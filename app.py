@@ -14,6 +14,12 @@ app = Flask(__name__)
 
 # Create a persistent session with a browser-like User-Agent to avoid blocks
 yf_session = requests_cffi.Session(impersonate="chrome")
+yf_session.headers.update({
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Origin": "https://finance.yahoo.com",
+    "Referer": "https://finance.yahoo.com",
+})
 
 # Allow requests from your site. In production replace "*" with your domain,
 # e.g. CORS(app, origins=["https://moneybymath.com"])
