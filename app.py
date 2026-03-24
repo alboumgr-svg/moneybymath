@@ -8,8 +8,12 @@ from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
+from curl_cffi import requests as requests_cffi
 
 app = Flask(__name__)
+
+# Create a persistent session with a browser-like User-Agent to avoid blocks
+yf_session = requests_cffi.Session(impersonate="chrome")
 
 # Allow requests from your site. In production replace "*" with your domain,
 # e.g. CORS(app, origins=["https://moneybymath.com"])
@@ -286,18 +290,22 @@ def stock():
         return jsonify({"error": "ticker is required"}), 400
 
     try:
-        t    = yf.Ticker(ticker)
+        # Pass the custom session here
+        t = yf.Ticker(ticker, session=yf_session)
         info = t.info
+        
+        # If info is empty (common when blocked), trigger a fallback check
+        if not info or len(info) < 5:
+            raise Exception("Yahoo Finance returned empty data. This usually means the IP is temporarily throttled.")
+            
     except Exception as e:
-        # Render cold-start or Yahoo Finance timeout - return a retriable 503
         err_str = str(e).lower()
-        if "timeout" in err_str or "connection" in err_str or "read timed out" in err_str:
+        if any(x in err_str for x in ["timeout", "connection", "403", "404"]):
             resp = jsonify({
-                "error": "The server is warming up or Yahoo Finance is slow. Please try again in a few seconds.",
+                "error": "Yahoo Finance is limiting requests. Please try again in 10-15 seconds.",
                 "retryable": True,
             })
             resp.status_code = 503
-            resp.headers["Retry-After"] = "5"
             return resp
         return jsonify({"error": f"Could not fetch data: {e}"}), 502
 
@@ -307,8 +315,7 @@ def stock():
         or safe(info.get("previousClose"))
     )
     if not spot:
-        return jsonify({"error": f'No price data found for "{ticker}". Check the symbol.'}), 404
-
+        return jsonify({"error": f'No price data found for "{ticker}". Symbol may be delisted or invalid.'}), 404
     _ed            = get_earnings_days(t)
     earn_days      = _ed["days"]      if isinstance(_ed, dict) else _ed
     earn_estimated = _ed["estimated"] if isinstance(_ed, dict) else False
@@ -444,20 +451,26 @@ def buy_analysis():
         return jsonify({"error": "ticker is required"}), 400
 
     try:
-        t    = yf.Ticker(ticker)
+        # Pass the custom session
+        t = yf.Ticker(ticker, session=yf_session)
         info = t.info
+        
+        # Fetch history using the same session-backed ticker object
+        hist = t.history(period="2y", interval="1d", auto_adjust=True)
+        
+        if hist.empty:
+            return jsonify({"error": f'No historical data for "{ticker}".'}), 404
+            
     except Exception as e:
-        # Render cold-start or Yahoo Finance timeout - return a retriable 503
         err_str = str(e).lower()
-        if "timeout" in err_str or "connection" in err_str or "read timed out" in err_str:
+        if any(x in err_str for x in ["timeout", "403", "404", "rate limit"]):
             resp = jsonify({
-                "error": "The server is warming up or Yahoo Finance is slow. Please try again in a few seconds.",
+                "error": "Yahoo Finance connection error. Retrying usually helps.",
                 "retryable": True,
             })
             resp.status_code = 503
-            resp.headers["Retry-After"] = "5"
             return resp
-        return jsonify({"error": f"Could not fetch data: {e}"}), 502
+        return jsonify({"error": f"Analysis failed: {e}"}), 502
 
     spot = (
         safe(info.get("currentPrice"))

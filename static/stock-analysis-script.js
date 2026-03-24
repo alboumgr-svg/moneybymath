@@ -6,7 +6,7 @@
 
 const API_BASE = window.location.origin; 
 
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 25;
 const STORAGE_KEY = 'stock_lookups'; // use a different key per page if you want separate limits
 
 function getRateLimitData() {
