@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent vs Buy Calculator - FinanceHub</title>
+    <meta name="description" content="Compare the true costs of renting versus buying a home over time.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="index.html" class="logo">
+                    <img src="logo.png" alt="MoneyByMath" class="nav-logo">
+                </a>
+                <div class="nav-links">
+                    <a href="index.html">Home</a>
+                    <a href="options-wheel.html">Options Wheel</a>
+                    <a href="coast-fire.html">Coast FIRE</a>
+                    <a href="rent-vs-buy.html">Rent vs Buy</a>
+                    <a href="compound-interest.html">Compound Interest</a>
+                    <a href="debt-payoff.html">Debt Payoff</a>
+                    <a href="401k-calculator.html">401(k)</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Housing Decision</div>
+                <h1 class="hero-title"><span class="gradient-text">Rent vs Buy</span> Calculator</h1>
+                <p class="hero-subtitle">Compare the true financial costs of renting versus buying over time. Factor in opportunity costs, maintenance, appreciation, and more.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculator Section -->
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+            <div class="calculator-grid">
+                <!-- Left Top: Buy Inputs -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Buying Parameters</h3>
+                    <div class="calculator-inputs">
+                        <div class="input-group">
+                            <label for="homePrice">Home Price ($)</label>
+                            <input type="number" id="homePrice" value="500000" min="0" step="10000" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="downPayment">Down Payment (%)</label>
+                            <input type="number" id="downPayment" value="20" min="0" max="100" step="1" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="mortgageRate">Mortgage Rate (%)</label>
+                            <input type="number" id="mortgageRate" value="6.5" min="0" max="15" step="0.1" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="mortgageTerm">Mortgage Term (years)</label>
+                            <input type="number" id="mortgageTerm" value="30" min="1" max="30" step="1" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="propertyTax">Annual Property Tax ($)</label>
+                            <input type="number" id="propertyTax" value="8000" min="0" step="100" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="homeInsurance">Annual Home Insurance ($)</label>
+                            <input type="number" id="homeInsurance" value="2000" min="0" step="100" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="hoaFees">Monthly HOA Fees ($)</label>
+                            <input type="number" id="hoaFees" value="200" min="0" step="50" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="maintenance">Annual Maintenance (% of home value)</label>
+                            <input type="number" id="maintenance" value="1" min="0" max="5" step="0.1" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="appreciation">Home Appreciation Rate (%/year)</label>
+                            <input type="number" id="appreciation" value="3" min="-5" max="10" step="0.5" oninput="calculateRentVsBuy()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Top: Rent Inputs -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Renting Parameters</h3>
+                    <div class="calculator-inputs">
+                        <div class="input-group">
+                            <label for="monthlyRent">Monthly Rent ($)</label>
+                            <input type="number" id="monthlyRent" value="2500" min="0" step="100" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="rentIncrease">Annual Rent Increase (%)</label>
+                            <input type="number" id="rentIncrease" value="3" min="0" max="10" step="0.5" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="rentersInsurance">Annual Renters Insurance ($)</label>
+                            <input type="number" id="rentersInsurance" value="200" min="0" step="50" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="investmentReturn">Investment Return (%/year)</label>
+                            <input type="number" id="investmentReturn" value="7" min="0" max="15" step="0.5" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="yearsToAnalyze">Years to Analyze</label>
+                            <input type="number" id="yearsToAnalyze" value="30" min="1" max="50" step="1" oninput="calculateRentVsBuy()">
+                        </div>
+                        <div class="input-group">
+                            <label for="monthsToAnalyze">Months</label>
+                            <input type="number" id="monthsToAnalyze" value="0" min="0" max="11" step="1" oninput="calculateRentVsBuy()">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Net Worth Comparison</h3>
+                    <div class="calculator-results">
+                        <div class="result-card result-highlight">
+                            <div class="result-label">Winner After <span id="yearsDisplay">10</span> Years</div>
+                            <div class="result-value-status" id="winner">Calculating...</div>
+                        </div>
+                        
+                        <div class="result-card">
+                            <div class="result-label">Buying Net Worth</div>
+                            <div class="result-value" id="buyNetWorth">$0</div>
+                            <div class="result-subtitle">Home equity + invested savings</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Renting Net Worth</div>
+                            <div class="result-value" id="rentNetWorth">$0</div>
+                            <div class="result-subtitle">Invested savings only</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Difference</div>
+                            <div class="result-value" id="difference">$0</div>
+                            <div class="result-subtitle" id="differencePercent">--</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Monthly Payment (Buying)</div>
+                            <div class="result-value" id="buyMonthly">$0</div>
+                            <div class="result-subtitle">Mortgage + taxes + insurance + HOA</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Break Even Point</div>
+                            <div class="result-value" id="breakEven">--</div>
+                            <div class="result-subtitle">When buying becomes better</div>
+                            <div class="date-display" id="breakEvenDate"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: Breakdown -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Cost Breakdown</h3>
+                    <div class="strategy-breakdown">
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Total Cost of Buying</div>
+                                <div class="step-value" id="totalBuyCost">$0</div>
+                                <div class="step-desc">Down payment + all monthly costs over time period</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Total Cost of Renting</div>
+                                <div class="step-value" id="totalRentCost">$0</div>
+                                <div class="step-desc">All rent payments + renters insurance over time period</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Home Equity Built</div>
+                                <div class="step-value" id="homeEquity">$0</div>
+                                <div class="step-desc">Principal paid down + appreciation - selling costs</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Investment Portfolio (Renting)</div>
+                                <div class="step-value" id="investmentPortfolio">$0</div>
+                                <div class="step-desc">Savings invested at market returns</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="calculation-methodology">
+                        <h4>How It's Calculated</h4>
+                        <div class="formula">
+                            <strong>Monthly Mortgage:</strong> Loan × [r(1+r)ⁿ] ÷ [(1+r)ⁿ-1] where r = monthly rate, n = total payments
+                        </div>
+                        <div class="formula">
+                            <strong>Buying Net Worth:</strong> Home Value × (1 + Appreciation Rate)ⁿ - Loan Balance - 6% Selling Costs
+                        </div>
+                        <div class="formula">
+                            <strong>Renting Net Worth:</strong> Down Payment invested + Monthly Savings Differential, compounding at investment return rate
+                        </div>
+                        <div class="formula">
+                            <strong>Key Assumption:</strong> Renter invests down payment amount and difference between monthly buy vs rent costs
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: Chart -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Net Worth Over Time</h3>
+                    <canvas id="rentBuyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learn Section -->
+    <section class="learn-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Key Considerations</h2>
+                <p>What the numbers don't capture</p>
+            </div>
+            <div class="learn-strategy">
+                <div class="strategy-grid">
+                    <div class="strategy-item">
+                        <h4>Flexibility</h4>
+                        <p>Renting offers easy relocation for career opportunities. Buying ties you to a location but builds forced savings through home equity.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Market Timing</h4>
+                        <p>Housing markets are cyclical. Buying at peak prices or high interest rates can significantly impact returns. Be patient.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Opportunity Cost</h4>
+                        <p>Down payment money could compound in the stock market. This calculator accounts for that, but many analyses don't.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Lifestyle Factors</h4>
+                        <p>Emotional satisfaction, stability for kids, ability to customize - these matter but can't be quantified in a calculator.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="logo.png" alt="MoneyByMath" class="footer-logo">
+                    </div>
+                    <p>Free financial calculators and tools for new age to build wealth and make informed money decisions.</p>
+                </div>
+                <div class="footer-links">
+                    <!-- <div class="footer-column">
+                        <h4>Calculators</h4>
+                        <a href="options-wheel.html">Options Wheel</a>
+                        <a href="coast-fire.html">Coast FIRE</a>
+                        <a href="rent-vs-buy.html">Rent vs Buy</a>
+                        <a href="compound-interest.html">Compound Interest</a>
+                        <a href="debt-payoff.html">Debt Payoff</a>
+                        <a href="401k-calculator.html">401(k) Calculator</a> 
+                    </div> -->
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="index.html#newsletter">Newsletter</a>
+                        <a href="index.html#calculators">Calculators</a>
+                        <a href="index.html">Home</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Community</h4>
+                        <a href="https://twitter.com/moneybymath" target="_blank" rel="noopener noreferrer">Follow on X</a>
+                        <a href="mailto:hello@moneybymath.com">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p><strong>DISCLAIMER:</strong> The information provided on this website is for educational purposes only and should not be considered financial advice. All calculations are estimates and actual results may vary. Please consult with a qualified financial advisor before making any investment decisions. We are not registered financial advisors and do not provide personalized investment advice.</p>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MoneyByMath. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="rent-vs-buy-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}MoneyByMath - {{ article.title }}{% endblock %}
+{% block content %}
+
+<section id="newsletter" class="newsletter-section">
+    <div class="container">
+        <div class="newsletter-grid">
+
+            <!-- LEFT: Article -->
+            <div class="article-preview">
+                <div class="article-badge">Latest Article</div>
+                <h2>{{ article.title }}</h2>
+                <div class="article-meta">
+                    <span>{{ article.read_time }}</span>
+                    <span>•</span>
+                    <span>{{ article.date }}</span>
+                </div>
+                <div class="article-content">
+                    <p>{{ article.intro }}</p>
+                    {% for section in article.sections %}
+                        <h3>{{ section.heading }}</h3>
+                        <p>{{ section.body }}</p>
+                    {% endfor %}
+                    <p>{{ article.closing }}</p>
+                </div>
+
+                <!-- Disqus Comments -->
+                <div class="comments-section" id="Discussion">
+                    <h3>Discussion</h3>
+                    <div id="disqus_thread"></div>
+                    <script>
+                        var disqus_config = function () {
+                            this.page.url = window.location.href;
+                            this.page.identifier = "{{ article.date | replace(' ', '-') }}";
+                        };
+                        (function() {
+                            var d = document, s = d.createElement('script');
+                            s.src = 'https://MoneyByMath.disqus.com/embed.js';
+                            s.setAttribute('data-timestamp', +new Date());
+                            (d.head || d.body).appendChild(s);
+                        })();
+                    </script>
+                    <noscript>Please enable JavaScript to view comments.</noscript>
+                </div>
+            </div>
+
+            <!-- RIGHT: Sticky Share Box (same slot as old signup box) -->
+            <div class="newsletter-signup">
+                <div class="signup-content">
+                    <h3>Share This Article</h3>
+                    <p>Found this useful? Share it with someone!</p>
+
+                    <div class="share-buttons-vert">
+                        <button onclick="shareArticle('twitter')" class="share-btn share-twitter">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            Share on X
+                        </button>
+                        <button onclick="shareArticle('linkedin')" class="share-btn share-linkedin">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                            Share on LinkedIn
+                        </button>
+                        <button onclick="shareArticle('copy')" class="share-btn share-copy" id="copyBtn">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                            </svg>
+                            Copy Link
+                        </button>
+                    </div>
+
+                    <div style="border-top: 1px solid #eee; margin: 1.25rem 0;"></div>
+
+                    <div class="signup-benefits" id="moreTools">
+                        <p style="font-weight: 600; margin-bottom: 0.75rem;">More Tools</p>
+                    </div>
+
+                    <p style="font-size: 0.75rem; color: #999; margin-top: 1rem; text-align: center;">
+                        <em>Not financial advice. Educational use only.</em>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<style>
+.share-buttons-vert {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+.share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    width: 100%;
+}
+.share-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+.share-btn:active { transform: translateY(0); }
+.share-twitter  { background: #000;    color: #fff; }
+.share-linkedin { background: #0a66c2; color: #fff; }
+.share-copy     { background: #f0f0f0; color: #333; border: 1px solid #ddd; }
+.comments-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+}
+.comments-section h3 { font-size: 1.2rem; margin-bottom: 1rem; }
+</style>
+
+<script>
+function shareArticle(platform) {
+    const url   = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(document.querySelector('.article-preview h2').innerText);
+    if (platform === 'twitter') {
+        window.open(`https://twitter.com/intent/tweet?text=${title}&url=${url}`, '_blank');
+    } else if (platform === 'linkedin') {
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+    } else if (platform === 'copy') {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.innerHTML = `<svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M5 10 L8 13 L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied!`;
+            setTimeout(() => {
+                btn.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg> Copy Link`;
+            }, 2000);
+        });
+    }
+}
+
+const ALL_TOOLS = [
+    { href: "/options-wheel",      label: "Options Wheel Analyzer" },
+    { href: "/stock-analysis",     label: "Stock Buy Analyzer" },
+    { href: "/coast-fire",         label: "Coast FIRE Calculator" },
+    { href: "/retirement",         label: "Retirement Planner" },
+    { href: "/afford-house",       label: "Can I Afford This House?" },
+    { href: "/rent-vs-buy",        label: "Rent vs Buy Calculator" },
+    { href: "/compound-interest",  label: "Compound Interest Calculator" },
+    { href: "/debt-payoff",        label: "Debt Payoff Planner" },
+    { href: "/car-cost",           label: "True Cost of a Car" },
+    { href: "/kids-future",        label: "Kids Future Calculator" },
+    { href: "/loan-from-401k",     label: "401k Loan Analyzer" },
+    { href: "/federal-tax",        label: "Federal Tax Estimator" },
+    { href: "/mortgage-calculator",label: "Mortgage Calculator" },
+];
+const checkSVG = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <path d="M5 10 L8 13 L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+// Shuffle and pick 4
+const shuffled = ALL_TOOLS.sort(() => Math.random() - 0.5).slice(0, 4);
+const container = document.getElementById('moreTools');
+shuffled.forEach(tool => {
+    const div = document.createElement('div');
+    div.className = 'benefit';
+    div.innerHTML = `${checkSVG}<a href="${tool.href}" class="inlineLinks">${tool.label}</a>`;
+    container.appendChild(div);
+});
+
+</script>
+
+{% endblock %}

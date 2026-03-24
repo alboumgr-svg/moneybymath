@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% block title %}Rent vs Buy Calculator - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+/* ── Side-by-side synced input row ─────────────────────────────────────── */
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+@media (max-width: 480px) {
+    .input-row { grid-template-columns: 1fr; }
+}
+
+/* ── Floating winner pill ───────────────────────────────────────────────── */
+#winnerFloat {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    z-index: 999;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+    border: 1.5px solid #E5E7EB;
+    min-width: 210px;
+    max-width: 270px;
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+#winnerFloat.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+#winnerFloat .float-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9CA3AF;
+    margin-bottom: 5px;
+}
+#winnerFloat .float-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #6B7280;
+    line-height: 1.2;
+}
+@media (max-width: 480px) {
+    #winnerFloat {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+    }
+}
+@media (min-width: 1024px) {
+    #winnerFloat {
+        min-width: 280px;
+        max-width: 360px;
+        padding: 1.1rem 1.5rem;
+        border-radius: 16px;
+    }
+    #winnerFloat .float-label {
+        font-size: 0.95rem;
+    }
+    #winnerFloat .float-value {
+        font-size: 1.85rem;
+    }
+}
+
+</style>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Housing Decision</div>
+                <h1 class="hero-title"><span class="gradient-text">Rent Forever vs</span> Buy a Place</h1>
+                <p class="hero-subtitle">Compare the true financial costs of renting versus buying over time. Factor in opportunity costs, maintenance, appreciation, and more.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculator Section -->
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+            <div class="calculator-grid">
+
+                <!-- Left Top: Buy Inputs -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Buying Parameters</h3>
+                    <div class="calculator-inputs">
+
+                        <!-- Dollar field → type="text" so commas work -->
+                        <div class="input-group">
+                            <label for="homePrice">Home Price ($)</label>
+                            <input type="text" inputmode="decimal" id="homePrice"
+                                   placeholder="e.g. 500,000"
+                                   data-input-type="currency"
+                                   oninput="handleInput(this); syncDownPaymentFromPct(); syncPropertyTaxFromPct(); syncMaintenanceFromPct()">
+                        </div>
+
+                        <!-- Side-by-side % / $ synced inputs -->
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="downPaymentPct">Down Payment (%)</label>
+                                <input type="number" id="downPaymentPct"
+                                       placeholder="e.g. 20"
+                                       min="0" max="100" step="0.5"
+                                       oninput="syncDownPaymentFromPct(); handleInput(this)">
+                            </div>
+                            <div class="input-group">
+                                <label for="downPaymentDollar">Down Payment ($)</label>
+                                <input type="text" inputmode="decimal" id="downPaymentDollar"
+                                       placeholder="e.g. 100,000"
+                                       data-input-type="currency"
+                                       oninput="handleInput(this); syncDownPaymentFromDollar()">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="mortgageRate">Mortgage Rate (%)</label>
+                            <input type="number" id="mortgageRate"
+                                   placeholder="e.g. 6.5"
+                                   min="0.1" max="20" step="0.1"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="mortgageTerm">Mortgage Term (years)</label>
+                            <input type="number" id="mortgageTerm"
+                                   placeholder="e.g. 30"
+                                   min="1" max="50" step="1"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <!-- Side-by-side $ / % synced inputs -->
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="propertyTaxDollar">Annual Property Tax ($)</label>
+                                <input type="text" inputmode="decimal" id="propertyTaxDollar"
+                                       placeholder="e.g. 8,000"
+                                       data-input-type="currency"
+                                       oninput="handleInput(this); syncPropertyTaxFromDollar()">
+                            </div>
+                            <div class="input-group">
+                                <label for="propertyTaxPct">Property Tax (% / year)</label>
+                                <input type="number" id="propertyTaxPct"
+                                       placeholder="e.g. 1.2"
+                                       min="0" max="25" step="0.1"
+                                       oninput="syncPropertyTaxFromPct(); handleInput(this)">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="homeInsurance">Annual Home Insurance ($)</label>
+                            <input type="text" inputmode="decimal" id="homeInsurance"
+                                   placeholder="e.g. 2,000"
+                                   data-input-type="currency"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="hoaFees">Monthly HOA Fees ($)</label>
+                            <input type="text" inputmode="decimal" id="hoaFees"
+                                   placeholder="e.g. 200"
+                                   data-input-type="currency"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <!-- Side-by-side % / $ synced inputs -->
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="maintenancePct">Annual Maintenance (% of home)</label>
+                                <input type="number" id="maintenancePct"
+                                       placeholder="e.g. 1"
+                                       min="0" max="25" step="0.1"
+                                       oninput="syncMaintenanceFromPct(); handleInput(this)">
+                            </div>
+                            <div class="input-group">
+                                <label for="maintenanceDollar">Annual Maintenance ($/year)</label>
+                                <input type="text" inputmode="decimal" id="maintenanceDollar"
+                                       placeholder="e.g. 5,000"
+                                       data-input-type="currency"
+                                       oninput="handleInput(this); syncMaintenanceFromDollar()">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="appreciation">Home Appreciation Rate (%/year)</label>
+                            <input type="number" id="appreciation"
+                                   placeholder="e.g. 3"
+                                   min="-10" max="20" step="0.5"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Right Top: Rent Inputs -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Renting Parameters</h3>
+                    <div class="calculator-inputs">
+
+                        <div class="input-group">
+                            <label for="monthlyRent">Monthly Rent ($)</label>
+                            <input type="text" inputmode="decimal" id="monthlyRent"
+                                   placeholder="e.g. 2,500"
+                                   data-input-type="currency"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="rentIncrease">Annual Rent Increase (%)</label>
+                            <input type="number" id="rentIncrease"
+                                   placeholder="e.g. 3"
+                                   min="0" max="20" step="0.5"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="rentersInsurance">Annual Renters Insurance ($)</label>
+                            <input type="text" inputmode="decimal" id="rentersInsurance"
+                                   placeholder="e.g. 200"
+                                   data-input-type="currency"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="investmentReturn">Investment Return (%/year)</label>
+                            <input type="number" id="investmentReturn"
+                                   placeholder="e.g. 7"
+                                   min="0" max="30" step="0.5"
+                                   oninput="handleInput(this)">
+                                   <small class="input-note">Historical S&amp;P 500 average is ~10%; 7–8% is a conservative estimate.</small>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="yearsToAnalyze">Years to Analyze</label>
+                            <input type="number" id="yearsToAnalyze"
+                                   placeholder="e.g. 30"
+                                   min="1" max="50" step="1"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="monthsToAnalyze">Additional Months</label>
+                            <input type="number" id="monthsToAnalyze"
+                                   placeholder="e.g. 0"
+                                   min="0" max="11" step="1"
+                                   oninput="handleInput(this)">
+                        </div>
+
+                    </div>
+
+                    <div style="margin-top:1rem;">
+                        <button class="btnprimary" onclick="clearAll()">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="calculator-card">
+                    <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Net Worth Comparison
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                        </div>
+                    </h3>
+                    <div class="calculator-results">
+                        <div class="result-card result-highlight" style="background:#f8fafc; border-left:4px solid var(--primary);">
+                            <div class="result-label" id="winner-after">Winner After <span id="yearsDisplay">--</span></div>
+                            <div class="result-value" id="winner">Fill in fields to calculate</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Buying Net Worth</div>
+                            <div class="result-value" id="buyNetWorth">--</div>
+                            <div class="result-subtitle"></div>
+                            <div id="buyNetWorthBreakdown"></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Renting Net Worth (Investment Portfolio)</div>
+                            <div class="result-value" id="rentNetWorth">--</div>
+                            <div class="result-subtitle"></div>
+                            <div id="rentNetWorthBreakdown"></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Difference</div>
+                            <div class="result-value" id="difference">--</div>
+                            <div class="result-subtitle" id="differencePercent">--</div>
+                            <div id="differenceBreakdown"></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Break Even Point</div>
+                            <div class="result-value" id="breakEven">--</div>
+                            <div class="result-subtitle">When buying becomes better</div>
+                            <div class="date-display" id="breakEvenDate"></div>
+                            <div id="breakEvenBreakdown"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: Breakdown -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Cost Breakdown</h3>
+                    <div class="calculator-results">
+                        <div class="result-card">
+                            <div class="result-label">Total Cost of Buying (Over <span id="yearsDisplay1">--</span>)</div>
+                            <div class="result-value" id="totalBuyCost">--</div>
+                            <div class="result-subtitle"></div>
+                            <div id="totalBuyCostBreakdown"></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Total Cost of Renting (Over <span id="yearsDisplay2">--</span>)</div>
+                            <div class="result-value" id="totalRentCost">--</div>
+                            <div class="result-subtitle"></div>
+                            <div id="totalRentCostBreakdown"></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Monthly Payment (Buying)</div>
+                            <div class="result-value" id="buyMonthly">--</div>
+                            <div class="result-subtitle"></div>
+                            <div id="buyMonthlyBreakdown"></div>
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="calculator-card chart-card" style="margin-bottom: 1.5rem;">
+                        <h3 class="card-title">How It's Calculated</h3>
+                        <div class="formula">
+                            <strong>Monthly Mortgage:</strong> Loan × [r(1+r)ⁿ] ÷ [(1+r)ⁿ-1] where r = monthly rate, n = total payments
+                        </div>
+                        <div class="formula">
+                            <strong>Buying Net Worth:</strong> Home Value × (1 + Appreciation Rate)ⁿ - Loan Balance - 6% Selling Costs
+                        </div>
+                        <div class="formula">
+                            <strong>Renting Net Worth:</strong> Down Payment invested + Monthly Savings Differential, compounding at investment return rate
+                        </div>
+                        <div class="formula">
+                            <strong>Key Assumption:</strong> Renter invests down payment amount and difference between monthly buy vs rent costs
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: Chart -->
+                <div class="calculator-card chart-card" style="margin-bottom: 1.75rem;">
+                    <h3 class="card-title">Net Worth Over Time</h3>
+                    <canvas id="rentBuyChart"></canvas>
+                </div>
+
+                <!-- Affilliate Link -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">If You Decide to Rent, You Will Need to Invest.</h3>
+                        <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            Ready to start investing? Open an account with AFFILLIATENAME to start trading stocks today.
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Start Trading on AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Learn Section -->
+    <section class="learn-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Key Considerations</h2>
+                <p>What the numbers don't capture</p>
+            </div>
+            <div class="learn-strategy">
+                <div class="strategy-grid">
+                    <div class="strategy-item">
+                        <h4>Flexibility</h4>
+                        <p>Renting offers easy relocation for career opportunities. Buying ties you to a location but builds forced savings through home equity.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Market Timing</h4>
+                        <p>Housing markets are cyclical. Buying at peak prices or high interest rates can significantly impact returns. Be patient.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Opportunity Cost</h4>
+                        <p>Down payment money could compound in the stock market. This calculator accounts for that, but many analyses don't.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Lifestyle Factors</h4>
+                        <p>Emotional satisfaction, stability for kids, ability to customize - these matter but can't be quantified in a calculator.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Floating winner pill (visible when result card is off-screen) -->
+    <div id="winnerFloat" style="background:#f8fafc;">
+        <div class="float-label" id="winner-after-float">Winner After <span id="yearsDisplayFloat">--</span></div>
+        <div class="float-value" id="winnerFloat-value">Fill in fields to calculate</div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='rent-vs-buy-script.js') }}"></script>
+{% endblock %}

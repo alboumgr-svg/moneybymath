@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+{% block title %}Can I Afford a House - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+/* ── Side-by-side synced input row ─────────────────────────────────────── */
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+@media (max-width: 480px) {
+    .input-row { grid-template-columns: 1fr; }
+}
+
+/* ── Floating verdict pill ──────────────────────────────────────────────── */
+#verdictFloat {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    z-index: 999;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+    border: 1.5px solid #E5E7EB;
+    min-width: 210px;
+    max-width: 270px;
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+#verdictFloat.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+#verdictFloat .float-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9CA3AF;
+    margin-bottom: 5px;
+}
+#verdictFloat .float-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #6B7280;
+    line-height: 1.2;
+}
+@media (max-width: 480px) {
+    #verdictFloat {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+    }
+}
+@media (min-width: 1024px) {
+    #verdictFloat {
+        min-width: 280px;
+        max-width: 360px;
+        padding: 1.1rem 1.5rem;
+        border-radius: 16px;
+    }
+    #verdictFloat .float-label {
+        font-size: 0.95rem;
+    }
+    #verdictFloat .float-value {
+        font-size: 1.65rem;
+    }
+}
+</style>
+
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Buy Smart</div>
+            <h1 class="hero-title">Can I Afford <span class="gradient-text">This House?</span></h1>
+            <p class="hero-subtitle">Real costs. Brutal honesty. Designed for people who'd rather skip the niceties and keep the savings.<br><br>
+            The monthly costs in these calculations do not include any closing costs. Closing costs are noted as a one time fee seen in the Total Cash Neded Upfront Section.</p>
+        </div>
+    </div>
+</section>
+
+<section id="affordCalc" class="calculator-section">
+    <div class="container">
+        <div class="calculator-grid">
+            <div class="calculator-card">
+                <h3 class="card-title">Property & Loan</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="homePrice">Home Price ($)</label>
+                        <input type="text" inputmode="decimal" id="homePrice"
+                               placeholder="e.g. 500,000"
+                               data-input-type="currency"
+                               data-min="1000" data-max="1000000000"
+                               oninput="handleInput(this); syncDownPaymentFromPct(); syncPropTaxFromPct(); syncMaintenanceFromPct(); syncInsuranceFromPct(); syncClosingFromPct(); calculateAffordability();">
+                    </div>
+
+                    <!-- Side-by-side % / $ synced inputs -->
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="downPaymentPct">Down Payment (%)</label>
+                            <input type="number" id="downPaymentPct"
+                                   placeholder="e.g. 20"
+                                   min="0" max="100" step="0.5"
+                                   oninput="syncDownPaymentFromPct(); calculateAffordability()">
+                        </div>
+                        <div class="input-group">
+                            <label for="downPaymentDollar">Down Payment ($)</label>
+                            <input type="text" inputmode="decimal" id="downPaymentDollar"
+                                   placeholder="e.g. 80,000"
+                                   data-input-type="currency"
+                                   data-max="5000000"
+                                   oninput="formatCurrencyInput(this); clampInput(this); syncDownPaymentFromDollar(); calculateAffordability()">
+                        </div>
+                    </div>
+
+                    <!-- Side-by-side % / $ synced inputs -->
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="closingPct">Closing Costs (%)</label>
+                            <input type="number" id="closingPct"
+                                   placeholder="e.g. 2.5"
+                                   min="0" max="10" step="0.1"
+                                   oninput="syncClosingFromPct(); calculateAffordability()">
+                        </div>
+                        <div class="input-group">
+                            <label for="closingDollar">Closing Costs ($)</label>
+                            <input type="text" inputmode="decimal" id="closingDollar"
+                                   placeholder="e.g. 12,500"
+                                   data-input-type="currency"
+                                   data-max="500000"
+                                   oninput="formatCurrencyInput(this); clampInput(this); syncClosingFromDollar(); calculateAffordability()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="loanTerm">Loan Term (years)</label>
+                        <input type="number" id="loanTerm"
+                               placeholder="e.g. 30"
+                               min="1" max="50" step="1"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="interestRate">Interest Rate (APR %)</label>
+                        <input type="number" id="interestRate"
+                               placeholder="e.g. 6.5"
+                               min="0.1" max="30" step="0.01"
+                               oninput="handleInput(this)">
+                    </div>
+                </div>
+
+                <h3 class="card-title" style="margin-top:1rem;">Real Recurring Costs</h3>
+                <div class="calculator-inputs">
+
+                    <!-- Side-by-side % / $ synced inputs -->
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="propTaxPct">Property Tax (% / year)</label>
+                            <input type="number" id="propTaxPct"
+                                   placeholder="e.g. 1.2"
+                                   min="0" max="25" step="0.1"
+                                   oninput="syncPropTaxFromPct(); calculateAffordability()">
+                        </div>
+                        <div class="input-group">
+                            <label for="propTaxDollar">Property Tax ($/year)</label>
+                            <input type="text" inputmode="decimal" id="propTaxDollar"
+                                   placeholder="e.g. 6,000"
+                                   data-input-type="currency"
+                                   data-max="500000"
+                                   oninput="formatCurrencyInput(this); clampInput(this); syncPropTaxFromDollar(); calculateAffordability()">
+                        </div>
+                    </div>
+
+                    <!-- Side-by-side $ / % synced inputs -->
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="insuranceDollar">Home Insurance ($/year)</label>
+                            <input type="text" inputmode="decimal" id="insuranceDollar"
+                                   placeholder="e.g. 1,200"
+                                   data-input-type="currency"
+                                   data-max="100000"
+                                   oninput="formatCurrencyInput(this); clampInput(this); syncInsuranceFromDollar(); calculateAffordability()">
+                        </div>
+                        <div class="input-group">
+                            <label for="insurancePct">Home Insurance (% of home)</label>
+                            <input type="number" id="insurancePct"
+                                   placeholder="e.g. 0.25"
+                                   min="0" max="25" step="0.05"
+                                   oninput="syncInsuranceFromPct(); calculateAffordability()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="hoa">HOA / Condo Fees (monthly $)</label>
+                        <input type="text" inputmode="decimal" id="hoa"
+                               placeholder="e.g. 0"
+                               data-input-type="currency"
+                               data-min="0" data-max="10000000"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <!-- Side-by-side % / $ synced inputs -->
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="maintenancePct">Maintenance (% / year)</label>
+                            <input type="number" id="maintenancePct"
+                                   placeholder="e.g. 1"
+                                   min="0" max="25" step="0.1"
+                                   oninput="syncMaintenanceFromPct(); calculateAffordability()">
+                        </div>
+                        <div class="input-group">
+                            <label for="maintenanceDollar">Maintenance ($/year)</label>
+                            <input type="text" inputmode="decimal" id="maintenanceDollar"
+                                   placeholder="e.g. 4,000"
+                                   data-input-type="currency"
+                                   data-max="500000"
+                                   oninput="formatCurrencyInput(this); clampInput(this); syncMaintenanceFromDollar(); calculateAffordability()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="utilities">Utilities &amp; Internet (monthly $)</label>
+                        <input type="text" inputmode="decimal" id="utilities"
+                               placeholder="e.g. 300"
+                               data-input-type="currency"
+                               data-min="0" data-max="10000000"
+                               oninput="handleInput(this)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Your Money</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="takeHome">Monthly Take-Home Pay ($)</label>
+                        <input type="text" inputmode="decimal" id="takeHome"
+                               placeholder="e.g. 6,000"
+                               data-input-type="currency"
+                               data-min="0" data-max="10000000"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Actual net monthly income after taxes.</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="otherSpending">Other Monthly Spending (non-housing) ($)</label>
+                        <input type="text" inputmode="decimal" id="otherSpending"
+                               placeholder="e.g. 2,000"
+                               data-input-type="currency"
+                               data-min="0" data-max="10000000"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="otherDebtMonthly">Existing Monthly Debt Payments ($)</label>
+                        <input type="text" inputmode="decimal" id="otherDebtMonthly"
+                               placeholder="e.g. 250"
+                               data-input-type="currency"
+                               data-min="0" data-max="1000000"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="savingsTarget">Savings Target (monthly $)</label>
+                        <input type="text" inputmode="decimal" id="savingsTarget"
+                               placeholder="e.g. 500"
+                               data-input-type="currency"
+                               data-min="0" data-max="1000000"
+                               oninput="handleInput(this)">
+                        <small class="input-note">How much you want to keep funneling to savings each month. Can be set to $0.</small>
+                    </div>
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <button class="btnprimary" onclick="clearAll()">Reset</button>
+                </div>
+            </div>
+
+            <div class="calculator-card chart-card">
+                <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Affordability Result
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                            <button class="share-btn primary" onclick="downloadPDF()" id="downloadPdfBtn">
+                                📄 Save PDF
+                            </button>
+                        </div>
+                    </h3>
+                <div class="calculator-results">
+
+                    <!-- Full-width verdict -->
+                    <div class="result-card result-highlight" style="background:#f8fafc; border-left:4px solid var(--primary);">
+                        <div class="result-label">Verdict</div>
+                        <div class="result-value" id="verdict">Fill in fields to calculate</div>
+                        <div class="result-subtitle" id="verdictSubtitle"></div>
+                    </div>
+
+                    <!-- 2-column grid for the remaining cards -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Monthly Mortgage</div>
+                            <div class="result-value" id="monthlyMortgage">--</div>
+                            <div id="mortgageBreakdown"></div>
+                        </div>
+
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Monthly Leftover (after everything, including savings)</div>
+                            <div class="result-value" id="leftover">--</div>
+                            <div id="leftoverBreakdown"></div>
+                        </div>
+
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Total Monthly Housing</div>
+                            <div class="result-value" id="totalHousing">--</div>
+                            <div id="housingBreakdown"></div>
+                        </div>
+
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Total Cash Needed Up Front</div>
+                            <div class="result-value" id="upfrontTotal">--</div>
+                            <div id="upfrontBreakdown"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div style="margin-top:1.25rem;">
+                    <canvas id="budgetChart" style="max-height:160px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Affilliate Link -->
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">So You Want to Buy A House, Huh?</h3>
+                    <div class="affiliate-container">
+                    <p class="affiliate-text">
+                        You will need to save. Open an account with AFFILLIATENAME to start saving today.
+                    </p>
+                    
+                    <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                        Start Saving with AFFILLIATENAME
+                    </a>
+
+                    <div class="disclosure-box">
+                        <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">What we assumed / Why this is realistic</h3>
+                <div class="formula">
+                    <strong>Mortgage P&amp;I:</strong> Standard amortizing loan formula (fixed-rate).
+                </div>
+                <div class="formula">
+                    <strong>Property tax &amp; maintenance:</strong> These regularly bite - tax is quoted as % of price per year; maintenance uses a 1% rule by default.
+                </div>
+                <div class="formula">
+                    <strong>Closing costs:</strong> Usually 2–5% of price - paid once at closing and included in your upfront cash requirement.
+                </div>
+                <p class="formula-note">Advice: If your leftover <em>after</em> housing + existing spending + debt + savings target is <strong>&gt;= 20%</strong> of take-home, you're reasonably safe. 5–20% → house-poor. &lt;0 → can't afford it.</p>
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- Floating verdict pill (visible when result card is off-screen) -->
+    <div id="verdictFloat" style="background:#f8fafc;">
+        <div class="float-label" id="verdictFloatLabel">Verdict</div>
+        <div class="float-value" id="verdictFloat-value">Fill in fields to calculate</div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='afford-house-script.js') }}"></script>
+{% endblock %}

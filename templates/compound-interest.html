@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Compound Interest Calculator - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+/* ── Floating balance pill ──────────────────────────────────────────────── */
+#balanceFloat {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    z-index: 999;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+    border: 1.5px solid #E5E7EB;
+    min-width: 140px;
+    max-width: 270px;
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+#balanceFloat.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+#balanceFloat .float-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9CA3AF;
+    margin-bottom: 5px;
+}
+#balanceFloat .float-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #6B7280;
+    line-height: 1.2;
+}
+@media (max-width: 480px) {
+    #balanceFloat {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+    }
+}
+@media (min-width: 1024px) {
+    #balanceFloat {
+        min-width: 200px;
+        max-width: 360px;
+        padding: 1.1rem 1.5rem;
+        border-radius: 16px;
+    }
+    #balanceFloat .float-label {
+        font-size: 0.95rem;
+    }
+    #balanceFloat .float-value {
+        font-size: 1.65rem;
+    }
+}
+</style>
+
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Investment Growth</div>
+                <h1 class="hero-title">The Magic of <span class="gradient-text">Compound Interest</span></h1>
+                <p class="hero-subtitle">Watch your money grow exponentially. Small, consistent investments today can become massive wealth tomorrow.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+            <div class="calculator-grid">
+                <div class="calculator-card">
+                    <h3 class="card-title">Investment Parameters</h3>
+                    <div class="calculator-inputs">
+                        <div class="input-group">
+                            <label for="initialAmount">Initial Investment ($)</label>
+                            <input type="text" id="initialAmount" placeholder="e.g. 10,000" oninput="formatNumber(this); calculateCompound()">
+                        </div>
+                        <div class="input-group">
+                            <label for="monthlyContribution">Monthly Contribution ($)</label>
+                            <input type="text" id="monthlyContribution" placeholder="e.g. 500" oninput="formatNumber(this); calculateCompound()">
+                        </div>
+                        <div class="input-group">
+                            <label for="annualReturn">Annual Return Rate (%)</label>
+                            <input type="number" id="annualReturn" placeholder="e.g. 7" min="0" max="20" step="0.5" oninput="calculateCompound()">
+                        </div>
+                        <div class="input-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="input-group">
+                                <label for="years">Time Period (Years)</label>
+                                <input type="number" id="years" placeholder="e.g. 30" min="0" max="50" step="1" oninput="calculateCompound()">
+                            </div>
+                            <div class="input-group">
+                                <label for="months">Months</label>
+                                <input type="number" id="months" placeholder="e.g. 0" min="0" max="11" step="1" oninput="calculateCompound()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem;">
+                        <button class="btnprimary" onclick="clearAll()">Reset</button>
+                    </div>
+                </div>
+                
+                <div class="calculator-card">
+                    <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Your Investment Growth
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                        </div>
+                    </h3>
+                    <div class="calculator-results">
+                        <div class="result-card result-highlight" style="background:#f8fafc; border-left:4px solid var(--primary);">
+                            <div class="result-label">Final Balance</div>
+                            <div class="result-value" id="finalBalance">Fill in fields to calculate</div>
+                            <div class="result-subtitle" id="final-after">After <span id="yearsDisplay">--</span></div>
+                        </div>
+                        
+                        <div class="result-card">
+                            <div class="result-label">Total Contributions</div>
+                            <div class="result-value" id="totalContributions">--</div>
+                            <div class="result-subtitle">Money you put in</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Total Interest Earned</div>
+                            <div class="result-value" id="totalInterest">--</div>
+                            <div class="result-subtitle">Your money working for you</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Wealth Multiplier</div>
+                            <div class="result-value" id="multiplier">--</div>
+                            <div class="result-subtitle">How much your money grew</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Affilliate Link -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Now That You've Seen What Investing Can Do...</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            It's time to start investing. Open a brokerage account with AFFILLIATENAME to start investing today.
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Start Investing on AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Growth Visualization</h3>
+                    <canvas id="compoundChart"></canvas>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title">Year-by-Year Breakdown</h3>
+                    <div id="yearBreakdown" class="year-breakdown"></div>
+                </div>
+
+                <div class="calculator-card">                    
+                    <h3 class="card-title">How It's Calculated</h3>
+                        <div class="formula">
+                            <strong>Monthly Compounding:</strong> Balance = Previous Balance × (1 + Annual Rate ÷ 12) + Monthly Contribution
+                        </div>
+                        <div class="formula">
+                            <strong>Total Interest:</strong> Final Balance - Total Contributions
+                        </div>
+                        <div class="formula">
+                            <strong>Wealth Multiplier:</strong> Final Balance ÷ Total Contributions
+                        </div>
+                        <p class="formula-note">Calculations assume returns compound monthly and contributions are made at the end of each month.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="learn-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Compound Interest Matters</h2>
+                <p>Time is your greatest asset</p>
+            </div>
+            <div class="learn-strategy">
+                <div class="strategy-grid">
+                    <div class="strategy-item">
+                        <h4>Start Early</h4>
+                        <p>Every year you delay costs you exponentially. A 22-year-old investing $500/month at 7% will have $1.1M by 65. Start at 32? Only $560k.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Consistency > Timing</h4>
+                        <p>Regular contributions beat trying to time the market. Dollar-cost averaging smooths out volatility and builds discipline.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Reinvest Returns</h4>
+                        <p>Let dividends and interest compound automatically. Don't spend your returns - let them generate more returns.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Tax-Advantaged Accounts</h4>
+                        <p>401(k)s and IRAs let you compound tax-free or tax-deferred. This dramatically accelerates growth over taxable accounts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Floating balance pill (visible when result card is off-screen) -->
+    <div id="balanceFloat" style="background:#f8fafc;">
+        <div class="float-label">Final Balance</div>
+        <div class="float-value" id="balanceFloat-value">--</div>
+        <div class="float-label" id="finalBalanceAfter" style="margin-top:5px; text-transform: none; letter-spacing: normal;">After <span id="yearsDisplayFloat">--</span></div>
+    </div>
+
+    {% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='compound-interest-script.js') }}"></script>
+{% endblock %}

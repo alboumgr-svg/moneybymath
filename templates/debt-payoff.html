@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}Debt Payoff Calculator - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+    /* ── Floating action plan pill ──────────────────────── */
+    #debtActionFloat {
+        position: fixed;
+        bottom: 10rem;
+        right: 1.75rem;
+        z-index: 999;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+        border: 1.5px solid #E5E7EB;
+        min-width: 210px;
+        max-width: 270px;
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #debtActionFloat.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    #debtActionFloat .float-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #9CA3AF;
+        margin-bottom: 5px;
+    }
+    #debtActionFloat .float-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+    @media (max-width: 480px) {
+        #debtActionFloat {
+            bottom: 10rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+    @media (min-width: 1024px) {
+        #debtActionFloat {
+            bottom: 12rem;
+            min-width: 280px;
+            max-width: 360px;
+            padding: 1.1rem 1.5rem;
+            border-radius: 16px;
+        }
+        #debtActionFloat .float-label { font-size: 0.95rem; }
+        #debtActionFloat .float-value { font-size: 1.1rem; }
+    }
+
+    /* ── Floating method pill ───────────────────────────── */
+    #debtMethodFloat {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.75rem;
+        z-index: 999;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+        border: 1.5px solid #E5E7EB;
+        min-width: 210px;
+        max-width: 270px;
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #debtMethodFloat.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    #debtMethodFloat .float-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #9CA3AF;
+        margin-bottom: 5px;
+    }
+    #debtMethodFloat .float-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+    @media (max-width: 480px) {
+        #debtMethodFloat {
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+    @media (min-width: 1024px) {
+        #debtMethodFloat {
+            min-width: 280px;
+            max-width: 360px;
+            padding: 1.1rem 1.5rem;
+            border-radius: 16px;
+        }
+        #debtMethodFloat .float-label { font-size: 0.95rem; }
+        #debtMethodFloat .float-value { font-size: 1.65rem; }
+    }
+</style>
+
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Debt Freedom</div>
+                <h1 class="hero-title">Destroy Your <span class="gradient-text">Debt</span></h1>
+                <p class="hero-subtitle">Compare avalanche vs snowball methods and create your personalized debt payoff plan.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+            <div class="calculator-grid">
+                <div class="calculator-card">
+                    <h3 class="card-title">Your Debts</h3>
+                    <div class="calculator-inputs">
+                        <div id="debtList" class="debt-list"></div>
+                        <button class="add-debt-btn" onclick="addDebt()">+ Add Another Debt</button>
+                        <div class="input-group" style="margin-top: 1.5rem;">
+                            <label>Base Monthly Payment ($)</label>
+                            <input type="text" inputmode="decimal" id="monthlyPayment" value=""
+                                   placeholder="e.g. 500"
+                                   data-max="100000"
+                                   oninput="formatNumber(this); clampDebtInput(this); calculateDebt()">
+                        </div>
+                        <div class="input-group">
+                            <label>Extra Monthly Payment ($)</label>
+                            <input type="text" inputmode="decimal" id="extraDebtPayment" value=""
+                                   placeholder="e.g. 100"
+                                   data-max="100000"
+                                   oninput="formatNumber(this); clampDebtInput(this); calculateDebt()">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem;">
+                        <button class="btnprimary" onclick="clearAll()">Reset</button>
+                    </div>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Payoff Details
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                            <button class="share-btn primary" onclick="downloadPDF()" id="downloadPdfBtn">
+                                📄 Save PDF
+                            </button>
+                        </div>
+                    </h3>
+                    <div class="calculator-results" id="debtResults">
+                        <div class="result-card result-highlight" style="grid-column: 1 / -1; background: #f8fafc; border-left: 4px solid var(--primary);">
+                            <div class="result-label" id="youractionlabel">Your Action Plan (This Month)</div>
+                            <div class="result-value" id="actionPlan" style="font-size: 1.25rem;">Calculating...</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label" id="bestmethodlabel">Best Method</div>
+                            <div class="result-value" id="bestMethod">Calculating...</div>
+                            <div class="result-subtitle">Mathematically optimal</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Extra Payment Savings</div>
+                            <div class="result-value" id="debtExtraSavings">$0</div>
+                            <div class="result-subtitle" id="debtTimeSaved">0 Months Faster</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Avalanche Method</div>
+                            <div class="result-value" id="avalancheTime">--</div>
+                            <div class="result-subtitle" id="avalancheInterest">$0 interest</div>
+                            <div class="date-display" id="avalancheDate"></div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Snowball Method</div>
+                            <div class="result-value" id="snowballTime">--</div>
+                            <div class="result-subtitle" id="snowballInterest">$0 interest</div>
+                            <div class="date-display" id="snowballDate"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Affilliate Link -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Too Many Different Debts?</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            Consolidate with AFFILLIATENAME. Open an account today to explore your options.
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Tackle Your Debts with AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Debt Payoff Progress</h3>
+                    <canvas id="debtChart"></canvas>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title">Understanding the Methods</h3>
+                    <div class="strategy-breakdown">
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Avalanche Method</div>
+                                <div class="step-desc">Pay minimums on all debts, then put extra toward the highest interest rate. Saves the most money mathematically.</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Snowball Method</div>
+                                <div class="step-desc">Pay minimums on all debts, then put extra toward the smallest balance. Builds momentum with quick wins.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title">How It's Calculated</h3>
+                    <div class="formula">
+                        <strong>Monthly Interest:</strong> Balance × (APR ÷ 12)
+                    </div>
+                    <div class="formula">
+                        <strong>Payment Allocation:</strong> After accruing interest, your payment is applied to balances based on method priority
+                    </div>
+                    <div class="formula">
+                        <strong>Total Interest:</strong> Sum of all interest charges across all debts until fully paid
+                    </div>
+                    <p class="formula-note">Simulator runs month-by-month until all debts reach $0 balance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Floating action plan pill -->
+    <div id="debtActionFloat" style="background:#f8fafc;">
+        <div class="float-label">Your Action Plan</div>
+        <div class="float-value" id="debtActionFloat-value">Calculating...</div>
+    </div>
+
+    <!-- Floating method pill -->
+    <div id="debtMethodFloat" style="background:#f8fafc;">
+        <div class="float-label" id="bestmethodlabel1">Best Method</div>
+        <div class="float-value" id="debtMethodFloat-value">--</div>
+        <div class="float-label" id="debtMethodFloat-sub" style="margin-top:5px; text-transform: none;"></div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='debt-payoff-script.js') }}"></script>
+{% endblock %}

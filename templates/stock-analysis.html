@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Stock Buy Analysis - MoneyByMath{% endblock %}
+{% block content %}
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Technical Stock Analysis</div>
+                <h1 class="hero-title">Is This Stock a <span class="gradient-text">Good Buy?</span></h1>
+                <p class="hero-subtitle">Enter any ticker and get an objective verdict based on 27 technical and fundamental indicators - trend, momentum, volume, volatility, and financials - explained in plain English.</p>
+                <div class="hero-cta">
+                    <a href="#analyzer" class="btn btn-primary">Analyze a Stock</a>
+                    <a href="#learn" class="btn btn-secondary">How It Works</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">43</div>
+                        <div class="stat-label">Indicators Checked</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">Live</div>
+                        <div class="stat-label">Yahoo Finance Data</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analyzer Section -->
+    <section id="analyzer" class="calculator-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Stock Buy Analyzer</h2>
+                <p>Enter any US stock ticker to see a full breakdown of every signal</p>
+            </div>
+
+            <div class="ba-search">
+                <input
+                    type="text"
+                    id="baTicker"
+                    class="ba-ticker-input"
+                    placeholder="e.g. AAPL"
+                    maxlength="10"
+                    onkeydown="if(event.key==='Enter') runBuyAnalysis()"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button class="btn btn-primary" onclick="runBuyAnalysis()">Analyze</button>
+            </div>
+
+            <div id="baError"   class="ba-error"        style="display:none;"></div>
+            <div id="baLoading" class="ba-loading-wrap"  style="display:none;">
+                <div class="ba-spinner"></div>
+                <span>Fetching live data for <strong id="baLoadingTicker"></strong>&hellip;</span>
+            </div>
+            <div id="baResults" style="display:none;"></div>
+
+            <p class="ba-disclaimer">
+                Data sourced from Yahoo Finance. For educational purposes only - not financial advice. Always do your own research before investing.
+            </p>
+        </div>
+    </section>
+
+    <!-- How It Works / Explainer Section -->
+    <section id="learn" class="stocks-section">
+        <div class="container" style="background-color: var(--bg-main); padding: 2rem 2rem; border-radius: 12px;">
+            <div class="section-header">
+                <h2>What We Check &amp; Why It Matters</h2>
+                <p>Seven categories of analysis, explained simply for new investors.</p>
+            </div>
+
+            <div class="ba-explainer-grid">
+                <div class="ba-explainer-card">
+                <span class="ba-explainer-icon"></span>
+                <h3>Momentum Oscillators</h3>
+                <p>This category utilizes RSI (Relative Strength Index), Stochastic Oscillators (%K/%D), Williams %R, and the Commodity Channel Index (CCI) to determine if a stock is technically overbought or oversold. By also calculating the 20-day Rate of Change (ROC), we can identify if the speed of a price move is sustainable or if a reversal is likely, helping you avoid "chasing" a stock at its peak.</p>
+            </div>
+
+            <div class="ba-explainer-card">
+                <span class="ba-explainer-icon"></span>
+                <h3>Volume Analysis</h3>
+                <p>We compare recent 10-day trading volume against the 50-day average to detect institutional interest. The script tracks On-Balance Volume (OBV) to see if capital is flowing in or out of the stock, and calculates the Up-Day vs Down-Day Volume Ratio. True price breakouts require "volume conviction"; if price rises while volume drops, the move is often a trap.</p>
+            </div>
+
+            <div class="ba-explainer-card">
+                <span class="ba-explainer-icon"></span>
+                <h3>Volatility Measures</h3>
+                <p>Using Bollinger Bands, we measure price standard deviation to identify "Squeezes" (periods of low volatility often followed by explosive moves) and overextensions. We also calculate ATR% (Average True Range as a percentage) and 21-day Historical Volatility. These metrics quantify the daily "swing" of the stock, allowing you to understand the risk-to-reward profile of the current price action.</p>
+            </div>
+
+            <div class="ba-explainer-card">
+                <span class="ba-explainer-icon"></span>
+                <h3>Price Structure</h3>
+                <p>A healthy stock should exhibit a "staircase" pattern of higher highs and higher lows over a 20-day window. The script specifically scans for these structural patterns and measures the exact percentage distance from both the 52-week high and 52-week low. This helps distinguish between a stock that is "on sale" at a support level versus one that is in a structural breakdown.</p>
+            </div>
+
+            <div class="ba-explainer-card">
+                <span class="ba-explainer-icon"></span>
+                <h3>Fundamental Health</h3>
+                <p>This is a deep dive into corporate efficiency and valuation. We check the P/E, P/B, P/S, and PEG ratios to see if you are overpaying for growth. We analyze Free Cash Flow yield, YoY Revenue Growth, Net Profit Margins, and Return on Equity (ROE) to ensure the company is profitable. Additionally, we check the Current Ratio for liquidity, Debt-to-Cash levels for solvency, and compare the current price to the average Analyst Consensus target.</p>
+            </div>
+
+            <div class="ba-explainer-card">
+                <span class="ba-explainer-icon"></span>
+                <h3>Risk & Sentiment</h3>
+                <p>The script flags upcoming Earnings dates, which can cause extreme overnight price gaps, and calculates Beta to measure sensitivity to market crashes. We also analyze Short Interest to gauge market pessimism and track Insider Activity - monitoring whether company executives are buying or selling their own shares. High insider ownership and low short interest typically signal strong internal confidence in the company's future.</p>
+            </div>
+            </div>
+
+            <div class="learn-strategy" style="margin-top:3rem;">
+                <h3>How the Score Works</h3>
+                <div class="strategy-grid">
+                    <div class="strategy-item">
+                        <h4>85–100 &rarr; Strong Buy</h4>
+                        <p>The majority of indicators are positive across trend, momentum, and fundamentals. Broad-based strength with few red flags. A reasonable entry point for a long-term investor.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>70–84 &rarr; Buy</h4>
+                        <p>More indicators are positive than negative. Some yellow flags exist but the overall picture is constructive. Consider position sizing down if risks are notable.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>50–69 &rarr; Hold/Neutral</h4>
+                        <p>Mixed signals. The stock isn't clearly bullish or bearish. It may be a decent long-term hold if already owned, but probably not the best new entry right now.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>35–49 &rarr; Caution</h4>
+                        <p>More indicators are negative. Not an ideal time to buy - wait for conditions to improve or for the stock to show more convincing signals before entering.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>0–34 &rarr; Avoid</h4>
+                        <p>The majority of indicators are bearish. This is not a recommended new position. Patience is a strategy - wait for a better setup.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Important: This Is a Tool, Not a Crystal Ball</h4>
+                        <p>No indicator or score predicts the future. These signals help you make a more informed decision, not an infallible one. Always invest only what you can afford to lose and diversify across multiple positions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Affilliate Link -->
+    <section id="learn" class="stocks-section">
+        <div class="container" style="background-color: var(--bg-main); padding: 2rem 2rem; border-radius: 12px;">
+            <h3 class="card-title">Now That You're a Pro...</h3>
+            <div class="affiliate-container">
+                <p class="affiliate-text">
+                    Ready to put your stock knowledge into practice? Open an account with AFFILLIATENAME to start trading stocks today.
+                </p>
+                
+                <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                    Start Trading on AFFILLIATENAME
+                </a>
+
+                <div class="disclosure-box">
+                    <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='stock-analysis-script.js') }}"></script>
+{% endblock %}

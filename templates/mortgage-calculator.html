@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+{% block title %}Mortgage Calculator - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+    /* ── Layout helpers ─────────────────────────────────── */
+    .input-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    @media (max-width: 480px) {
+        .input-row { grid-template-columns: 1fr; }
+    }
+
+    /* ── Floating monthly payment pill ─────────────────── */
+    #monthlyFloat {
+        position: fixed;
+        bottom: 9rem;
+        right: 1.75rem;
+        z-index: 999;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+        border: 1.5px solid #E5E7EB;
+        min-width: 210px;
+        max-width: 270px;
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #monthlyFloat.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    #monthlyFloat .float-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: 0.06em;
+        color: #9CA3AF;
+        margin-bottom: 5px;
+    }
+    #monthlyFloat .float-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+    @media (max-width: 480px) {
+        #monthlyFloat {
+            bottom: 7rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+    @media (min-width: 1024px) {
+        #monthlyFloat {
+            bottom: 10.5rem;
+            min-width: 280px;
+            max-width: 360px;
+            padding: 1.1rem 1.5rem;
+            border-radius: 16px;
+        }
+        #monthlyFloat .float-label { font-size: 0.95rem; }
+        #monthlyFloat .float-value { font-size: 1.65rem; }
+    }
+
+    /* ── Floating payoff pill ───────────────────────────── */
+    #payoffFloat {
+        position: fixed;
+        bottom: 1.75rem;
+        right: 1.75rem;
+        z-index: 999;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+        border: 1.5px solid #E5E7EB;
+        min-width: 210px;
+        max-width: 270px;
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #payoffFloat.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    #payoffFloat .float-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: 0.06em;
+        color: #9CA3AF;
+        margin-bottom: 5px;
+    }
+    #payoffFloat .float-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+    @media (max-width: 480px) {
+        #payoffFloat {
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+    @media (min-width: 1024px) {
+        #payoffFloat {
+            min-width: 280px;
+            max-width: 360px;
+            padding: 1.1rem 1.5rem;
+            border-radius: 16px;
+        }
+        #payoffFloat .float-label { font-size: 0.95rem; }
+        #payoffFloat .float-value { font-size: 1.65rem; }
+    }
+
+    .computed-label {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        font-weight: 400;
+        margin-left: 0.4rem;
+    }
+
+    /* ── Closing cost summary ───────────────────────────── */
+    .closing-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin-top: 0.5rem;
+    }
+    .closing-summary-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #166534;
+    }
+    .closing-summary-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #15803d;
+    }
+
+    /* ── Payment breakdown bar ──────────────────────────── */
+    .payment-bar {
+        display: flex;
+        height: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+        gap: 2px;
+    }
+    .bar-segment {
+        height: 100%;
+        transition: width 0.4s ease;
+        min-width: 2px;
+    }
+    .breakdown-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .breakdown-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+    }
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .legend-label {
+        flex: 1;
+        color: #64748b;
+    }
+    .legend-value {
+        font-weight: 600;
+        color: #1e293b;
+        text-align: right;
+    }
+    .breakdown-total {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+        color: #475569;
+        text-align: right;
+    }
+    .breakdown-empty {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        padding: 1rem 0;
+    }
+
+    /* ── Amortization table ─────────────────────────────── */
+    .amort-table-wrapper {
+        overflow-x: auto;
+        max-height: 420px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+    }
+    .amort-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+    .amort-table thead {
+        position: sticky;
+        top: 0;
+        background: #f8fafc;
+        z-index: 1;
+    }
+    .amort-table th {
+        padding: 0.6rem 0.8rem;
+        text-align: right;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 2px solid #e2e8f0;
+        white-space: nowrap;
+    }
+    .amort-table th:first-child { text-align: left; }
+    .amort-table td {
+        padding: 0.5rem 0.8rem;
+        text-align: right;
+        color: #1e293b;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .amort-table td:first-child { text-align: left; font-weight: 500; }
+    .amort-table tbody tr:hover { background: #f8fafc; }
+
+    /* ── Select styling ─────────────────────────────────── */
+    .calculator-inputs select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.95rem;
+        color: #1e293b;
+        background: #fff;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2.5rem;
+        transition: border-color 0.2s;
+    }
+    .calculator-inputs select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+</style>
+
+
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Home Ownership</div>
+                <h1 class="hero-title">Master Your <span class="gradient-text">Mortgage</span></h1>
+                <p class="hero-subtitle">Get a complete picture of your home loan — monthly payment breakdown, total costs, closing fees, and a personalized payoff plan.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+            <div class="calculator-grid">
+
+                <!-- ── LOAN DETAILS ──────────────────────────────────────── -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Loan Details</h3>
+                    <div class="calculator-inputs">
+
+                        <div class="input-group">
+                            <label>Home Price ($)</label>
+                            <input type="text" inputmode="decimal" id="homePrice"
+                                   placeholder="e.g. 450,000"
+                                   data-max="10000000000"
+                                   oninput="formatNumber(this); clampMortgageInput(this); syncLoanAmount(); syncDownPaymentFromPercent(); syncPropertyTaxFromPercent(); calculateMortgage(); saveToStorage()">
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Down Payment ($)</label>
+                                <input type="text" inputmode="decimal" id="downPaymentDollar"
+                                       placeholder="e.g. 90,000"
+                                       min="0"
+                                       oninput="formatNumber(this); clampMortgageInput(this); syncDownPaymentFromDollar(); calculateMortgage(); saveToStorage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Down Payment (%)</label>
+                                <input type="number" id="downPaymentPercent"
+                                       placeholder="e.g. 20"
+                                       min="0" max="100" step="0.5"
+                                       oninput="syncDownPaymentFromPercent(); calculateMortgage(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Loan Amount ($) <span class="computed-label">auto-calculated</span></label>
+                            <input type="text" id="loanAmount" readonly
+                                   placeholder="Home Price - Down Payment"
+                                   style="background: #f8fafc; cursor: default;">
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Loan Term</label>
+                                <select id="loanTerm" onchange="calculateMortgage(); saveToStorage()">
+                                    <option value="30">30 Years</option>
+                                    <option value="20">20 Years</option>
+                                    <option value="15">15 Years</option>
+                                    <option value="10">10 Years</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Rate Type</label>
+                                <select id="rateType" onchange="toggleArmFields(); calculateMortgage(); saveToStorage()">
+                                    <option value="fixed">Fixed</option>
+                                    <option value="arm51">ARM 5/1</option>
+                                    <option value="arm71">ARM 7/1</option>
+                                    <option value="arm101">ARM 10/1</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="interestRate">Interest Rate (APR %)</label>
+                            <input type="number" id="interestRate"
+                                   placeholder="e.g. 6.75"
+                                   min="0.1" max="50" step="0.125"
+                                   oninput="calculateMortgage(); saveToStorage()">
+                        </div>
+
+                        <div id="armFields" style="display:none;">
+                            <div class="input-group">
+                                <label>Expected Rate After Adjustment (%)</label>
+                                <input type="number" id="armAdjustedRate"
+                                       placeholder="e.g. 8.5"
+                                       min="0.1" max="50" step="0.125"
+                                       oninput="calculateMortgage(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Loan Start Date</label>
+                            <input type="month" id="startDate"
+                                   oninput="calculateMortgage(); saveToStorage()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── MONTHLY COSTS ─────────────────────────────────────── -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Monthly Costs</h3>
+                    <div class="calculator-inputs">
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Annual Property Tax ($)</label>
+                                <input type="text" inputmode="decimal" id="propertyTax"
+                                       placeholder="e.g. 5,400"
+                                       data-max="10000000"
+                                       oninput="formatNumber(this); clampMortgageInput(this); syncPropertyTaxFromDollar(); calculateMortgage(); saveToStorage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Property Tax (% / year)</label>
+                                <input type="number" id="propertyTaxPct"
+                                       placeholder="e.g. 1.2"
+                                       min="0" max="50" step="0.1"
+                                       oninput="syncPropertyTaxFromPercent(); calculateMortgage(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Annual Homeowner's Insurance ($)</label>
+                            <input type="text" inputmode="decimal" id="homeInsurance"
+                                   placeholder="e.g. 1,200"
+                                   data-max="10000000"
+                                   oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                        </div>
+
+                        <div class="input-group pmi-group">
+                            <label>
+                                PMI Rate (% of loan/year)
+                                <span class="computed-label" id="pmiNote">auto-estimated if LTV &gt; 80%</span>
+                            </label>
+                            <input type="number" id="pmiRate"
+                                   placeholder="e.g. 0.5 (leave blank to auto-estimate)"
+                                   min="0" max="25" step="0.05"
+                                   oninput="calculateMortgage(); saveToStorage()">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Monthly HOA Fees ($)</label>
+                            <input type="text" inputmode="decimal" id="hoaFees"
+                                   placeholder="e.g. 250 (leave blank if none)"
+                                   data-max="10000000"
+                                   oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Extra Monthly Payment ($)</label>
+                            <input type="text" inputmode="decimal" id="extraPayment"
+                                   placeholder="e.g. 200"
+                                   data-max="1000000000"
+                                   oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Extra Yearly Payment ($)</label>
+                            <input type="text" inputmode="decimal" id="extraYearlyPayment"
+                                   placeholder="e.g. 2,000"
+                                   data-max="1000000000"
+                                   oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem;">
+                        <button class="btnprimary" onclick="clearAll()">Reset</button>
+                    </div>
+                </div>
+
+                <!-- ── CLOSING COSTS ─────────────────────────────────────── -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Closing Costs &amp; Fees</h3>
+                    <div class="calculator-inputs">
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Origination Fee ($)</label>
+                                <input type="text" inputmode="decimal" id="originationFee"
+                                       placeholder="e.g. 1,000"
+                                       data-max="10000000"
+                                       oninput="formatNumber(this); clampMortgageInput(this); syncOriginationFromDollar(); calculateMortgage(); saveToStorage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Origination Fee (%)</label>
+                                <input type="number" id="originationPercent"
+                                       placeholder="e.g. 0.5"
+                                       min="0" max="25" step="0.1"
+                                       oninput="syncOriginationFromPercent(); calculateMortgage(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Discount Points (#)</label>
+                                <input type="number" id="discountPoints"
+                                       placeholder="e.g. 1"
+                                       min="0" max="25" step="0.125"
+                                       oninput="calculateMortgage(); saveToStorage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Rate Reduction / Point (%)</label>
+                                <input type="number" id="pointRateReduction"
+                                       placeholder="e.g. 0.25"
+                                       min="0" max="10" step="0.0625"
+                                       oninput="calculateMortgage(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Appraisal Fee ($)</label>
+                                <input type="text" inputmode="decimal" id="appraisalFee"
+                                       placeholder="e.g. 500"
+                                       data-max="10000000"
+                                       oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Title Insurance ($)</label>
+                                <input type="text" inputmode="decimal" id="titleInsurance"
+                                       placeholder="e.g. 1,000"
+                                       data-max="10000000"
+                                       oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Recording Fees ($)</label>
+                                <input type="text" inputmode="decimal" id="recordingFees"
+                                       placeholder="e.g. 125"
+                                       data-max="10000000"
+                                       oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Other Closing Costs ($)</label>
+                                <input type="text" inputmode="decimal" id="otherClosingCosts"
+                                       placeholder="e.g. 750"
+                                       data-max="10000000"
+                                       oninput="formatNumber(this); clampMortgageInput(this); calculateMortgage(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div class="closing-summary" id="closingSummary" style="display:none;">
+                            <div class="closing-summary-title">Total Closing Costs:</div>
+                            <div class="closing-summary-value" id="totalClosingCosts"> $0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── RESULTS ───────────────────────────────────────────── -->
+                <div class="calculator-card">
+                    <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Mortgage Summary
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                            <button class="share-btn primary" onclick="downloadPDF()" id="downloadPdfBtn">
+                                📄 Save PDF
+                            </button>
+                        </div>
+                    </h3>
+                    <div class="calculator-results" id="mortgageResults">
+
+                        <!-- Payoff date highlight -->
+                        <div class="result-card result-highlight" style="grid-column: 1 / -1; background: #f8fafc; border-left: 4px solid var(--primary);">
+                            <div class="result-label">Estimated Payoff Date</div>
+                            <div class="result-value" id="payoffDate">Fill in fields to calculate</div>
+                            <div class="result-subtitle" id="payoffTime"></div>
+                        </div>
+
+                        <div class="result-card result-highlight" style="grid-column: 1 / -1; background: #fff7ed; border-left: 4px solid #f59e0b;">
+                            <div class="result-label">Upfront Money Needed</div>
+                            <div class="result-value" id="upfrontNeeded">--</div>
+                            <div class="result-subtitle" id="upfrontNeededSubtitle"></div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Total Interest Paid</div>
+                            <div class="result-value" id="totalInterest">--</div>
+                            <div class="result-subtitle">Over life of loan</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Total Cost of Loan</div>
+                            <div class="result-value" id="totalCost">--</div>
+                            <div class="result-subtitle">Principal + all interest (no home insurance / prop tax)</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Interest Saved (Extra Payments)</div>
+                            <div class="result-value" id="interestSaved">--</div>
+                            <div class="result-subtitle" id="timeSaved"></div>
+                        </div>
+
+                        <div class="result-card" id="pmiCard">
+                            <div class="result-label">Monthly PMI</div>
+                            <div class="result-value" id="pmiMonthly">--</div>
+                            <div class="result-subtitle" id="pmiDropDate"></div>
+                        </div>
+
+                        <div class="result-card" id="pointsBreakevenCard" style="display:none;">
+                            <div class="result-label">Points Break-Even</div>
+                            <div class="result-value" id="pointsBreakeven">--</div>
+                            <div class="result-subtitle">Months to recoup point costs</div>
+                        </div>
+
+                        <div class="result-card" id="armCard" style="display:none;">
+                            <div class="result-label">Payment After Adjustment</div>
+                            <div class="result-value" id="armPayment">--</div>
+                            <div class="result-subtitle" id="armPaymentNote">at adjusted rate</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ── MONTHLY BREAKDOWN ─────────────────────────────────── -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Monthly Payment Breakdown</h3>
+                    <div id="paymentBreakdownContainer">
+                        <div class="breakdown-empty">Fill in loan details to see your payment breakdown.</div>
+                    </div>
+                </div>
+
+                <!-- Affilliate Link -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Applying for a Mortgage?</h3>
+                        <div class="affiliate-container">
+                            <p class="affiliate-text">
+                                AFFILLIATENAME is the place to go.
+                            </p>
+                            
+                            <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                                Get Your Mortgage with AFFILLIATENAME
+                            </a>
+
+                            <div class="disclosure-box">
+                                <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                            </div>
+                        </div>
+                </div>
+
+                <!-- ── CHART ─────────────────────────────────────────────── -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Balance Over Time</h3>
+                    <canvas id="mortgageChart"></canvas>
+                </div>
+
+                <!-- ── AMORTIZATION TABLE ────────────────────────────────── -->
+                <div class="calculator-card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 class="card-title" style="margin-bottom: 0;">Amortization Schedule</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="mode-btn active" id="tableViewBtn" onclick="switchAmortView('annual')">Annual</button>
+                            <button class="mode-btn" id="tableMonthlyBtn" onclick="switchAmortView('monthly')">Monthly</button>
+                        </div>
+                    </div>
+                    <div id="amortTableContainer">
+                        <div class="breakdown-empty">Fill in loan details to see the amortization schedule.</div>
+                    </div>
+                </div>
+
+                <!-- ── HOW IT WORKS ──────────────────────────────────────── -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">How It's Calculated</h3>
+                    <div class="formula">
+                        <strong>Monthly P&amp;I:</strong> P × [r(1+r)ⁿ] / [(1+r)ⁿ − 1], where P = loan amount, r = monthly rate, n = total payments
+                    </div>
+                    <div class="formula">
+                        <strong>PMI:</strong> Auto-estimated at 0.5% / year when LTV &gt; 80%, removed when balance falls below 80% of original home price. Override with a custom rate.
+                    </div>
+                    <div class="formula">
+                        <strong>Points:</strong> Each point costs 1% of the loan amount. Break-even = point cost ÷ monthly savings from rate reduction.
+                    </div>
+                    <div class="formula">
+                        <strong>ARM:</strong> Fixed-rate period runs for the initial fixed years, then the loan is re-amortized at the adjusted rate for the remaining term.
+                    </div>
+                    <p class="formula-note">All figures are estimates. Consult a licensed mortgage professional for binding quotes.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Floating monthly payment pill -->
+    <div id="monthlyFloat" style="background:#f8fafc; border-left:4px solid var(--primary);">
+        <div class="float-label">Total Monthly Payment</div>
+        <div class="float-value" id="monthlyFloat-value">--</div>
+    </div>
+
+    <!-- Floating payoff pill (visible when result card is off-screen) -->
+    <div id="payoffFloat" style="background:#f8fafc; border-left:4px solid var(--primary);">
+        <div class="float-label" id="floatpayofflabel">Estimated Payoff Date</div>
+        <div class="float-value" id="payoffFloat-value">Fill in fields to calculate</div>
+        <div class="float-label" id="payoffFloat-time" style="margin-top:5px; text-transform: none;"></div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='mortgage-script.js') }}"></script>
+{% endblock %}

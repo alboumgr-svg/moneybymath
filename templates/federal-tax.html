@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}Federal Income Tax Calculator - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+/* ── Filing status toggle ───────────────────────────────────── */
+.filing-toggle {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+}
+.filing-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.filing-btn.active {
+    background: #fff;
+    color: var(--primary, #2563EB);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* ── Tax summary visual bar ─────────────────────────────────── */
+.income-split-bar {
+    display: flex;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 12px 0 6px;
+    background: #f1f5f9;
+    position: relative;
+}
+.income-split-bar .bar-takehome {
+    background: linear-gradient(90deg, #10B981, #34d399);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+}
+.income-split-bar .bar-tax {
+    background: linear-gradient(90deg, #f97316, #ef4444);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+}
+.split-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* ── Bracket waterfall ──────────────────────────────────────── */
+.bracket-waterfall {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.bracket-row {
+    border-radius: 12px;
+    border: 1.5px solid #e5e7eb;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background: #fff;
+}
+.bracket-row.active {
+    border-color: var(--bracket-color);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+.bracket-row.inactive {
+    opacity: 0.45;
+}
+
+.bracket-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px 8px;
+}
+
+.rate-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    height: 38px;
+    border-radius: 8px;
+    background: var(--bracket-color);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+}
+
+.bracket-meta {
+    flex: 1;
+    min-width: 0;
+}
+.bracket-range {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    font-weight: 500;
+    margin-bottom: 1px;
+}
+.bracket-income-in {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.bracket-tax-owed {
+    text-align: right;
+    flex-shrink: 0;
+}
+.bracket-tax-label {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    font-weight: 500;
+}
+.bracket-tax-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--bracket-color);
+}
+
+/* Fill bar */
+.bracket-fill-track {
+    margin: 0 14px 12px;
+    height: 7px;
+    background: #f1f5f9;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.bracket-fill-bar {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--bracket-color);
+    transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+}
+
+/* ── Disclaimer card ────────────────────────────────────────── */
+.disclaimer-card {
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 4px;
+}
+.disclaimer-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.disclaimer-text {
+    font-size: 0.82rem;
+    color: #92400e;
+    line-height: 1.5;
+}
+.disclaimer-text strong {
+    display: block;
+    margin-bottom: 2px;
+    color: #78350f;
+}
+
+/* ── Deduction note ─────────────────────────────────────────── */
+.deduction-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: #6b7280;
+    padding: 6px 0;
+    border-bottom: 1px dashed #e5e7eb;
+}
+.deduction-row span:last-child { font-weight: 700; color: #374151; }
+.deduction-row.total {
+    border-bottom: none;
+    border-top: 1.5px solid #e5e7eb;
+    margin-top: 4px;
+    padding-top: 8px;
+    color: #111827;
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+.deduction-row.total span:last-child { color: var(--primary, #2563EB); }
+</style>
+
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Tax Planning</div>
+            <h1 class="hero-title">Federal <span class="gradient-text">Income Tax</span> Calculator</h1>
+            <p class="hero-subtitle">See exactly how the IRS taxes your income - bracket by bracket. Know your effective rate, not just your marginal one.</p>
+        </div>
+    </div>
+</section>
+
+<section id="taxCalc" class="calculator-section">
+    <div class="container">
+        <div class="calculator-grid">
+
+            <!-- ── Inputs ── -->
+            <div class="calculator-card">
+                <h3 class="card-title">Your Income</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="grossIncome">Gross Annual Income ($)</label>
+                        <input type="text" inputmode="decimal" id="grossIncome"
+                               placeholder="e.g 75,000"
+                               data-input-type="currency"
+                               oninput="handleTaxInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Filing Status</label>
+                        <div class="filing-toggle">
+                            <button class="filing-btn active" id="btn-single"
+                                    onclick="setFiling('single')">Single</button>
+                            <button class="filing-btn" id="btn-mfj"
+                                    onclick="setFiling('mfj')">Married Filing Jointly</button>
+                            <button class="filing-btn" id="btn-hoh"
+                                    onclick="setFiling('hoh')">Head of Household</button>
+                        </div>
+                        <small class="input-note">Standard deduction applied automatically.</small>
+                    </div>
+
+                </div>
+                <div style="margin-top:1rem;">
+                    <button class="btnprimary" onclick="clearTax()">Reset</button>
+                </div>
+            </div>
+
+            <!-- ── Summary Results ── -->
+            <div class="calculator-card">
+                <h3 class="card-title">Tax Summary</h3>
+                <div class="calculator-results">
+
+                    <div class="result-card result-highlight" style="background:#f8fafc; border-left:4px solid var(--primary);">
+                        <div class="result-label">Estimated Federal Tax</div>
+                        <div class="result-value" id="totalTax">--</div>
+                        <div class="result-subtitle" id="effectiveRateLabel">Effective rate</div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Gross Income</div>
+                            <div class="result-value" id="grossDisplay">--</div>
+                        </div>
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Taxable Income</div>
+                            <div class="result-value" id="taxableDisplay">--</div>
+                            <div class="result-subtitle" id="deductionLabel">After standard deduction</div>
+                        </div>
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Marginal Rate</div>
+                            <div class="result-value" id="marginalRate">--</div>
+                            <div class="result-subtitle">Your top bracket</div>
+                        </div>
+                        <div class="result-card" style="margin:0;">
+                            <div class="result-label">Monthly Take-Home</div>
+                            <div class="result-value" id="monthlyTakeHome">--</div>
+                            <div class="result-subtitle">Federal tax only</div>
+                        </div>
+                    </div>
+
+                    <!-- Visual income split bar -->
+                    <div style="margin-top:16px;">
+                        <div class="split-labels">
+                            <span id="takeHomeLabel">Take-Home</span>
+                            <span id="taxLabel">Federal Tax</span>
+                        </div>
+                        <div class="income-split-bar" id="splitBar">
+                            <div class="bar-takehome" id="barTakeHome" style="width:100%"></div>
+                            <div class="bar-tax"      id="barTax"      style="width:0%"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── Bracket Waterfall (full width) ── -->
+            <div class="calculator-card chart-card">
+                <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Bracket-by-Bracket Breakdown
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                        </div>
+                    </h3>
+                <p style="font-size:0.83rem; color:#6b7280; margin:-4px 0 16px;">
+                    The U.S. uses a <strong>progressive</strong> tax system - only the income <em>within</em> each bracket
+                    is taxed at that rate. Your entire income is never taxed at your top rate.
+                </p>
+                <div class="bracket-waterfall" id="bracketWaterfall">
+                    <!-- Injected by JS -->
+                </div>
+
+                <div class="disclaimer-card" style="margin-top:16px;">
+                    <div class="disclaimer-icon">⚠️</div>
+                    <div class="disclaimer-text">
+                        <strong>Estimates only - real taxes will differ.</strong>
+                        This calculator applies the 2026 standard deduction and federal brackets only.
+                        It does not account for state or local income taxes, FICA (Social Security &amp; Medicare),
+                        itemized deductions, tax credits, capital gains, investment income, AMT,
+                        or any other adjustments. Consult a tax professional for advice specific to your situation.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Affilliate Link -->
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">Need Help With Taxes?</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            AFFILLIATENAME is the place to go.
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Get Your Taxes Straight With AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+            </div>
+
+            <!-- ── How It's Calculated ── -->
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">How It's Calculated</h3>
+                <div class="formula">
+                    <strong>Standard Deduction:</strong> Subtracted from gross income before any tax is applied.
+                    2026 amounts: $16,100 (Single), $32,200 (Married Filing Jointly), $24,150 (Head of Household).
+                </div>
+                <div class="formula">
+                    <strong>Progressive Brackets:</strong> Only the income <em>within</em> each bracket is taxed at that rate.
+                    Earning $60,000 as a single filer does not mean all $60,000 is taxed at 22% -
+                    only the slice of income between $12,400–$50,400 is taxed at 22%.
+                </div>
+                <div class="formula">
+                    <strong>Effective Rate:</strong> Total federal tax ÷ Gross income.
+                    Almost always lower than your marginal (top bracket) rate because lower brackets
+                    cover the first dollars of income.
+                </div>
+                <div class="formula">
+                    <strong>Marginal Rate:</strong> The rate that applies to your last dollar of income.
+                    Useful for evaluating raises, freelance income, or deductions.
+                </div>
+                <p class="formula-note">
+                    Tax brackets shown are 2026 IRS figures (IRS Revenue Procedure 2025-32). Brackets adjust annually for inflation.
+                    This tool does not include state taxes, FICA, or any credits or deductions beyond
+                    the standard deduction.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='federal-tax-script.js') }}"></script>
+{% endblock %}

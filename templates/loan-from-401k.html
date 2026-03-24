@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}401(k) Early Withdrawal vs. Loan - MoneyByMath{% endblock %}
+{% block content %}
+
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Retirement</div>
+            <h1 class="hero-title">Early 401(k) Withdrawal <span class="gradient-text">vs. 401(k)Loan</span></h1>
+            <p class="hero-subtitle">
+                Need cash fast? Borrow up to 50% of your vested balance (max $50,000) for any purpose without a credit check. 
+                See exactly what raiding your retirement account will cost your future self-in today's dollars and at retirement.
+            </p>        
+        </div>
+    </div>
+</section>
+
+<section id="retirementCalc" class="calculator-section">
+    <div class="container">
+        <div class="calculator-grid">
+
+            <div class="calculator-card">
+                <h3 class="card-title">Your Situation</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="currentAge">Current Age</label>
+                        <input type="number" id="currentAge"
+                               placeholder="e.g. 35"
+                               min="18" max="59" step="1"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="retirementAge">Target Retirement Age</label>
+                        <input type="number" id="retirementAge"
+                               placeholder="e.g. 65"
+                               min="30" max="80" step="1"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="amountNeeded">Net Cash You Need ($)</label>
+                        <input type="text" inputmode="decimal" id="amountNeeded"
+                               placeholder="e.g. 20,000"
+                               data-input-type="currency" data-min="100" data-max="500000"
+                               oninput="handleInput(this)">
+                        <small class="input-note">The actual amount you want in your pocket after taxes and penalties.<br>
+                            Max loan is 50% of your vested balance (max $50,000).</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="taxBracket">Marginal Tax Bracket (%) - <a href="/federal-tax" target="_blank" class="inlineLinks">Find My Tax Bracket Here</a></label>
+                        <input type="number" id="taxBracket"
+                               placeholder="e.g. 22"
+                               min="10" max="37" step="1"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Your current federal income tax rate (top bracket).</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="expectedReturn">Expected Annual Portfolio Return (%)</label>
+                        <input type="number" id="expectedReturn"
+                               placeholder="e.g. 7"
+                               min="1" max="20" step="0.5"
+                               oninput="handleInput(this)">
+                               <small class="input-note">Historical S&amp;P 500 average is ~10%; 7–8% is a conservative estimate.</small>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">401(k) Loan Alternative</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="loanRate">Loan Interest Rate (%)</label>
+                        <input type="number" id="loanRate"
+                               placeholder="e.g. 6.5"
+                               min="0" max="20" step="0.1"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Typically prime rate + 1–2%. Interest is paid back to yourself.</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="loanTerm">Repayment Period (years)</label>
+                        <input type="number" id="loanTerm"
+                               placeholder="e.g. 5"
+                               min="1" max="15" step="1"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Max is typically 5 years; must be less than years to retirement.</small>
+                    </div>
+
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <button class="btnprimary" onclick="clearAll()">Reset</button>
+                </div>
+            </div>
+
+            <div class="calculator-card chart-card">
+                <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        The Real Cost Comparison
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                        </div>
+                    </h3>
+                <div class="calculator-results">
+
+                    <div class="result-card result-highlight" style="background:#f8fafc; border-left:4px solid var(--primary);">
+                        <div class="result-label">Verdict</div>
+                        <div class="result-value" id="retVerdict">Fill in fields to calculate</div>
+                        <div class="result-subtitle" id="retVerdictSubtitle"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Retirement Wealth Lost (Loan)</div>
+                        <div class="result-value" id="loanOpportunityCost">--</div>
+                        <div class="result-subtitle" id="loanOpportunityCostSubtitle">Compound growth you miss while money is out of the market during repayment</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Monthly Payment (Loan)</div>
+                        <div class="result-value" id="loanMonthly">--</div>
+                        <div class="result-subtitle">Paid back to your own account with interest</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Total Interest Paid (Loan)</div>
+                        <div class="result-value" id="loanInterestTotal">--</div>
+                        <div class="result-subtitle">Interest returns to your account on top of the original loan amount </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Retirement Wealth Lost (Withdrawal)</div>
+                        <div class="result-value" id="futureWealthLost">--</div>
+                        <div class="result-subtitle" id="futureWealthLostSubtitle">What the gross amount would have grown to by retirement</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Gross Withdrawal Required (Withdrawal)</div>
+                        <div class="result-value" id="grossWithdrawal">--</div>
+                        <div class="result-subtitle">Amount you must pull out to net your target after the IRS takes its cut</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Immediate Taxes &amp; Penalty (Withdrawal)</div>
+                        <div class="result-value" id="taxesPenalties">--</div>
+                        <div class="result-subtitle" id="taxesPenaltiesSubtitle">Income tax + 10% early withdrawal penalty</div>
+                    </div>
+
+                </div>
+                <div style="margin-top:1rem;">
+                    <canvas id="retChart" style="max-height:200px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Affilliate Link -->
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">Don't Have a 401(k) or Roth IRA?</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            Open a retirement account or regular brokerage today with AFFILLIATENAME to start your journey!
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Start Retirement on AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+            </div>
+
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">How It's Calculated</h3>
+                <div class="formula">
+                    <strong>Gross Withdrawal:</strong> Because of the 10% early withdrawal penalty plus income tax, the gross needed is Net ÷ [1 − (Tax Rate + 0.10)]. At 22%, a $20k need requires pulling ~$28.6k out.
+                </div>
+                <div class="formula">
+                    <strong>Retirement Wealth Lost (Withdrawal):</strong> The gross amount compounded at your expected return for all remaining years to retirement. This is the permanent hole in your retirement.
+                </div>
+                <div class="formula">
+                    <strong>Loan Opportunity Cost:</strong> Each monthly repayment goes back into your account and resumes compounding. The cost is the gap between what the loan amount would have grown to if untouched versus what it actually grows to after being repaid over time.
+                </div>
+                <div class="formula">
+                    <strong>Double Taxation Warning:</strong> 401(k) loan interest is paid with after-tax dollars - and then taxed again when you withdraw in retirement. It's the hidden sting of borrowing from yourself.
+                </div>
+                <p class="formula-note">The loan usually wins. An early withdrawal is almost always the worst financial move you can make. But if your job is at risk - a 401(k) loan becomes immediately due if you leave your employer - that changes the math entirely.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='loan-from-401k-script.js') }}"></script>
+{% endblock %}

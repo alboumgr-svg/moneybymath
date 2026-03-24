@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MoneyByMath{% endblock %}</title>
+    <meta name="description" content="Free financial calculators and tools for new age - Options Wheel, FIRE, Rent vs Buy, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/nav-overrides.css">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2187075822443464"
+     crossorigin="anonymous"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="/" class="logo">
+                    <img src="/static/logo.png" alt="MoneyByMath" class="nav-logo">
+                </a>
+                <button class="nav-toggle" id="navToggle" aria-label="toggle navigation">
+                    <span class="hamburger"></span>
+                </button>
+                <div class="nav-links" id="navLinks">
+                    <a href="/">Home</a>
+                    <a href="/newsletter">Weekly Article</a>
+                    <a href="/options-wheel">Options Wheel</a>
+                    <a href="/stock-analysis">Buy Analysis</a>
+                    <a href="/coast-fire">Coast FIRE</a>
+                    <a class="nav-overflow" href="/rent-vs-buy">Rent vs Buy</a>
+                    <a class="nav-overflow" href="/afford-house">Can I Afford a House</a>
+                    <a class="nav-overflow" href="/compound-interest">Compound Interest</a>
+                    <a class="nav-overflow" href="/debt-payoff">Debt Payoff</a>
+                    <a class="nav-overflow" href="/retirement">Retirement</a>
+                    <a class="nav-overflow" href="/car-cost">Car Cost</a>
+                    <a class="nav-overflow" href="/kids-future">Kids Future</a>
+                    <a class="nav-overflow" href="/loan-from-401k">401(k) Loan</a>
+                    <a class="nav-overflow" href="/federal-tax">What's my Tax Bracket</a>
+                    <a class="nav-overflow" href="/mortgage-calculator">Mortgage Calculator</a>
+                    <div class="nav-more" id="navMore">
+                        <button class="nav-more-btn" id="navMoreBtn" aria-haspopup="true" aria-expanded="false">
+                            More &#9660;
+                        </button>
+                        <div class="nav-more-dropdown" id="navMoreDropdown">
+                            <a href="/rent-vs-buy">Rent vs Buy</a>
+                            <a href="/afford-house">Can I Afford a House</a>
+                            <a href="/compound-interest">Compound Interest</a>
+                            <a href="/debt-payoff">Debt Payoff</a>
+                            <a href="/retirement">Retirement</a>
+                            <a href="/car-cost">Car Cost</a>
+                            <a href="/kids-future">Kids Future</a>
+                            <a href="/loan-from-401k">401(k) Loan</a>
+                            <a href="/federal-tax">What's my Tax Bracket</a>
+                            <a href="/mortgage-calculator">Mortgage Calculator</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    
+    {% block content %}{% endblock %}
+    <div class="footer-ad">
+        {% with slot="6674083199", format="auto", responsive=true %}{% include 'ad1.html' %}{% endwith %}
+    </div>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="/static/logo.png" alt="MoneyByMath" class="footer-logo">
+                    </div>
+                    <p>Free financial calculators and tools for new age to build wealth and make informed money decisions.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="/newsletter">Newsletter</a>
+                        <a href="/#calculators">Calculators</a>
+                        <a href="/">Home</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Community</h4>
+                        <a href="https://twitter.com/moneybymath" target="_blank" rel="noopener noreferrer">Follow on X</a>
+                        <a href="mailto:moneybymath@gmail.com">Contact Us</a>
+                        <a href="{{ url_for('newsletter', _anchor='Discussion') }}">Discussion</a>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p>
+                    <strong>NOT FINANCIAL ADVICE:</strong><br>This website is for informational and educational purposes only. 
+                    Nothing on this site constitutes financial, investment, legal, or tax advice. All calculators and 
+                    analysis tools produce estimates only - actual results will vary and may be materially different. 
+                    Past performance is not indicative of future results. We are not registered investment advisors, 
+                    brokers, or licensed financial professionals. Always consult a qualified financial advisor, 
+                    accountant, or attorney before making any financial decisions.
+                </p>
+                <p>
+                    Market data is provided by Yahoo Finance and may be delayed, inaccurate, or unavailable. 
+                    Mortgage rate data is sourced from the FRED® API (MORTGAGE30US series) and is not real-time. 
+                    This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.
+                    We make no representations or warranties as to the accuracy, completeness, or timeliness of any data displayed.
+                </p>
+                <p>
+                    By using this site you agree to our 
+                    <a href="/privacy" class="inlineLinks" target="_blank">Privacy Policy</a> and the 
+                    <a href="https://fred.stlouisfed.org/legal" target="_blank" rel="noopener" class="inlineLinks">FRED® API Terms of Use</a>.
+                    Use this site at your own risk.
+                </p>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MoneyByMath. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        const navToggle  = document.getElementById('navToggle');
+        const navLinks   = document.getElementById('navLinks');
+        const navOverlay = document.getElementById('navOverlay');
+
+        function openNav() {
+            navLinks.classList.add('active');
+            navToggle.classList.add('active');
+            navOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeNav() {
+            navLinks.classList.remove('active');
+            navToggle.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        navToggle.addEventListener('click', () => {
+            navLinks.classList.contains('active') ? closeNav() : openNav();
+        });
+        navOverlay.addEventListener('click', closeNav);
+        document.querySelectorAll('.nav-links > a').forEach(link => {
+            link.addEventListener('click', closeNav);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { closeNav(); closeMore(); }
+        });
+
+        const navMoreBtn      = document.getElementById('navMoreBtn');
+        const navMoreDropdown = document.getElementById('navMoreDropdown');
+
+        function openMore() {
+            navMoreDropdown.classList.add('active');
+            navMoreBtn.setAttribute('aria-expanded', 'true');
+            navMoreBtn.classList.add('active');
+        }
+        function closeMore() {
+            navMoreDropdown.classList.remove('active');
+            navMoreBtn.setAttribute('aria-expanded', 'false');
+            navMoreBtn.classList.remove('active');
+        }
+        navMoreBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMoreDropdown.classList.contains('active') ? closeMore() : openMore();
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#navMore')) closeMore();
+        });
+        navMoreDropdown.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeMore);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+
+    <!-- Fixed sidebar ads — outside all layout, zero impact on content -->
+    <div class="fixed-ad fixed-ad--left">
+    {% with slot="1476762689" %}{% include 'ad.html' %}{% endwith %}
+    </div>
+    <div class="fixed-ad fixed-ad--right">
+    {% with slot="1476762689" %}{% include 'ad.html' %}{% endwith %}
+    </div>
+</body>
+</html>

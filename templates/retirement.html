@@ -1,0 +1,634 @@
+{% extends "base.html" %}
+{% block title %}Retirement Planner - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+/*
+ * ═══════════════════════════════════════════════════════════════
+ * RETIREMENT PLANNER - Additional Styles
+ * Move everything in this block to your main stylesheet.
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+/* ── Account accordion (mixed tab) ─────────────────────────── */
+.account-accordion {
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: var(--radius, 8px);
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+.account-accordion > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    background: #f8fafc;
+    font-size: 0.88rem;
+    transition: background 0.15s;
+    gap: 8px;
+}
+.account-accordion > summary::-webkit-details-marker { display: none; }
+.account-accordion > summary:hover { background: #f1f5f9; }
+.account-accordion[open] > summary {
+    background: #eff6ff;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+}
+.account-accordion-label {
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 1;
+}
+.account-accordion-label::before {
+    content: '▶';
+    font-size: 0.6rem;
+    color: #9ca3af;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.account-accordion[open] > summary .account-accordion-label::before { transform: rotate(90deg); }
+.account-accordion-value {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary, #2563eb);
+    background: #fff;
+    padding: 2px 8px;
+    border-radius: 99px;
+    border: 1px solid #dbeafe;
+    white-space: nowrap;
+}
+.account-accordion-body { padding: 14px; }
+
+/* ── Runway settings hint bar ───────────────────────────────── */
+.runway-settings-bar {
+    font-size: 0.78rem;
+    color: #6b7280;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    line-height: 1.7;
+}
+.runway-settings-bar a {
+    color: var(--primary, #2563eb);
+    text-decoration: none;
+    font-weight: 600;
+}
+.runway-settings-bar a:hover { text-decoration: underline; }
+
+/* ── Tax-free notice ────────────────────────────────────────── */
+.tax-free-notice {
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    border-radius: var(--radius, 8px);
+    padding: 14px 16px;
+    margin-top: 16px;
+    color: #047857;
+}
+.tax-free-notice strong { display: block; margin-bottom: 4px; font-size: 0.95rem; }
+.tax-free-notice p { margin: 0; font-size: 0.85rem; }
+
+/* ── Runway stat mini-cards ─────────────────────────────────── */
+.runway-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+@media (max-width: 700px) { .runway-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+.runway-stat-card {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: var(--radius, 10px);
+    padding: 14px 12px;
+    text-align: center;
+    transition: box-shadow 0.2s;
+}
+.runway-stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.runway-stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted, #6b7280);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+.runway-stat-value { font-size: 1.2rem; font-weight: 800; color: var(--text, #111827); line-height: 1.1; }
+
+/* ── Runway header ──────────────────────────────────────────── */
+.runway-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.runway-header .card-title { margin: 0; }
+.runway-years-label { font-size: 0.8rem; color: var(--text-muted, #6b7280); font-weight: 500; }
+
+/* ── SWR indicators ─────────────────────────────────────────── */
+.swr-indicator { padding: 12px 16px; border-radius: var(--radius, 8px); font-size: 0.88rem; margin-bottom: 14px; border: 1px solid transparent; }
+.swr-safe    { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+.swr-caution { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
+.swr-danger  { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+
+/* ── Gauge ──────────────────────────────────────────────────── */
+.gauge-wrap { margin: 12px 0 16px; }
+.gauge-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted, #6b7280); margin-bottom: 4px; }
+.gauge-track { height: 10px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
+.gauge-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #10b981 0%, #f59e0b 65%, #ef4444 100%); transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+.gauge-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #9ca3af; margin-top: 4px; }
+
+/* ── Runway chart wrapper ───────────────────────────────────── */
+.runway-chart-wrap { background: var(--surface, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: var(--radius, 10px); padding: 16px; margin-bottom: 16px; }
+
+/* ── Roth conversion panel ──────────────────────────────────── */
+.conversion-panel { background: #f5f3ff; border: 1px solid #8b5cf6; border-radius: var(--radius, 10px); padding: 16px; margin-top: 4px; }
+.conversion-panel-title { font-weight: 700; color: #5b21b6; margin: 0 0 8px; font-size: 0.95rem; }
+.conversion-panel-note { font-size: 0.82rem; color: #6d28d9; margin: 0 0 10px; }
+.conversion-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #ddd6fe; font-size: 0.82rem; }
+.conversion-row:last-child { border-bottom: none; }
+.conversion-row-age { color: #374151; }
+.conversion-row-amt { color: #5b21b6; font-weight: 600; }
+
+/* ── Strategy comparison ────────────────────────────────────── */
+.strategy-comparison-panel { background: #fff7ed; border: 1px solid #f97316; border-radius: var(--radius, 10px); padding: 16px; margin-top: 14px; }
+.strategy-comparison-title-bar { font-weight: 700; color: #9a3412; margin: 0 0 12px; font-size: 0.95rem; }
+.strategy-optimal-panel { background: #ecfdf5; border: 1px solid #10b981; border-radius: var(--radius, 10px); padding: 14px; font-size: 0.88rem; color: #065f46; margin-top: 14px; }
+.strategy-comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.strategy-card { background: var(--surface, #fff); border-radius: 8px; padding: 14px; text-align: center; }
+.strategy-card--current   { border: 1px solid #fed7aa; }
+.strategy-card--optimized { border: 1px solid #a7f3d0; }
+.strategy-card-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.strategy-card-label--current   { color: #9a3412; }
+.strategy-card-label--optimized { color: #059669; }
+.strategy-card-amount { font-size: 1.4rem; font-weight: 800; }
+.strategy-card-amount--current   { color: #dc2626; }
+.strategy-card-amount--optimized { color: #059669; }
+.strategy-card-sub { font-size: 0.75rem; color: #6b7280; }
+.strategy-savings-highlight { background: #ecfdf5; border-radius: 6px; padding: 10px; text-align: center; font-weight: 800; color: #059669; font-size: 1.1rem; }
+.strategy-comparison-footnote { font-size: 0.78rem; color: #9a3412; margin: 10px 0 0; }
+
+/* ── Result card variants ───────────────────────────────────── */
+.result-card--success { background: #ecfdf5; border-color: #10b981; }
+.result-card--success .result-label, .result-card--success .result-value { color: #047857; }
+.result-card--danger  { background: #fef2f2; border-color: #ef4444; }
+.result-card--danger .result-label,  .result-card--danger .result-value  { color: #b91c1c; }
+
+/* ── Year-by-year table ─────────────────────────────────────── */
+.runway-table-wrap { overflow-x: auto; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; margin-top: 10px; }
+.runway-year-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.runway-year-table th { background: #f8fafc; padding: 8px 10px; text-align: right; font-weight: 700; color: #374151; border-bottom: 2px solid var(--border, #e2e8f0); white-space: nowrap; }
+.runway-year-table th:first-child { text-align: center; }
+.runway-year-table td { padding: 5px 10px; text-align: right; border-bottom: 1px solid #f1f5f9; color: #374151; }
+.runway-year-table td:first-child { text-align: center; font-weight: 600; }
+.runway-year-table tr.row-depleted { background: #fef2f2; }
+.runway-year-table tr.row-warning  { background: #fffbeb; }
+.runway-year-table tr:last-child td { border-bottom: none; }
+.col-blue   { color: #2563eb; }
+.col-green  { color: #059669; }
+.col-red    { color: #dc2626; font-weight: 600; }
+.col-purple { color: #7c3aed; }
+
+/* ── Collapsible ────────────────────────────────────────────── */
+details.runway-details summary { cursor: pointer; font-weight: 600; color: #374151; font-size: 0.9rem; padding: 10px 0; user-select: none; list-style: none; display: flex; align-items: center; gap: 6px; }
+details.runway-details summary::before { content: '▶'; font-size: 0.65rem; color: #9ca3af; transition: transform 0.2s; }
+details.runway-details[open] summary::before { transform: rotate(90deg); }
+details.runway-details summary::-webkit-details-marker { display: none; }
+
+/* ── Misc ───────────────────────────────────────────────────── */
+.section-divider { margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0; }
+
+/*
+ * ═══════════════════════════════════════════════════════════════
+ * END RETIREMENT PLANNER ADDITIONS
+ * ═══════════════════════════════════════════════════════════════
+ */
+</style>
+
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Comprehensive Retirement Planning</div>
+                <h1 class="hero-title">Maximize Your <span class="gradient-text">Retirement</span></h1>
+                <p class="hero-subtitle">Model Traditional 401(k)s, Roth accounts, Social Security, and interactive tax breakdowns to find your true take-home pay.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+
+            <div class="calculator-grid">
+
+                <div class="calculator-card">
+
+                    <div id="tab-mixed">
+                        <h3 class="card-title">Portfolio</h3>
+                        <p class="formula-note">Configure all four accounts below. These inputs also power the Taxes &amp; Payouts analysis. Projected balances update live.</p><br>
+
+                        <details class="account-accordion" open>
+                            <summary>
+                                <span class="account-accordion-label">Traditional 401(k)</span>
+                                <span class="account-accordion-value" id="mix_trad_summary">--</span>
+                            </summary>
+                            <div class="account-accordion-body">
+                                <div class="calculator-inputs">
+                                    <div class="input-group">
+                                        <label for="mix_tradBalance">Current Balance ($)</label>
+                                        <input type="text" id="mix_tradBalance" value="20,000" placeholder="e.g. 20,000" oninput="formatNumber(this); calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_tradContrib">Your Contribution (% of salary)</label>
+                                        <input type="number" id="mix_tradContrib" value="10" min="0" max="100" step="0.5" placeholder="e.g. 10" oninput="calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_employerMatch">Employer Match (%)</label>
+                                        <input type="number" id="mix_employerMatch" value="5" min="0" max="100" step="0.5" placeholder="e.g. 5" oninput="calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_matchLimit">Match Limit (% of salary)</label>
+                                        <input type="number" id="mix_matchLimit" value="6" min="0" max="100" step="0.5" placeholder="e.g. 6" oninput="calculateAll()">
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="account-accordion">
+                            <summary>
+                                <span class="account-accordion-label">Roth 401(k)</span>
+                                <span class="account-accordion-value" id="mix_roth_summary">--</span>
+                            </summary>
+                            <div class="account-accordion-body">
+                                <p class="formula-note" style="margin-bottom:10px;">Your contributions are Roth (tax-free at withdrawal). The employer match is deposited into a separate pre-tax bucket.</p>
+                                <div class="calculator-inputs">
+                                    <div class="input-group">
+                                        <label for="mix_rothBalance">Current Balance ($)</label>
+                                        <input type="text" id="mix_rothBalance" value="10,000" placeholder="e.g. 10,000" oninput="formatNumber(this); calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_rothContrib">Your Contribution (% of salary)</label>
+                                        <input type="number" id="mix_rothContrib" value="10" min="0" max="100" step="0.5" placeholder="e.g. 10" oninput="calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_rothEmployerMatch">Employer Match (%) <small>– deposited pre-tax</small></label>
+                                        <input type="number" id="mix_rothEmployerMatch" value="5" min="0" max="100" step="0.5" placeholder="e.g. 5" oninput="calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_rothMatchLimit">Match Limit (% of salary)</label>
+                                        <input type="number" id="mix_rothMatchLimit" value="6" min="0" max="100" step="0.5" placeholder="e.g. 6" oninput="calculateAll()">
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="account-accordion">
+                            <summary>
+                                <span class="account-accordion-label">Traditional IRA</span>
+                                <span class="account-accordion-value" id="mix_tradira_summary">--</span>
+                            </summary>
+                            <div class="account-accordion-body">
+                                <p class="formula-note" style="margin-bottom:10px;">Pre-tax contributions grow tax-deferred. Withdrawals in retirement are taxed as ordinary income. No employer match.</p>
+                                <div class="calculator-inputs">
+                                    <div class="input-group">
+                                        <label for="mix_tradIraBalance">Current Balance ($)</label>
+                                        <input type="text" id="mix_tradIraBalance" value="0" placeholder="e.g. 5,000" oninput="formatNumber(this); calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_tradIraContrib">Annual Contribution ($)</label>
+                                        <input type="text" id="mix_tradIraContrib" value="0" placeholder="e.g. 7,000" oninput="formatNumber(this); calculateAll()">
+                                    </div>
+                                    <p class="formula-note">2026 limit: $7,000/yr ($8,000 if age 50+). Income limits apply for deductibility.</p>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="account-accordion">
+                            <summary>
+                                <span class="account-accordion-label">Roth IRA</span>
+                                <span class="account-accordion-value" id="mix_ira_summary">--</span>
+                            </summary>
+                            <div class="account-accordion-body">
+                                <p class="formula-note" style="margin-bottom:10px;">After-tax contributions grow completely tax-free. No Required Minimum Distributions ever apply.</p>
+                                <div class="calculator-inputs">
+                                    <div class="input-group">
+                                        <label for="mix_iraBalance">Current Balance ($)</label>
+                                        <input type="text" id="mix_iraBalance" value="5,000" placeholder="e.g. 5,000" oninput="formatNumber(this); calculateAll()">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="mix_iraContrib">Annual Contribution ($)</label>
+                                        <input type="text" id="mix_iraContrib" value="7,000" placeholder="e.g. 7,000" oninput="formatNumber(this); calculateAll()">
+                                    </div>
+                                    <p class="formula-note">2026 limit: $7,000/yr ($8,000 if age 50+). Income limits apply.</p>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
+                    <hr class="section-divider">
+
+                    <h3 class="card-title">Global Settings</h3>
+                    <div class="calculator-inputs">
+                        <div class="input-group">
+                            <label for="salary">Annual Salary ($)</label>
+                            <input type="text" id="salary" value="75,000" placeholder="e.g. 75,000" oninput="formatNumber(this); calculateAll()">
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="currentAge">Current Age</label>
+                                <input type="number" id="currentAge" value="30" min="18" max="80" placeholder="e.g. 30" oninput="calculateAll()">
+                            </div>
+                            <div class="input-group">
+                                <label for="retirementAge">Retirement Age</label>
+                                <input type="number" id="retirementAge" value="65" min="30" max="100" placeholder="e.g. 65" oninput="calculateAll()">
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="returnRate">Annual Return (%)</label>
+                                <input type="number" id="returnRate" value="7" min="0" max="15" step="0.5" placeholder="e.g. 7" oninput="calculateAll()">
+                                <small class="input-note">Historical S&amp;P 500 average is ~10%; 7–8% is a conservative estimate.</small>
+                            </div>
+                            <div class="input-group">
+                                <label for="salaryIncrease">Salary Increase (%)</label>
+                                <input type="number" id="salaryIncrease" value="3" min="0" max="10" step="0.5" placeholder="e.g. 3" oninput="calculateAll()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="section-divider">
+
+                    <div id="tab-payouts">
+                        <h3 class="card-title">Retirement Income &amp; Runway Setup</h3>
+                        <p class="formula-note">These settings power the runway analysis below.</p>
+                        <div class="calculator-inputs">
+                            <div class="input-group">
+                                <label for="targetIncome">Target Annual Income ($)</label>
+                                <input type="text" id="targetIncome" value="80,000" placeholder="e.g. 80,000" oninput="formatNumber(this); calculateAll()">
+                            </div>
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label for="postReturnRate">Post-Retirement Return (%)</label>
+                                    <input type="number" id="postReturnRate" value="5" min="0" max="15" step="0.1" placeholder="e.g. 5" oninput="calculateAll()">
+                                </div>
+                                <div class="input-group">
+                                    <label for="lifeExpectancy">Life Expectancy (Age)</label>
+                                    <input type="number" id="lifeExpectancy" value="90" min="55" max="110" placeholder="e.g. 90" oninput="calculateAll()">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="withdrawalInflation">Withdrawal Growth / Inflation (%)</label>
+                                <input type="number" id="withdrawalInflation" value="2.5" min="0" max="8" step="0.5" placeholder="e.g. 2.5" oninput="calculateAll()">
+                            </div>
+
+                            <div class="toggle-container">
+                                <input type="checkbox" id="includeSS" onchange="calculateAll()" checked>
+                                <label for="includeSS">Include Social Security</label>
+                            </div>
+                            <div id="ss-inputs" style="margin-bottom: 0rem">
+                                <div class="input-group">
+                                    <label for="ssMonthly">Est. Monthly SS Benefit ($)</label>
+                                    <input type="text" id="ssMonthly" value="2,500" placeholder="e.g. 2,500" oninput="formatNumber(this); calculateAll()">
+                                </div>
+                            </div>
+
+                            <hr class="section-divider" style="margin-bottom: 0rem">
+                            <h3 class="card-title" style="margin-bottom: 0rem">Retirement Tax Setup</h3>
+                            <div class="input-group">
+                                <label for="filingStatus">Filing Status in Retirement</label>
+                                <select id="filingStatus" onchange="calculateAll()">
+                                    <option value="single">Single</option>
+                                    <option value="joint">Married Filing Jointly</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="withdrawStrategy">Withdrawal Strategy</label>
+                                <select id="withdrawStrategy" onchange="calculateAll()">
+                                    <option value="proportional">Proportional (Mix of Pre/Post-Tax)</option>
+                                    <option value="pretax-first">Pre-Tax First</option>
+                                    <option value="roth-first">Roth First</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem;">
+                        <button class="btnprimary" onclick="clearAll()">Reset</button>
+                    </div>
+
+                </div>
+
+                <div class="calculator-card">
+                    <div id="account-explanation" class="info-card"></div>
+                    <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Projection Results
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                            <button class="share-btn primary" onclick="downloadPDF()" id="downloadPdfBtn">
+                                📄 Save PDF
+                            </button>
+                        </div>
+                    </h3>
+                    <div class="calculator-results">
+                        <div class="result-card result-highlight">
+                            <div class="result-label">Total Portfolio at Retirement</div>
+                            <div class="result-value" id="finalBalance">$0</div>
+                            <div class="result-subtitle">At age <span id="retireAgeSpan">65</span></div>
+                        </div>
+                        <div class="split-results" id="splitBalances">
+                            <div class="result-card">
+                                <div class="result-label">Pre-Tax Balance</div>
+                                <div class="result-value" id="finalPreTax">$0</div>
+                                <div class="result-subtitle">Taxable upon withdrawal</div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Roth Balance</div>
+                                <div class="result-value" id="finalRoth">$0</div>
+                                <div class="result-subtitle">Tax-free withdrawal</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                  <h3 class="card-title" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">Retirement Runway</h3>
+                        
+
+                        <div class="runway-settings-bar" id="runwaySettingsBar">
+                            Targeting <strong id="hintTarget">$80,000</strong> withdrawn /yr<br>
+                            Retirement years <strong id="runwayYearsLabel">65</strong><br>
+                            Post-retirement return <strong id="hintReturn">5.0%</strong><br>
+                            Life exp. age <strong id="hintLifeExp">90</strong><br>
+                            <a href="#tab-payouts">Edit in Taxes &amp; Payouts</a>
+                        </div>
+
+                        <div class="runway-stats-grid">
+                            <div class="runway-stat-card">
+                                <div class="runway-stat-label">Portfolio Lasts Until</div>
+                                <div class="runway-stat-value" id="longevityDisplay">--</div>
+                            </div>
+                            <div class="runway-stat-card">
+                                <div class="runway-stat-label">Lifetime Fed Taxes</div>
+                                <div class="runway-stat-value" id="totalTaxesDisplay">--</div>
+                            </div>
+                            <div class="runway-stat-card">
+                                <div class="runway-stat-label">Total Withdrawn</div>
+                                <div class="runway-stat-value" id="totalWithdrawalsDisplay">--</div>
+                            </div>
+                            <div class="runway-stat-card">
+                                <div class="runway-stat-label">Tax Savings Available</div>
+                                <div class="runway-stat-value" id="taxSavingsDisplay">--</div>
+                            </div>
+                        </div>
+
+                        <div class="swr-indicator" id="swrIndicator"></div>
+
+                        <div class="gauge-wrap">
+                            <div class="gauge-header">
+                                <span>Portfolio Funding Coverage</span>
+                                <span id="gaugePct"></span>
+                            </div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill" id="gaugeFill" style="width:0%"></div>
+                            </div>
+                            <div class="gauge-labels">
+                                <span id="gaugeStart"></span>
+                                <span id="gaugeEnd"></span>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                <!-- Affilliate Link -->
+                <div class="calculator-card chart-card" style="margin-top: 1.5rem;">
+                    <h3 class="card-title">Now is the Time to Save for Retirement!</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            Ready to put savings away for Retirement? Open a retirement account or regular brokerage today with AFFILLIATENAME to start your journey!
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Start Retirement on AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-card chart-card"  style="margin-top: 1.5rem;">
+                    
+                    <!--
+                    <div id="chart-section">
+                        <canvas id="fourzerokChart"></canvas>
+                    </div>
+                    -->
+
+                    <div id="retirement-runway-section">
+                        <div id="tax-free-banner" class="tax-free-notice" style="display:none; margin-bottom: 1.5rem;">
+                            <strong>Tax-Free Account</strong>
+                            <p>Qualified Roth IRA withdrawals carry no federal income tax. Your retirement runway below reflects $0 in lifetime taxes from this account.</p>
+                        </div>
+
+                        <div id="tax-breakdown-section" style="display:none;">
+                            <h3 class="card-title">First Year Retirement Income &amp; Taxes</h3>
+                            <div class="split-results" style="margin-bottom:15px;">
+                                <div class="result-card result-card--success">
+                                    <div class="result-label">Take-Home Pay</div>
+                                    <div class="result-value" id="takeHomePay">$0</div>
+                                    <div class="result-subtitle">After estimated federal taxes</div>
+                                </div>
+                                <div class="result-card result-card--danger">
+                                    <div class="result-label">Effective Fed Tax Rate</div>
+                                    <div class="result-value" id="effectiveTaxRate">0%</div>
+                                    <div class="result-subtitle">Total Tax: <span id="totalTaxOwed">$0</span></div>
+                                </div>                                
+                            </div>
+                            <div class="calculation-methodology">
+                                <h4>Income Sources to Meet Target ($<span id="targetIncomeDisplay">0</span>)</h4>
+                                <div class="formula">Social Security: $<span id="ssAnnualDisplay">0</span></div>
+                                <div class="formula">Pre-Tax Withdrawal: $<span id="preTaxWithdrawalDisplay">0</span></div>
+                                <div class="formula">Roth Withdrawal: $<span id="rothWithdrawalDisplay">0</span></div>
+                            </div>
+                            <h4 style="margin-top:18px; font-size:0.95rem; font-weight:700; color:#374151;">Federal Tax Bracket Breakdown (2026 Rates)</h4>
+                            <table class="tax-table">
+                                <thead><tr><th>Bracket</th><th>Taxable Amount</th><th>Tax Owed</th></tr></thead>
+                                <tbody id="taxTableBody"></tbody>
+                            </table>
+                            <p class="formula-note">Includes the Standard Deduction ($<span id="stdDeductionDisplay">0</span>). Social Security taxability estimated via Combined Income rules.</p>
+                        </div>
+
+                        <div class="runway-chart-wrap">
+                            <h4 class="card-title" style="margin-bottom:12px;">Annual Withdrawals &amp; Portfolio Balance</h4>
+                            <canvas id="runwayChart"></canvas>
+                        </div>
+
+                        <div id="conversionOpportunities"></div>
+                        <div id="strategyComparison"></div>
+
+                        <details class="runway-details" style="margin-top:18px;">
+                            <summary>Year-by-Year Full Breakdown</summary>
+                            <div class="runway-table-wrap">
+                                <table class="runway-year-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Age</th>
+                                            <th>Start Balance</th>
+                                            <th>Pre-Tax W/D</th>
+                                            <th>Roth W/D</th>
+                                            <th>SS Income</th>
+                                            <th class="col-red">Fed Taxes</th>
+                                            <th class="col-green">Net Income</th>
+                                            <th>End Balance</th>
+                                            <th class="col-purple" id="runway-opt-header">Opt. Savings</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="runwayTableBody"></tbody>
+                                </table>
+                            </div>
+                        </details>
+
+                    </div>
+                    </div>
+                </div>
+        </div>
+    </section>
+
+    <section class="learn-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Key Considerations</h2>
+                <p>What the numbers don't capture</p>
+            </div>
+            <div class="learn-strategy">
+                <div class="strategy-grid">
+                    <div class="strategy-item">
+                        <h4>Tax Diversification</h4>
+                        <p>Holding both pre-tax and Roth accounts lets you control your taxable income in retirement - filling lower brackets with traditional withdrawals and pulling the rest tax-free.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>The 4% Rule</h4>
+                        <p>Withdraw no more than 4% of your portfolio in year one, adjusted for inflation annually. Historically this has sustained a 30-year retirement across most market conditions.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Required Minimum Distributions</h4>
+                        <p>Traditional 401(k) and IRA accounts require mandatory withdrawals starting at age 73. Roth accounts have no RMDs - a major advantage for estate planning and tax control.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Social Security Timing</h4>
+                        <p>Claiming at 62 gives a permanently lower benefit. Waiting until 70 raises your monthly amount by roughly 8% per year of delay - one of the most impactful retirement decisions you'll make.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='retirement-script.js') }}"></script>
+{% endblock %}

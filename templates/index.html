@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}MoneyByMath - New Age Financial Tools{% endblock %}
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero home-hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge-large">Financial Tools for new age</div>
+                <h1 class="hero-title-large">Take Control of Your <span class="gradient-text">Financial Future</span></h1>
+                <p class="hero-subtitle-large">Stop scrolling FinTok. Start using real calculators. Free tools to help you make smarter money decisions-from options trading to retirement planning.</p>
+                <div class="hero-cta">
+                    <a href="#calculators" class="btn btn-primary btn-large">Explore Calculators</a>
+                </div>
+                <div class="hero-features">
+                    <div class="hero-feature">
+                        <span class="feature-icon">✓</span>
+                        <span class="feature-text">No BS, Just Math</span>
+                    </div>
+                    <div class="hero-feature">
+                        <span class="feature-icon">✓</span>
+                        <span class="feature-text">Actually Useful</span>
+                    </div>
+                    <div class="hero-feature">
+                        <span class="feature-icon">✓</span>
+                        <span class="feature-text">Forever Free</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="stats-banner">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-icon">13</div>
+                    <div class="stat-content">
+                        <div class="stat-number">Tools</div>
+                        <div class="stat-label">Free Calculators</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">$0</div>
+                    <div class="stat-content">
+                        <div class="stat-number">Fees</div>
+                        <div class="stat-label">No Hidden Costs</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">No</div>
+                    <div class="stat-content">
+                        <div class="stat-number">Email</div>
+                        <div class="stat-label">Required</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">24/7</div>
+                    <div class="stat-content">
+                        <div class="stat-number">Access</div>
+                        <div class="stat-label">Always Available</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculators Grid -->
+    <section id="calculators" class="calculators-section">
+        <div class="container">
+            <div class="section-header-home">
+                <h2>Pick Your Calculator</h2>
+                <p>Choose the financial tool that fits what you're trying to figure out right now</p>
+            </div>
+            
+            <div class="calculators-grid">
+                <!-- Options Wheel -->
+                <a href="/options-wheel" class="calculator-card-link">
+                    <div class="calculator-icon">OPT</div>
+                    <h3>Options Wheel</h3>
+                    <p>Master the covered call and cash-secured put strategy with interactive modeling tools.</p>
+                    <div class="calculator-tag">Advanced</div>
+                </a>
+
+                <!-- Stock Analysis -->
+                <a href="/stock-analysis" class="calculator-card-link">
+                    <div class="calculator-icon">SA</div>
+                    <h3>Stock Analysis</h3>
+                    <p>Check a stock against our buy analysis tool to see if its a good buy.</p>
+                    <div class="calculator-tag">Advanced</div>
+                </a>
+
+                <!-- Coast FIRE -->
+                <a href="/coast-fire" class="calculator-card-link">
+                    <div class="calculator-icon">FIRE</div>
+                    <h3>Coast FIRE</h3>
+                    <p>Calculate when you can stop saving and let your investments compound to retirement.</p>
+                    <div class="calculator-tag">Popular</div>
+                </a>
+
+                <!-- Rent vs Buy -->
+                <a href="/rent-vs-buy" class="calculator-card-link">
+                    <div class="calculator-icon">HOME</div>
+                    <h3>Rent vs Buy</h3>
+                    <p>Compare the true costs of renting versus buying a home over time.</p>
+                    <div class="calculator-tag">Essential</div>
+                </a>
+                
+                <!-- Compound Interest -->
+                <a href="/afford-house" class="calculator-card-link">
+                    <div class="calculator-icon">CIATH</div>
+                    <h3>Can I Afford This House?</h3>
+                    <p>See how your current savings will stack up against the TRUE cost of buying a home.</p>
+                    <div class="calculator-tag">Essential</div>
+                </a>
+
+                <!-- Compound Interest -->
+                <a href="/compound-interest" class="calculator-card-link">
+                    <div class="calculator-icon">COMP</div>
+                    <h3>Compound Interest</h3>
+                    <p>See how your investments will grow over time with compound returns.</p>
+                    <div class="calculator-tag">Beginner</div>
+                </a>
+
+                <!-- Debt Payoff -->
+                <a href="/debt-payoff" class="calculator-card-link">
+                    <div class="calculator-icon">DEBT</div>
+                    <h3>Debt Payoff</h3>
+                    <p>Compare avalanche vs snowball methods and create a payoff plan.</p>
+                    <div class="calculator-tag">Essential</div>
+                </a>
+
+                <!-- Afford House Calculator -->
+                <a href="/afford-house" class="calculator-card-link">
+                    <div class="calculator-icon">HOUSING</div>
+                    <h3>Can I Afford This House?</h3>
+                    <p>See if you can ACTUALLY afford a new place to live.</p>
+                    <div class="calculator-tag">Essential</div>
+                </a>
+
+                <!-- Car Cost Calculator -->
+                <a href="/car-cost" class="calculator-card-link">
+                    <div class="calculator-icon">CARS</div>
+                    <h3>New vs Used Car</h3>
+                    <p>See the drastic differences between buying new vs used.</p>
+                    <div class="calculator-tag">Popular</div>
+                </a>
+
+                <!-- Tax Bracket Calculator -->
+                <a href="/federal-tax" class="calculator-card-link">
+                    <div class="calculator-icon">TAXES</div>
+                    <h3>Federal Tax Bracket</h3>
+                    <p>See a breakdown of your salary and what taxes get paid in each bracket.</p>
+                    <div class="calculator-tag">Popular</div>
+                </a>
+
+                <!-- Kids future Calculator -->
+                <a href="/kids-future" class="calculator-card-link">
+                    <div class="calculator-icon">KIDS</div>
+                    <h3>Set Up Kids Future</h3>
+                    <p>Get insight into what accounts to fund for your kid.</p>
+                    <div class="calculator-tag">Popular</div>
+                </a>
+
+                <!-- 401(k) Calculator -->
+                <a href="/loan-from-401k" class="calculator-card-link">
+                    <div class="calculator-icon">401(k) Loan</div>
+                    <h3>401(k) Loan vs Withdrawel</h3>
+                    <p>Find out the implications of taking out a 401(k) loan vs withdrawing early.</p>
+                    <div class="calculator-tag">Popular</div>
+                </a>
+
+                <!-- Mortgage Calculator -->
+                <a href="/mortgage-calculator" class="calculator-card-link">
+                    <div class="calculator-icon">Mortgage</div>
+                    <h3>A REAL Mortgage Breakdown</h3>
+                    <p>See how much your mortgage will ACTUALLY cost you.</p>
+                    <div class="calculator-tag">Essential</div>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Section -->
+    <section class="why-section-home">
+        <div class="container">
+            <div class="why-content">
+                <div class="why-header">
+                    <h2>Why MoneyByMath?</h2>
+                    <p class="why-subtitle">We're tired of finance gatekeepers and overpriced "gurus." So we built something better.</p>
+                </div>
+                <div class="why-grid">
+                    <div class="why-card">
+                        <div class="why-icon">►</div>
+                        <h3>No BS, Just Tools</h3>
+                        <p>Skip the finance-bro jargon and thousand-word blog posts. Get straight to calculating what actually matters for your money.</p>
+                    </div>
+                    <div class="why-card">
+                        <div class="why-icon">►</div>
+                        <h3>Actually Free</h3>
+                        <p>No hidden fees, no email gates, no "upgrade to premium" BS. Just genuinely useful financial tools that don't ask for your credit card.</p>
+                    </div>
+                    <div class="why-card">
+                        <div class="why-icon">►</div>
+                        <h3>Built for Speed</h3>
+                        <p>Quick calculations, clean interfaces, no unnecessary friction. Get your answer in seconds and move on with your life.</p>
+                    </div>
+                    <div class="why-card">
+                        <div class="why-icon">►</div>
+                        <h3>Real Math</h3>
+                        <p>Every calculator uses actual financial formulas, not estimates. Trust the numbers, make better decisions.</p>
+                    </div>
+                    <div class="why-card">
+                        <div class="why-icon">►</div>
+                        <h3>Works Everywhere</h3>
+                        <p>Phone, tablet, laptop-doesn't matter. No apps to download, no accounts to create. Just open and calculate.</p>
+                    </div>
+                    <div class="why-card">
+                        <div class="why-icon">►</div>
+                        <h3>Your Data Stays Yours</h3>
+                        <p>We don't track you, store your info, or sell your data. All calculations and storage happen in your browser. Period.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+

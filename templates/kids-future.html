@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Fund My Kid's Future - MoneyByMath{% endblock %}
+{% block content %}
+
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Family Finance</div>
+            <h1 class="hero-title">Fund My <span class="gradient-text">Kid's Future</span></h1>
+            <p class="hero-subtitle">529 vs. brokerage. College-bound vs. not. See which account wins - and exactly how much the IRS takes under each path.</p>
+        </div>
+    </div>
+</section>
+
+<section id="kidsCalc" class="calculator-section">
+    <div class="container">
+        <div class="calculator-grid">
+
+            <div class="calculator-card">
+                <h3 class="card-title">Child &amp; Contributions</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="childAge">Child's Current Age</label>
+                        <input type="number" id="childAge"
+                               placeholder="e.g. 3"
+                               min="0" max="17" step="1"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="targetAge">Target Age (to access funds)</label>
+                        <input type="number" id="targetAge"
+                               placeholder="e.g. 18"
+                               min="5" max="30" step="1"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Typically 18 (college) or 21 (UTMA/brokerage).</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="initialContrib">Initial Contribution ($)</label>
+                        <input type="text" inputmode="decimal" id="initialContrib"
+                               placeholder="e.g. 5,000"
+                               data-input-type="currency" data-min="0" data-max="1000000"
+                               oninput="handleInput(this)">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="monthlyContrib">Monthly Contribution ($)</label>
+                        <input type="text" inputmode="decimal" id="monthlyContrib"
+                               placeholder="e.g. 200"
+                               data-input-type="currency" data-min="0" data-max="10000"
+                               oninput="handleInput(this)">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Rates &amp; Tax Assumptions</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="kidsReturn">Expected Annual Return (%)</label>
+                        <input type="number" id="kidsReturn"
+                               placeholder="e.g. 8"
+                               min="1" max="20" step="0.5"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Historical S&amp;P 500 average is ~10%; 7–8% is a conservative estimate.</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="kidsTaxBracket">Parent's Income Tax Bracket (%)</label>
+                        <input type="number" id="kidsTaxBracket"
+                               placeholder="e.g. 22"
+                               min="10" max="37" step="1"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Used to calculate 529 non-qualified penalty and brokerage tax drag.</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="capitalGainsRate">Long-Term Capital Gains Rate (%)</label>
+                        <input type="number" id="capitalGainsRate"
+                               placeholder="e.g. 15"
+                               min="0" max="20" step="1"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Typically 0%, 15%, or 20% depending on income.</small>
+                    </div>
+
+                </div>
+                <div style="margin-top:1rem;">
+                    <button class="btnprimary" onclick="clearAll()">Reset</button>
+                </div>
+            </div>
+
+            <div class="calculator-card chart-card">
+                <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Path Comparison at Target Age
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                        </div>
+                    </h3>
+                <div class="calculator-results">
+
+                    <div class="result-card result-highlight" style="background:#f8fafc; border-left:4px solid var(--primary);">
+                        <div class="result-label">Verdict</div>
+                        <div class="result-value" id="kidsVerdict">Fill in fields to calculate</div>
+                        <div class="result-subtitle" id="kidsVerdictSubtitle"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Total Contributions</div>
+                        <div class="result-value" id="totalContribs">--</div>
+                        <div class="result-subtitle">Your money going in</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Raw Projected Balance (529)</div>
+                        <div class="result-value" id="balance529">--</div>
+                        <div class="result-subtitle" id="balance529Subtitle">Full tax-free growth</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Path A - College: 529 Net Spendable</div>
+                        <div class="result-value" id="pathA529">--</div>
+                        <div class="result-subtitle">Tax-free for qualified education expenses. Best option for college.</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Path A - College: Brokerage Net Spendable</div>
+                        <div class="result-value" id="pathABrokerage">--</div>
+                        <div class="result-subtitle" id="pathABrokerageSubtitle">After capital gains tax on profits</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Path B - Non-College: 529 Net Spendable</div>
+                        <div class="result-value" id="pathB529">--</div>
+                        <div class="result-subtitle" id="pathB529Subtitle">After 10% penalty + income tax on earnings</div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="result-label">Path B - Non-College: Brokerage Net Spendable</div>
+                        <div class="result-value" id="pathBBrokerage">--</div>
+                        <div class="result-subtitle" id="pathBBrokerageSubtitle">After capital gains tax on profits. Best for non-college use.</div>
+                    </div>
+
+                </div>
+                <div style="margin-top:1rem;">
+                    <canvas id="kidsChart" style="max-height:220px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Affilliate Link -->
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">Invest Now, and Your Kid Will Thank You Later...</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            It's time to start investing. Open a brokerage account with AFFILLIATENAME to start investing today.
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Start Investing on AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+            </div>
+
+            <div class="calculator-card chart-card">
+                <h3 class="card-title">How It's Calculated</h3>
+                <div class="formula">
+                    <strong>529 Plan:</strong> Compounds at the full expected return, tax-free. Qualified education withdrawals are 100% tax-free. For non-qualified use, only the earnings (not contributions) are subject to income tax plus the 10% penalty.
+                </div>
+                <div class="formula">
+                    <strong>529 Penalty Math:</strong> Total Penalty = Earnings × (Income Tax Rate + 0.10). Your contributions always come out penalty-free - only the growth is taxed.
+                </div>
+                <div class="formula">
+                    <strong>Taxable Brokerage:</strong> An annual "tax drag" is applied - approximately 1.5% dividend yield taxed at your ordinary income rate each year. At sale, long-term capital gains tax applies to total profits (balance minus contributions).
+                </div>
+                <div class="formula">
+                    <strong>Custodial Roth IRA:</strong> Not modeled here, but worth considering if your child has earned income - contributions can always be withdrawn penalty-free, and earnings grow tax-free if held to age 59½.
+                </div>
+                <p class="formula-note">College-bound: 529 wins clearly. Non-college: a taxable brokerage (or UTMA) almost always beats a penalized 529 withdrawal. The longer the time horizon, the bigger the 529 advantage for education.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='kids-future-script.js') }}"></script>
+{% endblock %}

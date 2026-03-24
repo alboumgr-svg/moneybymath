@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debt Payoff Calculator - FinanceHub</title>
+    <meta name="description" content="Compare debt payoff strategies: avalanche vs snowball method.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="index.html" class="logo">
+                    <img src="logo.png" alt="MoneyByMath" class="nav-logo">
+                </a>
+                <div class="nav-links">
+                    <a href="index.html">Home</a>
+                    <a href="options-wheel.html">Options Wheel</a>
+                    <a href="coast-fire.html">Coast FIRE</a>
+                    <a href="rent-vs-buy.html">Rent vs Buy</a>
+                    <a href="compound-interest.html">Compound Interest</a>
+                    <a href="debt-payoff.html">Debt Payoff</a>
+                    <a href="401k-calculator.html">401(k)</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Debt Freedom</div>
+                <h1 class="hero-title">Destroy Your <span class="gradient-text">Debt</span></h1>
+                <p class="hero-subtitle">Compare avalanche vs snowball methods and create your personalized debt payoff plan.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+            <div class="calculator-grid">
+                <div class="calculator-card">
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" onclick="switchMode('debt')">Multiple Debts</button>
+                        <button class="mode-btn" onclick="switchMode('mortgage')">Mortgage Payoff</button>
+                    </div>
+
+                    <div id="debtMode">
+                        <h3 class="card-title">Your Debts</h3>
+                        <div class="calculator-inputs">
+                            <div id="debtList" class="debt-list"></div>
+                            <button class="add-debt-btn" onclick="addDebt()">+ Add Another Debt</button>
+                            <div class="input-group" style="margin-top: 1.5rem;">
+                                <label>Monthly Payment Amount ($)</label>
+                                <input type="text" id="monthlyPayment" value="800" oninput="formatNumber(this); calculateDebt()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mortgageMode" style="display:none;">
+                        <h3 class="card-title">Mortgage Details</h3>
+                        <div class="calculator-inputs">
+                            <div class="input-group">
+                                <label>Remaining Balance ($)</label>
+                                <input type="text" id="mortgageBalance" value="250000" oninput="formatNumber(this); calculateMortgage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Interest Rate (APR %)</label>
+                                <input type="number" id="mortgageRate" value="4.5" step="0.1" oninput="calculateMortgage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Current Monthly Payment ($)</label>
+                                <input type="text" id="mortgagePayment" value="1500" oninput="formatNumber(this); calculateMortgage()">
+                            </div>
+                            <div class="input-group">
+                                <label>Extra Monthly Payment ($)</label>
+                                <input type="text" id="extraPayment" value="0" oninput="formatNumber(this); calculateMortgage()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="calculator-card">
+                    <h3 class="card-title" id="resultsTitle">Payoff Comparison</h3>
+                    <div class="calculator-results" id="debtResults">
+                        <div class="result-card result-highlight">
+                            <div class="result-label">Best Method</div>
+                            <div class="result-value-status" id="bestMethod">Calculating...</div>
+                        </div>
+                        
+                        <div class="result-card">
+                            <div class="result-label">Avalanche Method</div>
+                            <div class="result-value" id="avalancheTime">--</div>
+                            <div class="result-subtitle" id="avalancheInterest">$0 interest</div>
+                            <div class="date-display" id="avalancheDate"></div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Snowball Method</div>
+                            <div class="result-value" id="snowballTime">--</div>
+                            <div class="result-subtitle" id="snowballInterest">$0 interest</div>
+                            <div class="date-display" id="snowballDate"></div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Savings with Avalanche</div>
+                            <div class="result-value" id="savings">$0</div>
+                            <div class="result-subtitle">Less interest paid</div>
+                        </div>
+                    </div>
+
+                    <div class="calculator-results" id="mortgageResults" style="display:none;">
+                        <div class="result-card result-highlight">
+                            <div class="result-label">Payoff Date</div>
+                            <div class="result-value-status" id="mortgagePayoffDate">--</div>
+                        </div>
+                        
+                        <div class="result-card">
+                            <div class="result-label">Time to Payoff</div>
+                            <div class="result-value" id="mortgageTime">--</div>
+                            <div class="result-subtitle">Months remaining</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Total Interest</div>
+                            <div class="result-value" id="mortgageInterest">$0</div>
+                            <div class="result-subtitle">Over life of loan</div>
+                        </div>
+
+                        <div class="result-card">
+                            <div class="result-label">Interest Saved</div>
+                            <div class="result-value" id="mortgageSaved">$0</div>
+                            <div class="result-subtitle">With extra payments</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Debt Payoff Progress</h3>
+                    <canvas id="debtChart"></canvas>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title">Understanding the Methods</h3>
+                    <div class="strategy-breakdown">
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Avalanche Method</div>
+                                <div class="step-desc">Pay minimums on all debts, then put extra toward the highest interest rate. Saves the most money mathematically.</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Snowball Method</div>
+                                <div class="step-desc">Pay minimums on all debts, then put extra toward the smallest balance. Builds momentum with quick wins.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calculator-card">
+                    <h3 class="card-title">How It's Calculated</h3>
+                        <div class="formula">
+                            <strong>Monthly Interest:</strong> Balance × (APR ÷ 12)
+                        </div>
+                        <div class="formula">
+                            <strong>Payment Allocation:</strong> After accruing interest, your payment is applied to balances based on method priority
+                        </div>
+                        <div class="formula">
+                            <strong>Total Interest:</strong> Sum of all interest charges across all debts until fully paid
+                        </div>
+                        <p class="formula-note">Simulator runs month-by-month until all debts reach $0 balance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="logo.png" alt="MoneyByMath" class="footer-logo">
+                    </div>
+                    <p>Free financial calculators and tools for new age to build wealth and make informed money decisions.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="index.html#newsletter">Newsletter</a>
+                        <a href="index.html#calculators">Calculators</a>
+                        <a href="index.html">Home</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Community</h4>
+                        <a href="https://twitter.com/moneybymath" target="_blank" rel="noopener noreferrer">Follow on X</a>
+                        <a href="mailto:hello@moneybymath.com">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-disclaimer">
+                <p><strong>DISCLAIMER:</strong> The information provided on this website is for educational purposes only and should not be considered financial advice. All calculations are estimates and actual results may vary. Please consult with a qualified financial advisor before making any investment decisions. We are not registered financial advisors and do not provide personalized investment advice.</p>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MoneyByMath. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="debt-payoff-script.js"></script>
+</body>
+</html>

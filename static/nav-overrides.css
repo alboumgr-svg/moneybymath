@@ -1,0 +1,125 @@
+/* ============================================================
+   Nav overrides — add this AFTER styles.css in base.html
+   ============================================================ */
+
+/* Desktop (>1150px): all links visible, normal spacing */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+}
+
+.nav-links > a {
+    white-space: nowrap;
+}
+
+/* Always hide the More button on desktop and mobile
+   (mobile uses hamburger, desktop shows all links) */
+.nav-more {
+    display: none;
+}
+
+/* ── Medium screens 769px – 1150px ── */
+@media (min-width: 769px) and (max-width: 1920px) {
+
+    /* Tighten gap */
+    .nav-links {
+        gap: 1.0rem;
+    }
+
+    /* Hide overflow links in the main row */
+    .nav-links > a.nav-overflow {
+        display: none;
+    }
+
+    /* Show the More button */
+    .nav-more {
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+}
+
+/* ── More button ── */
+.nav-more-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: none;
+    border: 1.5px solid var(--border-dark);
+    border-radius: 8px;
+    padding: 0.375rem 0.8rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.nav-more-btn:hover,
+.nav-more-btn.active {
+    color: var(--primary);
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.nav-more-arrow {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+    display: inline-block;
+    line-height: 1;
+}
+
+.nav-more-btn.active .nav-more-arrow {
+    transform: rotate(180deg);
+}
+
+/* ── Dropdown panel ── */
+.nav-more-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.65rem);
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.10);
+    min-width: 190px;
+    padding: 0.4rem;
+    z-index: 1200;
+    flex-direction: column;
+    gap: 0.1rem;
+    /* Subtle entrance animation */
+    transform-origin: top right;
+    animation: none;
+}
+
+.nav-more-dropdown.active {
+    display: flex;
+    animation: dropdownIn 0.18s ease;
+}
+
+@keyframes dropdownIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+.nav-more-dropdown a {
+    display: block;
+    padding: 0.6rem 0.9rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+
+.nav-more-dropdown a:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}

@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Coast FIRE Calculator - MoneyByMath{% endblock %}
+{% block content %}
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">FIRE Planning</div>
+                <h1 class="hero-title">Calculate Your <span class="gradient-text">Coast FIRE</span> Number</h1>
+                <p class="hero-subtitle">Find out when you can stop saving and let compound interest carry you to retirement. Coast FIRE (Financially Independent Retire Early) means your current savings will grow to your FI number without additional contributions. 
+                    <br><br><strong>Note:</strong> These calculations are based on a 
+                    <strong>tax-free</strong> retirment account (Roth IRA or Roth 401(k)). 
+                    A pre-tax 401(k) will require a substantially higher retirement portfolio. 
+                    See the <a href="/retirement" class="inlineLinks">Retirement Calculator</a> to 
+                    understand the full scope of retirement, including tax implications.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="calculator" class="calculator-section">
+        <div class="container">
+            <div class="calculator-grid">
+
+                <div class="calculator-card">
+
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" data-tab="find" onclick="switchTab('find')">Find My Number</button>
+                        <button class="mode-btn" data-tab="track" onclick="switchTab('track')">My Savings Rate</button>
+                    </div>
+
+                    <div id="calcError" style="display:none; background:#FEF2F2; color:#B91C1C; border:1px solid #FECACA; border-radius:8px; padding:0.65rem 1rem; font-size:0.9rem; font-weight:500; margin-bottom:1rem;"></div>
+
+                    <div class="calculator-inputs">
+                        <div class="input-group">
+                            <label for="currentAge">Current Age</label>
+                            <input type="number" id="currentAge" placeholder="e.g. 30" min="1" max="99" oninput="calculateCoastFIRE(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="retirementAge">Target Retirement Age</label>
+                            <input type="number" id="retirementAge" placeholder="e.g. 65" min="2" max="100" oninput="calculateCoastFIRE(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="currentSavings">Current Savings ($)</label>
+                            <input type="text" id="currentSavings" placeholder="e.g. 50,000" oninput="formatNumber(this); calculateCoastFIRE(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="annualSpending" id="annualSpendingLabel">Annual Spending in Retirement ($)</label>
+                            <input type="text" id="annualSpending" placeholder="e.g. 60,000" oninput="onSpendingInput(this)">
+                            <small class="input-note" id="taxBufferNote">The total amount you wish to spend per year in retirement.</small>
+                            <div id="taxCheckboxWrapper" style="display:none; align-items:center; gap:0.5rem; margin-top:0.4rem;">
+                                <input type="checkbox" id="taxAccountCheckbox" onchange="handleTaxCheckbox()" style="width:auto; cursor:pointer; accent-color:#2563EB; flex-shrink:0;">
+                                <label for="taxAccountCheckbox" style="font-size:0.82rem; color:#374151; cursor:pointer; margin:0; font-weight:500; line-height:1.3;">Apply pre-tax adjustment to this field</label>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="withdrawalRate">Safe Withdrawal Rate (%)</label>
+                            <input type="number" id="withdrawalRate" placeholder="e.g. 4" min="0.1" max="50" step="0.1" oninput="calculateCoastFIRE(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="returnRate">Expected Annual Return (%)</label>
+                            <input type="number" id="returnRate" placeholder="e.g. 7" min="0" max="50" step="0.5" oninput="calculateCoastFIRE(); saveToStorage()">
+                            <small class="input-note">Historical S&amp;P 500 average is ~10%; 7–8% is a conservative estimate.</small>
+                        </div>
+
+                        <div id="tab-find">
+                            <div class="input-group">
+                                <label for="coastTargetAge">Target Coast FIRE Age</label>
+                                <input type="number" id="coastTargetAge" min="1" max="99" step="1" placeholder="Defualts to halfway" oninput="calculateCoastFIRE(); saveToStorage()">
+                            </div>
+                        </div>
+
+                        <div id="tab-track" style="display:none;">
+                            <div class="input-group">
+                                <label for="userMonthlySavings">Your Monthly Retirement Savings ($)</label>
+                                <input type="text" id="userMonthlySavings" placeholder="e.g. 1,000" oninput="formatNumber(this); calculateCoastFIRE(); saveToStorage()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem;">
+                        <button class="btnprimary" onclick="clearAll()">Reset</button>
+                    </div>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        Your Coast FIRE Results
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                                📎︎ Share Results
+                            </button>
+                        </div>
+                    </h3>
+
+                    <div class="calculator-results" id="results-find">
+                        <div class="result-card result-highlight">
+                            <div class="result-label">Coast FIRE Number</div>
+                            <div class="result-value" id="coastNumber">$0</div>
+                            <div class="result-subtitle" id="result-subtitle">Amount needed in your account <strong>today</strong> to coast to retirement</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Your FI Number</div>
+                            <div class="result-value" id="fiNumber">$0</div>
+                            <div class="result-subtitle">Total needed at retirement</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Years Until Coast FIRE</div>
+                            <div class="result-value" id="yearsToCoast">--</div>
+                            <div class="result-subtitle" id="coastAge">Age --</div>
+                            <div class="date-display" id="coastDate"></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Monthly Savings Needed</div>
+                            <div class="result-value" id="monthlySavings">$0</div>
+                            <div class="result-subtitle">To reach Coast FIRE by your <strong>target age</strong></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Status</div>
+                            <div class="result-value" id="coastStatus">Calculating...</div>
+                        </div>
+                    </div>
+
+                    <div class="calculator-results" id="results-track" style="display:none;">
+                        <div class="result-card">
+                            <div class="result-label">When You'll Hit Coast FIRE With Your Current Savings Rate</div>
+                            <div class="result-value" id="userCoastTime">--</div>
+                            <div class="result-subtitle" id="userCoastAge">Enter your monthly savings on the left</div>
+                            <div class="date-display" id="userCoastDate"></div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label" id="userBalCardLabel">Portfolio Value at Coast FIRE</div>
+                            <div class="result-value" id="userBalAtCoast">--</div>
+                            <div class="result-subtitle" id="userBalSubtitle">
+                                Your balance when you can stop contributing
+                            </div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Your FI Number</div>
+                            <div class="result-value" id="fiNumber2">$0</div>
+                            <div class="result-subtitle">
+                                Total needed at retirement
+                            </div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">Explanation</div>
+                            <div class="result-subtitle">
+                                <span id="explanationWording">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Growth Projection</h3>
+                    <canvas id="coastChart"></canvas>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title">Understanding the Results</h3>
+                    <div class="strategy-breakdown">
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">FI Number</div>
+                                <div class="step-desc">Your annual spending ÷ safe withdrawal rate. This is the total portfolio you need at retirement to never run out of money.</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Coast FIRE Number</div>
+                                <div class="step-desc">The amount you need today that will grow to your FI number by retirement age, assuming no additional contributions.</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">The Power of Time</div>
+                                <div class="step-desc">The younger you are, the less you need today thanks to decades of compound growth. Start early!</div>
+                            </div>
+                        </div>
+                        <div class="breakdown-step">
+                            <div class="step-icon">►</div>
+                            <div class="step-details">
+                                <div class="step-title">Some Differences you May See</div>
+                                <div class="step-desc">You may notice that the Coast FIRE number shown under “Find My Number” differs from the Portfolio Value at Coast FIRE shown under “My Savings Rate.” That difference is intentional.
+
+                                                        The value in “Find My Number” represents the amount you would need today to stop contributing immediately and still reach full FI by retirement through compounding alone.
+
+                                                        If you don’t already have that amount, you must continue investing to reach it. During that time, your portfolio keeps growing from both contributions and compounding. As a result, by the time you actually hit Coast FIRE under the “My Savings Rate” scenario, your portfolio balance will typically be higher than the original “today” Coast number.
+                                </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calculator-card">
+                    <h3 class="card-title">How It's Calculated</h3>
+                    <div class="formula">
+                        <strong>FI Number =</strong> Annual Spending ÷ Safe Withdrawal Rate
+                    </div>
+                    <div class="formula">
+                        <strong>Coast FIRE Number =</strong> FI Number ÷ (1 + Annual Return)<sup>Years to Retirement</sup>
+                    </div>
+                    <div class="formula">
+                        <strong>Monthly Savings =</strong> Future Value of Annuity formula to reach Coast FIRE by target age
+                    </div>
+                    <div class="formula" style="background:#EFF6FF; border-left:3px solid #2563EB; padding:0.75rem 1rem; border-radius:0 8px 8px 0; margin-top:0.5rem; font-size:0.875rem; color:#374151;">
+                        <strong>What is the Safe Withdrawal Rate?</strong><br>
+                        The SWR is the percentage of your portfolio you can withdraw each year in retirement without running out of money. The classic research-backed figure is <strong>4%</strong> (the "4% Rule"), meaning a $1M portfolio supports $40,000/year of spending indefinitely. A lower rate (e.g. 3%) is more conservative for longer retirements; a higher rate (e.g. 5%) assumes a shorter or more flexible retirement. At 4%, your FI number is simply <strong>25× your annual spending</strong>.
+                    </div>
+                </div>
+
+                <!-- Affilliate Link -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Now That You Know Your Coast FIRE Number... Take Action!</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            Ready to put savings away to try and reach Coast FIRE? Open a retirement account or regular brokerage today with AFFILLIATENAME to start your journey!
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Start Trading on AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        
+    </section>
+
+    <section class="learn-section">
+        <div class="container">
+            <div class="learn-strategy">
+                <div class="section-header">
+                    <h2>What Does Coast FIRE Mean to You?</h2>
+                    <p>The freedom to stop aggressive saving</p>
+                </div>
+                <div class="strategy-grid">
+                    <div class="strategy-item">
+                        <h4>Coast to Retirement</h4>
+                        <p>You've saved enough that compound interest alone will grow your portfolio to your FI number by retirement age - no more contributions needed.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Work Optional</h4>
+                        <p>You can take lower-paying but more fulfilling jobs, work part-time, or just cover current expenses without worrying about retirement savings.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Financial Security</h4>
+                        <p>Even if you never save another dollar, your retirement is secured. Any future savings is pure gravy or early retirement.</p>
+                    </div>
+                    <div class="strategy-item">
+                        <h4>Earlier Than Full FIRE</h4>
+                        <p>Coast FIRE typically happens 10-15 years before full FIRE, giving you freedom in your 30s or 40s instead of waiting until your 50s.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='coast-fire-script.js') }}"></script>
+{% endblock %}
