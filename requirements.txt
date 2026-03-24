@@ -1,3 +1,7 @@
+# Ensure build deps
+setuptools>=68.0
+wheel>=0.42
+
 flask==3.0.3
 flask-cors==4.0.1
 yfinance==0.2.40
