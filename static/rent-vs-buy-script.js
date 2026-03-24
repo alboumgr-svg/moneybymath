@@ -1,5 +1,5 @@
 let rentBuyChart = null;
-const API_BASE = 'http://localhost:5000'; // ← change to your Render URL for production
+const API_BASE = window.location.origin; 
 
 const STATE_IDS = ['homePrice','downPaymentPct','downPaymentDollar','mortgageRate','mortgageTerm',
                       'propertyTaxDollar','propertyTaxPct','homeInsurance','hoaFees',
@@ -610,7 +610,7 @@ async function loadMortgageRate() {
         }
 
         if (label) {
-            label.innerHTML = `Interest Rate (APR %) <br><span style="color:var(--primary)">Current Avg: ${rate}% (provided by Freddie Mac through <a href="https://fred.stlouisfed.org/series/MORTGAGE30US" target="_blank" rel="noopener" class="inlineLinks">FRED® API)</a></span>`;
+            label.innerHTML = `Interest Rate (APR %) <br><span style="color:var(--primary)">Current Avg: ${rate}% (provided by Freddie Mac via <a href="https://fred.stlouisfed.org/series/MORTGAGE30US" target="_blank" rel="noopener" class="inlineLinks">FRED® API)</a></span>`;
         }
 
     } catch (err) {

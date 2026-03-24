@@ -4,9 +4,9 @@
 //  Change API_BASE to your Render URL when deploying.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const API_BASE = 'http://localhost:5000'; // ← change to your Render URL for production
+const API_BASE = window.location.origin; 
 
-const DAILY_LIMIT = 3;
+const DAILY_LIMIT = 10;
 const STORAGE_KEY = 'stock_lookups'; // use a different key per page if you want separate limits
 
 function getRateLimitData() {

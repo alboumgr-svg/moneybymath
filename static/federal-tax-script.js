@@ -5,7 +5,7 @@
    - localStorage persistence
 */
 
-const API_BASE = 'http://localhost:5000'; // ← change to your Render URL for production
+const API_BASE = window.location.origin; 
 
 // ─── 2026 Tax Data ────────────────────────────────────────────────────────────
 

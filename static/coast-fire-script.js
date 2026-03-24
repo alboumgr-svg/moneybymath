@@ -8,7 +8,7 @@ const STATE_IDS = [
 let taxData = null;
 let originalSpending = null; // Stores pre-tax-adjustment spending value
 
-const API_BASE = 'http://localhost:5000'; // ← change to your Render URL for production
+const API_BASE = window.location.origin; 
 
 // Fetch the tax data when the script loads
 async function fetchTaxData() {

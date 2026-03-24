@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 # Allow requests from your site. In production replace "*" with your domain,
 # e.g. CORS(app, origins=["https://moneybymath.com"])
-CORS(app)
+CORS(app, origins=["https://moneybymath.com"])
 
 @app.route("/")
 def index():

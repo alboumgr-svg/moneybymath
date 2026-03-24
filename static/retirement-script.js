@@ -6,7 +6,7 @@ let fourzerokChart = null;
 let runwayChart    = null;
 let currentActiveTab = 'mixed';
 
-const API_BASE = 'http://localhost:5000'; // ← change to your Render URL for production
+const API_BASE = window.location.origin; 
 
 // ── 2026 Federal Income Tax Brackets ────────────────────────────────
 // Reflects inflation-adjusted TCJA rates for tax year 2026
