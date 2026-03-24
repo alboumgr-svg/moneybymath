@@ -51,6 +51,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
+    bottom: vh-70px;
     z-index: 1000;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -126,13 +127,49 @@ body {
     }
 }
 
-/* ── "More" button & dropdown ── */
-.nav-more {
-    display: none;
-    position: relative;
+/* ============================================================
+   Nav overrides — add this AFTER styles.css in base.html
+   ============================================================ */
+
+/* Desktop (>1150px): all links visible, normal spacing */
+.nav-links {
+    display: flex;
     align-items: center;
+    gap: 1.75rem;
 }
 
+.nav-links > a {
+    white-space: nowrap;
+}
+
+/* Always hide the More button on desktop and mobile
+   (mobile uses hamburger, desktop shows all links) */
+.nav-more {
+    display: none;
+}
+
+/* ── Medium screens 769px – 1150px ── */
+@media (min-width: 769px) and (max-width: 1920px) {
+
+    /* Tighten gap */
+    .nav-links {
+        gap: 1.0rem;
+    }
+
+    /* Hide overflow links in the main row */
+    .nav-links > a.nav-overflow {
+        display: none;
+    }
+
+    /* Show the More button */
+    .nav-more {
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+}
+
+/* ── More button ── */
 .nav-more-btn {
     display: flex;
     align-items: center;
@@ -140,7 +177,7 @@ body {
     background: none;
     border: 1.5px solid var(--border-dark);
     border-radius: 8px;
-    padding: 0.35rem 0.75rem;
+    padding: 0.375rem 0.8rem;
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -148,6 +185,7 @@ body {
     font-family: 'Inter', sans-serif;
     transition: all 0.2s ease;
     white-space: nowrap;
+    line-height: 1;
 }
 
 .nav-more-btn:hover,
@@ -158,38 +196,49 @@ body {
 }
 
 .nav-more-arrow {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     transition: transform 0.2s ease;
     display: inline-block;
+    line-height: 1;
 }
 
 .nav-more-btn.active .nav-more-arrow {
     transform: rotate(180deg);
 }
 
+/* ── Dropdown panel ── */
 .nav-more-dropdown {
     display: none;
     position: absolute;
-    top: calc(100% + 0.6rem);
+    top: calc(100% + 0.65rem);
     right: 0;
-    background: var(--bg-white);
+    background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    min-width: 180px;
-    padding: 0.5rem;
-    z-index: 1100;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.10);
+    min-width: 190px;
+    padding: 0.4rem;
+    z-index: 1200;
     flex-direction: column;
-    gap: 0.125rem;
+    gap: 0.1rem;
+    /* Subtle entrance animation */
+    transform-origin: top right;
+    animation: none;
 }
 
 .nav-more-dropdown.active {
     display: flex;
+    animation: dropdownIn 0.18s ease;
+}
+
+@keyframes dropdownIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
 }
 
 .nav-more-dropdown a {
     display: block;
-    padding: 0.625rem 0.875rem;
+    padding: 0.6rem 0.9rem;
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.875rem;
@@ -197,12 +246,14 @@ body {
     border-radius: 8px;
     transition: background 0.15s ease, color 0.15s ease;
     white-space: nowrap;
+    animation: slideFade 0.35s forwards;
 }
 
 .nav-more-dropdown a:hover {
     background: var(--primary-light);
     color: var(--primary);
 }
+
 
 .nav-links a:hover {
     color: var(--text-primary);
@@ -2584,17 +2635,17 @@ section {
 
     .nav-links {
         position: fixed;
-        top: 0;
+        top: 70px;
         left: 0;
         right: 0;
         bottom: 0;
         background: #ffffff;
         flex-direction: column;
-        justify-content: center;
-        height: 100vh;        
-        min-height: 100vh;
+        justify-content: flex-start;
+        height: auto;        
+        min-height: 90vh;
         align-items: center;
-        padding: 8rem 2rem 2rem;
+        padding: 0rem 2rem 2rem 1rem;
         gap: 0.1rem;
         text-align: center;
         opacity: 0;
@@ -2604,6 +2655,7 @@ section {
         display: flex;
         z-index: 999;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .nav-links.active {
@@ -3179,4 +3231,928 @@ details.runway-details summary::-webkit-details-marker { display: none; }
 
 .disclosure-box strong {
     color: #4B5563;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   1 — GLOBAL RESETS & iOS FIXES
+   ══════════════════════════════════════════════════════════════ */
+ 
+html { -webkit-overflow-scrolling: touch; }
+ 
+@media (max-width: 768px) {
+    .calculator-card, .result-card, .debt-item, .learn-card,
+    .why-card, .calculator-card-link, .stock-card,
+    .ba-explainer-card, .runway-chart-wrap,
+    .conversion-panel, .strategy-comparison-panel {
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+}
+ 
+/* iOS Safari auto-zoom prevention: any input < 16px triggers zoom */
+@media (max-width: 768px) {
+    .input-group input,
+    .input-group select,
+    .input-group textarea,
+    .signup-form input,
+    .checker-ticker-input,
+    .ba-ticker-input { font-size: 16px !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   2 — CONTAINER & SECTION SPACING
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 768px) { .container { padding: 0 0.875rem; } }
+ 
+@media (max-width: 480px) {
+    .container           { padding: 0 0.75rem; }
+    section              { padding: 2rem 0 !important; }
+    .calculator-section  { padding: 1.5rem 0 !important; }
+    .why-section-home    { padding: 2.5rem 0 !important; }
+    .learn-section       { padding: 2rem 0 !important; }
+    .stocks-section      { padding: 2rem 0 !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   3 — NAVBAR & LOGO
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 380px) {
+    .nav-logo    { height: 30px !important; }
+    .nav-content { padding: 0.625rem 0 !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   4 — HERO SECTIONS
+   ══════════════════════════════════════════════════════════════ */
+ 
+/* Standard hero (all calculator pages) */
+@media (max-width: 768px) {
+    .hero {
+        min-height: 0 !important;
+        padding-top: 74px !important;
+        padding-bottom: 2rem !important;
+    }
+    .hero-content    { padding: 0; }
+    .hero-badge      { padding: 0.3rem 0.75rem !important; font-size: 0.8rem !important; margin-bottom: 0.5rem !important; margin-top: 0.5rem !important;}
+    .hero-title      { font-size: clamp(1.6rem, 7.5vw, 2.25rem) !important; margin-bottom: 0.5rem !important; line-height: 1.15 !important; }
+    .hero-subtitle   { font-size: 0.9rem !important; margin-bottom: 1rem !important; line-height: 1.6 !important; }
+}
+ 
+/* Home hero */
+@media (max-width: 768px) {
+    .home-hero           { min-height: 0 !important; padding-top: 80px !important; padding-bottom: 3rem !important; }
+    .hero-badge-large    { font-size: 0.875rem !important; padding: 0.5rem 1rem !important; margin-bottom: 1.25rem !important; }
+    .hero-title-large    { font-size: clamp(1.875rem, 8vw, 2.75rem) !important; margin-bottom: 1rem !important; }
+    .hero-subtitle-large { font-size: 0.9375rem !important; margin-bottom: 1.5rem !important; line-height: 1.7 !important; }
+}
+ 
+/* Hero CTA buttons */
+@media (max-width: 480px) {
+    .hero-cta             { flex-direction: column !important; gap: 0.625rem !important; width: 100% !important; }
+    .hero-cta .btn        { width: 100% !important; text-align: center !important; padding: 0.875rem 1rem !important; }
+}
+ 
+/* Hero stats grid (options-wheel, stock-analysis) */
+@media (max-width: 600px) {
+    .hero-stats        { grid-template-columns: repeat(3, 1fr) !important; gap: 0.75rem !important; max-width: 100% !important; }
+    .stat-number       { font-size: 1.25rem !important; }
+    .stat-label        { font-size: 0.7rem !important; }
+}
+@media (max-width: 380px) {
+    .hero-stats        { grid-template-columns: repeat(2, 1fr) !important; }
+}
+ 
+/* Hero features (home) */
+@media (max-width: 480px) {
+    .hero-features     { flex-direction: column !important; gap: 0.625rem !important; align-items: center !important; margin-top: 1.5rem !important; }
+    .hero-feature      { font-size: 0.9rem !important; gap: 0.5rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   5 — CALCULATOR GRID & CARDS
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 968px) { .calculator-grid { gap: 1rem !important; } }
+ 
+@media (max-width: 480px) {
+    .calculator-grid   { gap: 0.875rem !important; }
+    .calculator-card   { padding: 1rem !important; border-radius: 12px !important; }
+}
+ 
+/* Card title — accommodate share buttons without line-break fighting */
+@media (max-width: 600px) {
+    .card-title {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+        font-size: 1rem !important;
+        margin-bottom: 1rem !important;
+        padding-bottom: 0.625rem !important;
+    }
+    .share-actions  { width: 100%; justify-content: flex-start; gap: 0.375rem; }
+    .share-btn      { font-size: 0.7rem !important; padding: 0.275rem 0.5rem !important; gap: 3px !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   6 — INPUT GROUPS, ROWS & HELPER TEXT
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .calculator-inputs     { gap: 0.875rem !important; }
+    .input-group           { gap: 0.375rem !important; }
+    .input-group label     { font-size: 0.8125rem !important; }
+    .input-group input     { padding: 0.7rem 0.75rem !important; font-size: 16px !important; border-radius: 8px !important; }
+    .input-group small,
+    .input-note            { font-size: 0.73rem !important; line-height: 1.45 !important; }
+    /* Side-by-side pairs always stack */
+    .input-row             { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+    /* Inline links in labels (401k) */
+    .input-group label a.inlineLinks { display: block; margin-top: 2px; font-size: 0.75rem; }
+    /* Unit toggle button (car-cost) */
+    .unit-toggle-btn       { min-width: 36px !important; padding: 0 8px !important; font-size: 0.75rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   7 — RESULT CARDS & VALUES
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .calculator-results        { gap: 0.75rem !important; }
+    .result-card               { padding: 0.875rem 1rem !important; border-radius: 10px !important; }
+    .result-label              { font-size: 0.8rem !important; }
+    .result-value              { font-size: 1.3rem !important; line-height: 1.2 !important; word-break: break-word !important; }
+    .result-subtitle           { font-size: 0.75rem !important; }
+    .result-card.result-highlight { padding: 0.875rem 1rem !important; }
+    #actionPlan                { font-size: 0.9375rem !important; line-height: 1.55 !important; }
+    .date-display              { font-size: 0.8rem !important; }
+    /* Kill inline 2-col sub-grids injected directly via style="" */
+    div[style*="grid-template-columns:1fr 1fr"],
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 0.625rem !important;
+    }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   8 — MODE TOGGLE & STRATEGY BUTTONS
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .mode-toggle           { padding: 0.375rem !important; gap: 0.375rem !important; }
+    .mode-btn              { font-size: 0.8125rem !important; padding: 0.625rem 0.5rem !important; }
+    .strategy-btn          { padding: 0.875rem !important; }
+    .strategy-name         { font-size: 0.875rem !important; }
+    .strategy-desc         { font-size: 0.75rem !important; }
+}
+@media (max-width: 400px) {
+    /* Coast FIRE mode toggle gets very tight */
+    .mode-btn              { font-size: 0.75rem !important; padding: 0.6rem 0.375rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   9 — FEDERAL TAX: FILING TOGGLE & BRACKET WATERFALL
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 600px) {
+    .filing-toggle         { flex-wrap: wrap !important; gap: 4px !important; padding: 4px !important; }
+    .filing-btn            { flex: 1 1 calc(50% - 4px) !important; font-size: 0.75rem !important; padding: 7px 6px !important; white-space: nowrap !important; }
+}
+ 
+@media (max-width: 480px) {
+    .split-labels          { font-size: 0.7rem !important; }
+    .bracket-header        { padding: 10px 10px 6px !important; gap: 8px !important; }
+    .rate-badge            { min-width: 44px !important; height: 32px !important; font-size: 0.9rem !important; }
+    .bracket-range         { font-size: 0.72rem !important; }
+    .bracket-income-in     { font-size: 0.78rem !important; }
+    .bracket-tax-value     { font-size: 0.9rem !important; }
+    .bracket-tax-label     { font-size: 0.66rem !important; }
+    .bracket-fill-track    { margin: 0 10px 10px !important; }
+    .disclaimer-card       { padding: 10px 12px !important; gap: 8px !important; }
+    .disclaimer-text       { font-size: 0.75rem !important; }
+    .deduction-row         { font-size: 0.75rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   10 — DEBT PAYOFF: DEBT ITEMS & FLOATING PILLS
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .debt-item             { padding: 0.875rem !important; }
+    .debt-item .input-row  { grid-template-columns: 1fr !important; }
+    .debt-item-title       { font-size: 0.875rem !important; }
+    .add-debt-btn          { padding: 0.75rem !important; font-size: 0.875rem !important; }
+}
+ 
+/* Floating pills — full-width strip, stacked to avoid overlap */
+@media (max-width: 600px) {
+    #debtActionFloat, #debtMethodFloat,
+    #winnerFloat, #balanceFloat {
+        left: 0.625rem !important;
+        right: 0.625rem !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        padding: 0.625rem 0.875rem !important;
+        border-radius: 10px !important;
+    }
+    #debtActionFloat              { bottom: 5.25rem !important; }
+    #debtMethodFloat              { bottom: 0.625rem !important; }
+    #winnerFloat, #balanceFloat   { bottom: 0.625rem !important; }
+ 
+    #debtActionFloat .float-value,
+    #debtMethodFloat .float-value,
+    #winnerFloat .float-value,
+    #balanceFloat .float-value    { font-size: 0.875rem !important; line-height: 1.4 !important; }
+ 
+    #debtActionFloat .float-label,
+    #debtMethodFloat .float-label,
+    #winnerFloat .float-label,
+    #balanceFloat .float-label    { font-size: 0.62rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   11 — CHARTS & CANVASES
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 768px) {
+    .chart-card canvas         { max-width: 100% !important; max-height: 280px !important; }
+    .pnl-charts-row            { flex-direction: column !important; gap: 1.5rem !important; }
+    .pnl-chart-side            { width: 100% !important; min-height: 220px !important; }
+    .pnl-graph-container       { min-height: 240px !important; }
+    .vline-legend              { margin-top: 0.75rem !important; font-size: 0.7rem !important; }
+}
+ 
+@media (max-width: 480px) {
+    .chart-card canvas         { max-height: 240px !important; min-height: 180px !important; }
+    canvas[style*="max-height"]{ max-height: 200px !important; }
+    #pnlChart                  { max-height: 220px !important; }
+    #kidsChart                 { max-height: 200px !important; }
+    #retChart                  { max-height: 180px !important; }
+    #carChart                  { max-height: 200px !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   12 — TAB BUTTONS (scrollable single row)
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 600px) {
+    .stocks-tabs,
+    .tabs-container {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        padding-bottom: 0.5rem !important;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .stocks-tabs::-webkit-scrollbar,
+    .tabs-container::-webkit-scrollbar { display: none; }
+    .tab-btn { flex-shrink: 0 !important; font-size: 0.8rem !important; padding: 0.5rem 0.875rem !important; white-space: nowrap !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   13 — STOCK CHECKER & BUY ANALYZER
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 600px) {
+    .checker-search,
+    .ba-search              { flex-direction: column !important; gap: 0.625rem !important; max-width: 100% !important; }
+    .checker-search .btn,
+    .ba-search .btn         { width: 100% !important; }
+    .checker-ticker-input,
+    .ba-ticker-input        { font-size: 16px !important; padding: 0.875rem 1rem !important; }
+}
+ 
+@media (max-width: 480px) {
+    .checker-score-value,
+    .ba-score-value             { font-size: 2rem !important; }
+    .checker-score-bar-track,
+    .ba-score-bar-track         { width: 100% !important; }
+    .checker-verdict-title      { font-size: 1rem !important; }
+    .checker-verdict-sub        { font-size: 0.8125rem !important; }
+    .ba-verdict-title           { font-size: 1.375rem !important; }
+    .ba-verdict-sub             { font-size: 0.875rem !important; }
+    .checker-checklist-grid,
+    .ba-checklist-grid          { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+    .checker-summary-cols,
+    .ba-summary-cols            { grid-template-columns: 1fr !important; }
+    .checker-row-label          { font-size: 0.75rem !important; }
+    .checker-row-detail         { font-size: 0.7rem !important; }
+    .ba-row-name                { font-size: 0.8125rem !important; }
+    .ba-row-value,
+    .ba-row-interp              { font-size: 0.75rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   14 — RETIREMENT PLANNER
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .account-accordion > summary    { padding: 9px 12px !important; font-size: 0.82rem !important; }
+    .account-accordion-body         { padding: 12px !important; }
+    .account-accordion-value        { font-size: 0.75rem !important; padding: 2px 6px !important; }
+    .runway-stats-grid              { gap: 8px !important; }
+    .runway-stat-card               { padding: 10px 8px !important; }
+    .runway-stat-value              { font-size: 1rem !important; }
+    .runway-stat-label              { font-size: 0.62rem !important; }
+    .strategy-comparison-grid       { grid-template-columns: 1fr !important; }
+    .strategy-card-amount           { font-size: 1.15rem !important; }
+    .swr-indicator                  { font-size: 0.82rem !important; padding: 10px 12px !important; }
+    .runway-table-wrap              { -webkit-overflow-scrolling: touch; }
+    .runway-year-table              { font-size: 0.72rem !important; }
+    .runway-year-table th,
+    .runway-year-table td           { padding: 5px 8px !important; }
+    .conversion-row                 { font-size: 0.78rem !important; padding: 5px 0 !important; }
+    .conversion-panel               { padding: 12px !important; }
+    .runway-chart-wrap              { padding: 12px !important; }
+    .runway-settings-bar            { font-size: 0.72rem !important; padding: 7px 10px !important; }
+    .gauge-header, .gauge-labels    { font-size: 0.68rem !important; }
+}
+@media (max-width: 360px) {
+    .runway-stats-grid              { grid-template-columns: 1fr !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   15 — OPTIONS WHEEL specific
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .closing-summary        { gap: 0.625rem !important; }
+    .closing-summary-title  { font-size: 0.75rem !important; }
+    .closing-summary-value  { font-size: 1rem !important; }
+    .pnl-chart-side-label   { font-size: 0.85rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   16 — STRATEGY BREAKDOWN STEPS
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .breakdown-step        { flex-direction: column !important; gap: 0.625rem !important; padding: 0.875rem !important; margin-bottom: 0.875rem !important; }
+    .step-icon             { width: 36px !important; height: 36px !important; font-size: 1rem !important; }
+    .step-title            { font-size: 0.875rem !important; }
+    .step-desc             { font-size: 0.8rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   17 — FORMULA BOXES
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .formula        { font-size: 0.8rem !important; padding: 0.75rem 0.875rem !important; word-break: break-word; line-height: 1.6 !important; }
+    .formula-note   { font-size: 0.75rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   18 — LEARN GRID, STRATEGY GRID, SECTION HEADERS
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .section-header                 { margin-bottom: 1.75rem !important; padding: 0 0.25rem; }
+    .section-header h2              { font-size: clamp(1.5rem, 7vw, 2rem) !important; }
+    .section-header p,
+    .section-header-home p          { font-size: 0.9rem !important; }
+    .section-header-home            { margin-bottom: 2rem !important; }
+ 
+    .learn-card                     { padding: 1.25rem !important; }
+    .learn-card h3                  { font-size: 1rem !important; }
+    .learn-card p                   { font-size: 0.875rem !important; }
+    .learn-highlight                { font-size: 0.8125rem !important; padding: 0.75rem !important; }
+ 
+    .learn-strategy                 { padding: 1.25rem !important; }
+    .learn-strategy h3              { font-size: 1.375rem !important; margin-bottom: 1.25rem !important; }
+ 
+    .strategy-item h4               { font-size: 0.9375rem !important; }
+    .strategy-item p                { font-size: 0.8375rem !important; }
+ 
+    .ba-explainer-card              { padding: 1.25rem !important; }
+    .ba-explainer-card h3           { font-size: 0.9375rem !important; }
+    .ba-explainer-card p            { font-size: 0.8375rem !important; }
+ 
+    /* stock-analysis inline-styled container */
+    .stocks-section .container[style] { padding: 1.5rem 1rem !important; border-radius: 10px !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   19 — HOME PAGE: STATS BANNER, CALCULATORS GRID, WHY SECTION
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .stats-banner               { padding: 1.75rem 0 !important; }
+    .stats-grid                 { gap: 0.75rem !important; }
+    .stat-item                  { padding: 0.875rem !important; gap: 0.75rem !important; }
+    .stat-content .stat-number  { font-size: 1.375rem !important; }
+    .stat-content .stat-label   { font-size: 0.75rem !important; }
+    .stat-icon                  { font-size: 1.125rem !important; }
+ 
+    .calculator-card-link       { padding: 1.375rem 1.125rem !important; }
+    .calculator-card-link h3    { font-size: 1.125rem !important; }
+    .calculator-card-link p     { font-size: 0.875rem !important; }
+    .calculator-icon            { font-size: 1.125rem !important; margin-bottom: 0.875rem !important; }
+    .calculator-tag             { font-size: 0.75rem !important; padding: 0.3rem 0.625rem !important; }
+ 
+    .why-card                   { padding: 1.375rem 1.125rem !important; }
+    .why-card h3                { font-size: 1.0625rem !important; }
+    .why-card p                 { font-size: 0.875rem !important; }
+    .why-icon                   { font-size: 1.5rem !important; }
+    .why-header h2              { font-size: clamp(1.5rem, 7vw, 2.25rem) !important; }
+    .why-subtitle               { font-size: 0.9375rem !important; }
+}
+@media (max-width: 380px) {
+    .stats-grid                 { grid-template-columns: 1fr !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   20 — NEWSLETTER / ARTICLE PAGE
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 768px) {
+    .newsletter-section         { padding: 2.5rem 0 !important; }
+}
+@media (max-width: 480px) {
+    .article-preview            { padding: 1.25rem !important; }
+    .article-preview h2         { font-size: 1.375rem !important; }
+    .article-meta               { font-size: 0.8rem !important; flex-wrap: wrap !important; gap: 0.375rem !important; }
+    .article-content p          { font-size: 0.875rem !important; }
+    .article-content h3         { font-size: 1rem !important; }
+    .article-badge              { font-size: 0.75rem !important; }
+    .newsletter-signup          { padding: 1.25rem !important; }
+    .newsletter-signup h3       { font-size: 1.25rem !important; }
+    .share-buttons-vert         { gap: 0.5rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   21 — AFFILIATE SECTIONS
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .affiliate-container        { padding: 0.5rem 0 !important; }
+    .affiliate-text             { font-size: 0.9rem !important; }
+    .affiliate-btn              { display: block !important; text-align: center !important; padding: 0.875rem 1rem !important; font-size: 0.9rem !important; }
+    .disclosure-box             { font-size: 0.78rem !important; padding: 0.625rem 0.875rem !important; line-height: 1.5 !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   22 — YEAR BREAKDOWN (compound interest)
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .year-breakdown         { max-height: 360px !important; -webkit-overflow-scrolling: touch; }
+    .year-item              { padding: 0.75rem 1rem !important; }
+    .year-number            { font-size: 0.875rem !important; }
+    .year-stat              { font-size: 0.8rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   23 — FOOTER
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .footer                     { padding: 2rem 0 1.5rem !important; }
+    .footer-brand p             { max-width: 100% !important; font-size: 0.875rem !important; line-height: 1.6 !important; }
+    .footer-logo                { max-height: 44px !important; }
+    .footer-column h4           { font-size: 0.9375rem !important; margin-top: 0.75rem !important; }
+    .footer-column a            { font-size: 0.875rem !important; }
+    .footer-disclaimer          { padding: 0.875rem !important; border-radius: 6px !important; }
+    .footer-disclaimer p        { font-size: 0.76rem !important; line-height: 1.6 !important; }
+    .footer-bottom              { font-size: 0.8rem !important; }
+    .footer-ad                  { padding: 8px !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   24 — MISC UTILITY BUTTONS
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .btnprimary { font-size: 0.875rem !important; padding: 0.75rem 1rem !important; }
+    .btn-large  { padding: 0.875rem 1.5rem !important; font-size: 0.9375rem !important; }
+}
+ 
+ 
+/* ══════════════════════════════════════════════════════════════
+   25 — SPLIT RESULTS (afford-house sub-grids)
+   ══════════════════════════════════════════════════════════════ */
+ 
+@media (max-width: 480px) {
+    .split-results { grid-template-columns: 1fr !important; gap: 0.625rem !important; }
+}
+
+/* ==========================================================================
+   ✨ MODERN MOBILE LAYOUT POLISH (Drop at Bottom) ✨
+   Enhances text readability, container spacing, and touch targets
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    /* ── 1. Typography & Readability ── */
+    body {
+        font-size: 16px; /* Base size for better readability */
+        line-height: 1.65;
+    }
+
+    h1, .hero-title, .hero-title-large {
+        line-height: 1.2 !important;
+        letter-spacing: -0.02em;
+    }
+
+    .card-title {
+        font-size: 1.25rem !important; /* Clearer hierarchy */
+        margin-bottom: 1.25rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    /* ── 2. Container & Card Spacing ── */
+    section {
+        padding: 2.5rem 0 !important; /* Consistent, breathable gaps */
+    }
+
+    .calculator-card, .result-card, .learn-card, .why-card, .stock-card {
+        border-radius: 16px !important; /* Modern softer corners */
+        padding: 1.5rem !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .calculator-grid {
+        gap: 1.25rem !important; /* Slightly tighter between major blocks */
+    }
+
+    /* ── 3. Touch Targets (Apple UI Guidelines = 48px min) ── */
+    .input-group label {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.35rem;
+        color: #374151; /* Darker for better contrast */
+    }
+
+    .input-group input, 
+    .input-group select,
+    .signup-form input {
+        padding: 0.875rem 1rem !important;
+        min-height: 48px !important; /* Easier to tap */
+        font-size: 16px !important; /* Prevents iOS auto-zoom */
+        border-radius: 10px !important;
+    }
+
+    .btn, .btnprimary, .mode-btn, .strategy-btn {
+        min-height: 48px !important; 
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px !important;
+    }
+
+    /* ── 4. Emphasize Results ── */
+    .result-value {
+        font-size: 1.75rem !important; /* Make the math the hero */
+        font-weight: 800 !important;
+        margin-bottom: 0.25rem;
+        color: #111827 !important;
+    }
+
+    .result-label {
+        font-size: 0.85rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700 !important;
+        color: #6B7280 !important;
+    }
+
+    .result-subtitle {
+        font-size: 0.9rem !important;
+        color: #4B5563 !important;
+        line-height: 1.4 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* ── Ultra-Compact Mobile Polish ── */
+    
+    .container {
+        padding: 0 1rem !important; /* Bring content closer to edge */
+    }
+
+    .calculator-card {
+        padding: 1.25rem 1rem !important;
+    }
+
+    .result-card {
+        padding: 1rem 1.25rem !important;
+    }
+
+    /* Override inline 2-column grids (like in Afford House) to stack on phones */
+    div[style*="grid-template-columns:1fr 1fr"], 
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 0.875rem !important;
+    }
+
+    /* Fix floating pill positions so they don't cover content awkwardly */
+    #verdictFloat, #debtActionFloat, #debtMethodFloat {
+        bottom: 1rem !important;
+        border-radius: 12px !important;
+        padding: 0.875rem 1rem !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.12) !important;
+    }
+    
+    /* Make the Share/PDF buttons wrap nicely if screen is tiny */
+    .share-actions {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    .share-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.6rem 0.5rem !important;
+    }
+}
+
+/* ==========================================================================
+   🏡 MORTGAGE & AFFORD HOUSE - TARGETED MOBILE FIXES
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    /* 1. Force all side-by-side inputs (% / $) to stack neatly */
+    .input-row {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    /* 2. Catch ALL inline grids in results (Afford House) and force them to stack */
+    .calculator-results div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    /* 3. Fix Amortization Table overflowing the card */
+    .amort-table-wrapper {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        /* Allow table to stretch edge-to-edge inside the card padding */
+        width: calc(100% + 3rem) !important;
+        margin-left: -1.5rem !important;
+    }
+    
+    .amort-table th, .amort-table td {
+        padding: 0.5rem !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Adjust table edge-to-edge for the tighter mobile container padding */
+    .amort-table-wrapper {
+        width: calc(100% + 2rem) !important;
+        margin-left: -1rem !important;
+    }
+
+    /* 4. ── Floating Pill Stacking Fix (Mortgage Calc has TWO pills) ── */
+    
+    /* Reset and standardize all floating pills */
+    #verdictFloat, #payoffFloat, #monthlyFloat {
+        right: 1rem !important;
+        left: 1rem !important;
+        max-width: none !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 12px !important;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.15) !important;
+    }
+    
+    /* Stack them so they do NOT overlap each other */
+    #payoffFloat, #verdictFloat {
+        bottom: 1rem !important; 
+    }
+    
+    #monthlyFloat {
+        bottom: 5.5rem !important; /* Sits cleanly right above the payoff float */
+    }
+
+    /* Scale down the float text slightly so long numbers don't break lines */
+    #verdictFloat .float-value, 
+    #payoffFloat .float-value, 
+    #monthlyFloat .float-value {
+        font-size: 1.25rem !important;
+    }
+    
+    #verdictFloat .float-label, 
+    #payoffFloat .float-label, 
+    #monthlyFloat .float-label {
+        font-size: 0.75rem !important;
+        margin-bottom: 2px !important;
+    }
+}
+
+/* Floating pills — full-width strip, stacked to avoid overlap */
+@media (max-width: 600px) {
+    /* Added #verdictFloat, #monthlyFloat, and #payoffFloat */
+    #debtActionFloat, #debtMethodFloat,
+    #winnerFloat, #balanceFloat,
+    #verdictFloat, #monthlyFloat, #payoffFloat {
+        left: 0.625rem !important;
+        right: 0.625rem !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        padding: 0.625rem 0.875rem !important;
+        border-radius: 10px !important;
+    }
+
+    /* Debt Page Stacking */
+    #debtActionFloat              { bottom: 5.25rem !important; }
+    #debtMethodFloat              { bottom: 0.625rem !important; }
+
+    /* Mortgage Page Stacking */
+    #monthlyFloat                 { bottom: 5.25rem !important; }
+    #payoffFloat                  { bottom: 0.625rem !important; }
+
+    /* House Affordability (Single pill) */
+    #verdictFloat                 { bottom: 0.625rem !important; }
+
+    /* Generic Shared Styles */
+    #winnerFloat, #balanceFloat   { bottom: 0.625rem !important; }
+
+    #debtActionFloat .float-value,
+    #debtMethodFloat .float-value,
+    #winnerFloat .float-value,
+    #balanceFloat .float-value,
+    #verdictFloat .float-value,
+    #monthlyFloat .float-value,
+    #payoffFloat .float-value      { font-size: 0.875rem !important; line-height: 1.4 !important; }
+
+    #debtActionFloat .float-label,
+    #debtMethodFloat .float-label,
+    #winnerFloat .float-label,
+    #balanceFloat .float-label,
+    #verdictFloat .float-label,
+    #monthlyFloat .float-label,
+    #payoffFloat .float-label      { font-size: 0.62rem !important; }
+}
+
+/* Floating pills — Side-by-side on mobile */
+@media (max-width: 600px) {
+    #debtActionFloat, #debtMethodFloat,
+    #monthlyFloat, #payoffFloat,
+    #winnerFloat, #balanceFloat {
+        bottom: 0.625rem !important; /* All sit at the bottom */
+        max-width: none !important;
+        min-width: 0 !important;
+        padding: 0.625rem 0.5rem !important; /* Slightly tighter padding */
+        border-radius: 10px !important;
+    }
+
+    /* Left side pills */
+    #debtActionFloat, 
+    #monthlyFloat, 
+    #winnerFloat {
+        left: 0.625rem !important;
+        right: calc(50% + 0.3125rem) !important; /* Spans left half with a gap */
+    }
+
+    /* Right side pills */
+    #debtMethodFloat, 
+    #payoffFloat, 
+    #balanceFloat {
+        left: calc(50% + 0.3125rem) !important; /* Spans right half with a gap */
+        right: 0.625rem !important;
+    }
+
+    /* Typography adjustments for tight space */
+    #debtActionFloat .float-value,
+    #debtMethodFloat .float-value,
+    #monthlyFloat .float-value,
+    #payoffFloat .float-value,
+    #winnerFloat .float-value,
+    #balanceFloat .float-value {
+        font-size: 0.8rem !important; /* Slightly smaller to prevent clipping */
+        line-height: 1.2 !important;
+
+        text-overflow: ellipsis;
+    }
+
+    #debtActionFloat .float-label,
+    #debtMethodFloat .float-label,
+    #monthlyFloat .float-label,
+    #payoffFloat .float-label,
+    #winnerFloat .float-label,
+    #balanceFloat .float-label {
+        font-size: 0.55rem !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   1 — GLOBAL RESETS & iOS FIXES
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+    /* Shrink base text and layout containers */
+    body { 
+        font-size: 0.875rem !important; /* ~14px for better density */
+        line-height: 1.5 !important;
+    }
+
+    .container {
+        padding: 0 1rem !important; /* Narrower gutters */
+    }
+
+    section {
+        padding: 2rem 0 !important; /* Reduced vertical space between sections */
+    }
+
+    /* ── Shrink Large "Boxes" (Cards & Grids) ── */
+    .calculator-card, .card, .hero-content, .result-card {
+        padding: 1.15rem !important;
+        border-radius: 10px !important;
+    }
+
+    .calculator-grid, .strategy-grid, .input-row {
+        gap: 0.75rem !important; /* Tighter spacing between elements */
+    }
+
+    /* ── Shrink Text (Hero & Headers) ── */
+    .hero {
+        padding-top: 80px !important; /* Pull content up */
+        min-height: auto !important;
+        padding-bottom: 1.5rem !important;
+    }
+
+    .hero-badge {
+        padding: 0.25rem 0.75rem !important;
+        font-size: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    .hero-title {
+        font-size: 1.75rem !important; /* Significantly smaller than desktop */
+        margin-bottom: 0.5rem !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem !important;
+        margin-bottom: 1.25rem !important;
+        line-height: 1.5 !important;
+    }
+
+    /* ── Shrink Inputs & Labels ── */
+    .input-group {
+        margin-bottom: 0.65rem !important;
+    }
+
+    .input-group label {
+        font-size: 0.75rem !important;
+        margin-bottom: 0.25rem !important;
+        color: var(--text-secondary);
+    }
+
+    input, select, textarea {
+        padding: 0.5rem 0.65rem !important; /* Smaller internal padding */
+        font-size: 0.95rem !important; /* Close to 16px to prevent iOS auto-zoom */
+        min-height: 38px !important; /* Shorter height */
+        border-radius: 8px !important;
+    }
+
+    /* ── Shrink Buttons ── */
+    .btn {
+        padding: 0.6rem 1.25rem !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+    }
+
+    /* ── Shrink Stats & Results ── */
+    .stat-number {
+        font-size: 1.4rem !important;
+    }
+
+    .stat-label {
+        font-size: 0.75rem !important;
+    }
+
+    .result-item {
+        padding: 0.4rem 0 !important;
+        font-size: 0.85rem !important;
+    }
 }
