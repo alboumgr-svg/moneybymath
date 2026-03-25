@@ -4,7 +4,7 @@ import datetime
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
@@ -84,6 +84,10 @@ def mortgage_calculator():
 @app.route("/newsletter")
 def newsletter():
     return render_template("newsletter.html", article=LATEST_ARTICLE)
+
+@app.route("/ads.txt")
+def ads():
+    return send_from_directory(app.root_path, "ads.txt", mimetype="text/plain")
 
 # ── Edit this every week ──────────────────────────────────────────────────────
 LATEST_ARTICLE = {
