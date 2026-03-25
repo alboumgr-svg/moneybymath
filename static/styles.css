@@ -1189,6 +1189,7 @@ section {
     border: 1.5px solid #FCA5A5;
     border-radius: 8px;
     margin-bottom: 2rem;
+    max-width: calc(100vw - 50px) !important; margin-left: auto !important; margin-right: auto !important;
 }
 
 .footer-disclaimer p {
@@ -2534,12 +2535,6 @@ section {
         grid-template-columns: 1fr;
     }
 
-    /* Stack footer links to a single column on phones */
-    .footer-links {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
     .footer-column h4 {
         margin-top: 1rem;
     }
@@ -3812,14 +3807,14 @@ html { -webkit-overflow-scrolling: touch; }
    23 — FOOTER
    ══════════════════════════════════════════════════════════════ */
  
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .footer                     { padding: 2rem 0 1.5rem !important; }
     .footer-brand p             { max-width: 100% !important; font-size: 0.875rem !important; line-height: 1.6 !important; }
     .footer-logo                { max-height: 44px !important; }
     .footer-column h4           { font-size: 0.9375rem !important; margin-top: 0.75rem !important; }
     .footer-column a            { font-size: 0.875rem !important; }
-    .footer-disclaimer          { padding: 0.875rem !important; border-radius: 6px !important; }
-    .footer-disclaimer p        { font-size: 0.76rem !important; line-height: 1.6 !important; }
+    .footer-disclaimer          { padding: 0.875rem !important; border-radius: 6px !important; max-width: calc(100vw - 50px) !important; margin-left: auto !important; margin-right: auto !important;}
+    .footer-disclaimer p        { font-size: 0.7rem !important; line-height: 1.6 !important; }
     .footer-bottom              { font-size: 0.8rem !important; }
     .footer-ad                  { padding: 8px !important; }
 }
@@ -4092,6 +4087,6 @@ html { -webkit-overflow-scrolling: touch; }
 
     /* Navigation */
     .navbar {
-        background: var(--bg-secondary);
+        background: var(--bg-main);
     }
 }
