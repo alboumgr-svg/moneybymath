@@ -569,12 +569,12 @@ function renderAnnualTable(container) {
     if (yearBucket) years.push(yearBucket);
  
     container.innerHTML = `
-        <div class="amort-table-wrapper" style="overflow-x: unset;">
+        <div class="amort-table-wrapper">
             <table class="amort-table" style="table-layout: fixed; width: 100%;">
                 <colgroup>
-                    <col style="width: 20%"><col style="width: 20%">
-                    <col style="width: 20%"><col style="width: 20%">
-                    <col style="width: 20%">
+                    <col style="width: 10%"><col style="width: 23%">
+                    <col style="width: 23%"><col style="width: 23%">
+                    <col style="width: 23%">
                 </colgroup>
                 <thead>
                     <tr style="text-align: left; text-decoration: underline;">
@@ -605,12 +605,12 @@ function renderMonthlyTable(container) {
     const rows    = showAll ? amortData : amortData.slice(0, 24);
  
     container.innerHTML = `
-        <div class="amort-table-wrapper" style="overflow-x: unset;">
+        <div class="amort-table-wrapper">
             <table class="amort-table" style="table-layout: fixed; width: 100%;">
                 <colgroup>
-                    <col style="width: 16%"><col style="width: 17%">
+                    <col style="width: 14%"><col style="width: 17%">
                     <col style="width: 17%"><col style="width: 17%">
-                    <col style="width: 16%"><col style="width: 17%">
+                    <col style="width: 17%"><col style="width: 17%">
                 </colgroup>
                 <thead>
                     <tr style="text-align: left; text-decoration: underline;">

@@ -1908,6 +1908,7 @@ section {
 
 .mode-btn {
     flex: 1;
+    width: 6rem;
     padding: 0.75rem 1rem;
     background: var(--bg-white);
     border: 1.5px solid var(--border);
@@ -3459,16 +3460,12 @@ html { -webkit-overflow-scrolling: touch; }
    8 — MODE TOGGLE & STRATEGY BUTTONS
    ══════════════════════════════════════════════════════════════ */
  
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .mode-toggle           { padding: 0.375rem !important; gap: 0.375rem !important; }
     .mode-btn              { font-size: 0.8125rem !important; padding: 0.625rem 0.5rem !important; }
     .strategy-btn          { padding: 0.875rem !important; }
     .strategy-name         { font-size: 0.875rem !important; }
     .strategy-desc         { font-size: 0.75rem !important; }
-}
-@media (max-width: 400px) {
-    /* Coast FIRE mode toggle gets very tight */
-    .mode-btn              { font-size: 0.75rem !important; padding: 0.6rem 0.375rem !important; }
 }
  
  
@@ -3885,7 +3882,6 @@ html { -webkit-overflow-scrolling: touch; }
     }
 
     .btn, .btnprimary, .mode-btn, .strategy-btn {
-        min-height: 48px !important; 
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -3955,28 +3951,68 @@ html { -webkit-overflow-scrolling: touch; }
         gap: 1rem !important;
     }
 
-    /* 3. Fix Amortization Table overflowing the card */
-    .amort-table-wrapper {
-        border-radius: 0 !important;
-        border-left: none !important;
-        border-right: none !important;
-        /* Allow table to stretch edge-to-edge inside the card padding */
-        width: calc(100% + 3rem) !important;
-        margin-left: -1.5rem !important;
-    }
-    
-    .amort-table th, .amort-table td {
-        padding: 0.5rem !important;
-        font-size: 0.8rem !important;
-    }
 }
 
-@media (max-width: 480px) {
-    /* Adjust table edge-to-edge for the tighter mobile container padding */
-    .amort-table-wrapper {
-        width: calc(100% + 2rem) !important;
-        margin-left: -1rem !important;
+/* ── Amortization table ─────────────────────────────── */
+.amort-table-wrapper {
+    overflow-x: auto;
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+}
+.amort-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.amort-table thead {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    z-index: 1;
+}
+.amort-table th {
+    padding: 0.6rem 0.8rem;
+    text-align: right;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+.amort-table th:first-child { text-align: left; }
+.amort-table td {
+    padding: 0.5rem 0.8rem;
+    text-align: right;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap !important;
+}
+.amort-table td:first-child { text-align: left; font-weight: 500; }
+.amort-table tbody tr:hover { background: #f8fafc; }
+
+@media (max-width: 768px) {
+
+    .amort-table {
+        font-size: 0.72rem;
+        width: max-content;
+        min-width: 100%;
+        border-spacing: 20px 0;
     }
+
+    .amort-table th,
+    .amort-table td {
+        padding: 0.35rem 0.6rem;
+        white-space: nowrap !important;
+    }
+
+    .amort-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
+    
 }
 
 /* ══════════════════════════════════════════════════════════════
