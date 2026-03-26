@@ -1,25 +1,288 @@
 import os
 import math
 import datetime
-import yfinance as yf
 import pandas as pd
 import numpy as np
 from flask import Flask, jsonify, render_template, request, send_from_directory
 from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
-from curl_cffi import requests as requests_cffi
+
+load_dotenv()
 
 app = Flask(__name__)
 
-# Create a persistent session with a browser-like User-Agent to avoid blocks
-yf_session = requests_cffi.Session(impersonate="chrome")
-yf_session.headers.update({
-    "Accept": "*/*",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Origin": "https://finance.yahoo.com",
-    "Referer": "https://finance.yahoo.com",
-})
+# ─────────────────────────────────────────────────────────────────────────────
+#  Financial Modeling Prep (FMP) helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+FMP_API_KEY = os.getenv("FMP_API_KEY")
+# Root domain only - every call prefixes /stable/, /api/v3/, or /api/v4/ explicitly.
+FMP_BASE = "https://financialmodelingprep.com"
+
+
+def fmp_fetch(path, **params):
+    """
+    GET from FMP API; returns parsed JSON or raises on error.
+    path must begin with /stable/, /api/v3/, or /api/v4/.
+    Extra kwargs are forwarded as URL query parameters.
+    """
+    params["apikey"] = FMP_API_KEY
+    url = f"{FMP_BASE}{path}"
+    resp = requests.get(url, params=params, timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
+    if isinstance(data, dict) and data.get("Error Message"):
+        raise ValueError(data["Error Message"])
+    return data
+
+
+def _one(data):
+    """Return first element if list, or the dict itself – handles both stable and legacy response shapes."""
+    if isinstance(data, list):
+        return data[0] if data else {}
+    return data if isinstance(data, dict) else {}
+
+def get_fmp_history(ticker, days=365):
+    """
+    Return a DataFrame with Open, High, Low, Close, Volume indexed by date (ascending).
+    Uses FMP stable /stable/historical-price-eod/full endpoint.
+    """
+    from_date = (datetime.date.today() - datetime.timedelta(days=days)).isoformat()
+    data = fmp_fetch(
+        f"/stable/historical-price-eod/full",
+        symbol=ticker,
+        **{"from": from_date}
+    )
+    historical = data.get("historical", []) if isinstance(data, dict) else []
+    if not historical:
+        return pd.DataFrame()
+    df = pd.DataFrame(historical)
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").set_index("date")
+    df = df.rename(columns={
+        "open":   "Open",
+        "high":   "High",
+        "low":    "Low",
+        "close":  "Close",
+        "volume": "Volume",
+    })
+    for col in ["Open", "High", "Low", "Close", "Volume"]:
+        if col not in df.columns:
+            df[col] = float("nan")
+    return df[["Open", "High", "Low", "Close", "Volume"]]
+
+
+def build_fmp_info(ticker):
+    """
+    Fetch several FMP stable/v3/v4 endpoints and return a dict with
+    yfinance-compatible key names so the signal code below needs no changes.
+
+    Endpoint reference (FMP stable API docs):
+      /stable/profile                       – company overview, beta, mktCap
+      /stable/quote                         – real-time price, pe, avgVolume
+      /stable/key-metrics-ttm               – P/B, P/S, EV/EBITDA, PEG, divYield
+      /stable/ratios-ttm                    – margins, ROE, currentRatio, D/E, payout
+      /stable/cash-flow-statement           – freeCashFlow, operatingCashFlow
+      /stable/balance-sheet-statement       – totalDebt, cash
+      /stable/income-statement              – netIncome, revenue, eps  (YoY growth)
+      /stable/analyst-stock-recommendations – analyst consensus counts
+      /stable/price-target-consensus        – mean analyst price target
+      /api/v4/short-of-float-change         – short % of float  (legacy v4, graceful)
+      /api/v3/institutional-holder/{ticker} – institutional holders list (legacy v3)
+      /stable/shares-float                  – float / outstanding shares
+    """
+    info = {}
+
+    # ── 1. Company profile ────────────────────────────────────────────────────
+    try:
+        data = fmp_fetch("/stable/profile", symbol=ticker)
+        p = _one(data)
+        if p:
+            info["shortName"]     = p.get("companyName", ticker)
+            info["longName"]      = p.get("companyName", ticker)
+            info["sector"]        = p.get("sector")
+            info["industry"]      = p.get("industry")
+            info["beta"]          = p.get("beta")
+            info["marketCap"]     = p.get("mktCap")
+            info["averageVolume"] = p.get("volAvg")
+            # isEtf is a boolean in the stable profile response
+            info["quoteType"]     = "ETF" if p.get("isEtf") else "EQUITY"
+    except Exception:
+        pass
+
+    # ── 2. Real-time quote ────────────────────────────────────────────────────
+    try:
+        data = fmp_fetch("/stable/quote", symbol=ticker)
+        q = _one(data)
+        if q:
+            info["currentPrice"]  = q.get("price")
+            info["previousClose"] = q.get("previousClose")
+            if not info.get("trailingPE"):
+                info["trailingPE"] = q.get("pe")
+            if not info.get("marketCap"):
+                info["marketCap"] = q.get("marketCap")
+            if not info.get("averageVolume"):
+                info["averageVolume"] = q.get("avgVolume")
+    except Exception:
+        pass
+
+    # ── 3. Key metrics TTM ────────────────────────────────────────────────────
+    # Stable endpoint: /stable/key-metrics-ttm?symbol=TICKER
+    # Field names confirmed in FMP stable docs (camelCase, no "TTM" suffix on most).
+    try:
+        data = fmp_fetch("/stable/key-metrics-ttm", symbol=ticker)
+        m = _one(data)
+        if m:
+            if not info.get("trailingPE"):
+                info["trailingPE"] = m.get("peRatio")
+            info["priceToBook"]                 = m.get("pbRatio")
+            info["priceToSalesTrailing12Months"] = m.get("priceToSalesRatio")
+            info["enterpriseToEbitda"]           = m.get("enterpriseValueOverEBITDA")
+            info["pegRatio"]                     = m.get("pegRatio")
+            # dividendYield in key-metrics is already a decimal fraction (0.005 = 0.5%)
+            dy = m.get("dividendYield")
+            if dy is not None:
+                info["dividendYield"] = dy
+    except Exception:
+        pass
+
+    # ── 4. Financial ratios TTM ───────────────────────────────────────────────
+    # Stable endpoint: /stable/ratios-ttm?symbol=TICKER
+    try:
+        data = fmp_fetch("/stable/ratios-ttm", symbol=ticker)
+        r = _one(data)
+        if r:
+            info["grossMargins"]   = r.get("grossProfitMargin")
+            info["profitMargins"]  = r.get("netProfitMargin")
+            info["returnOnEquity"] = r.get("returnOnEquity")
+            info["currentRatio"]   = r.get("currentRatio")
+            info["payoutRatio"]    = r.get("payoutRatio")
+            # D/E in FMP ratios-ttm is already a ratio (e.g. 1.5).
+            # The downstream signal code divides by 100 (yfinance returned %).
+            # So multiply by 100 here to normalise.
+            dte = r.get("debtToEquityRatio")
+            if dte is None:
+                dte = r.get("debtEquityRatio")
+            info["debtToEquity"] = dte * 100 if dte is not None else None
+            # Forward P/E lives in ratios-ttm as priceEarningsRatio
+            fpe = r.get("priceEarningsRatio")
+            if fpe is not None and not info.get("forwardPE"):
+                info["forwardPE"] = fpe
+            # Secondary dividend yield source
+            if not info.get("dividendYield"):
+                info["dividendYield"] = r.get("dividendYield")
+    except Exception:
+        pass
+
+    # ── 5. Cash-flow statement (most recent annual) ───────────────────────────
+    # Stable endpoint: /stable/cash-flow-statement?symbol=TICKER&limit=1
+    try:
+        data = fmp_fetch("/stable/cash-flow-statement", symbol=ticker, limit=1)
+        cf = _one(data)
+        if cf:
+            info["freeCashflow"]      = cf.get("freeCashFlow")
+            info["operatingCashflow"] = cf.get("operatingCashFlow")
+    except Exception:
+        pass
+
+    # ── 6. Balance sheet (most recent annual) ─────────────────────────────────
+    # Stable endpoint: /stable/balance-sheet-statement?symbol=TICKER&limit=1
+    try:
+        data = fmp_fetch("/stable/balance-sheet-statement", symbol=ticker, limit=1)
+        bs = _one(data)
+        if bs:
+            info["totalDebt"] = bs.get("totalDebt")
+            cash = bs.get("cashAndCashEquivalents") or 0
+            sti  = bs.get("shortTermInvestments")   or 0
+            info["totalCash"] = cash + sti
+    except Exception:
+        pass
+
+    # ── 7. Income statement – 2 years for YoY growth ──────────────────────────
+    # Stable endpoint: /stable/income-statement?symbol=TICKER&limit=2
+    try:
+        data = fmp_fetch("/stable/income-statement", symbol=ticker, limit=2)
+        if isinstance(data, list) and data:
+            info["netIncomeToCommon"] = data[0].get("netIncome")
+            if len(data) >= 2:
+                curr_rev = data[0].get("revenue") or 0
+                prev_rev = data[1].get("revenue") or 0
+                if prev_rev != 0:
+                    info["revenueGrowth"] = (curr_rev - prev_rev) / abs(prev_rev)
+                curr_eps = data[0].get("eps") or 0
+                prev_eps = data[1].get("eps") or 0
+                if prev_eps != 0:
+                    info["earningsGrowth"] = (curr_eps - prev_eps) / abs(prev_eps)
+    except Exception:
+        pass
+
+    # ── 8. Analyst recommendations → map to recommendationKey ─────────────────
+    # Stable endpoint: /stable/analyst-stock-recommendations?symbol=TICKER
+    try:
+        data = fmp_fetch("/stable/analyst-stock-recommendations", symbol=ticker)
+        r = _one(data)
+        if r:
+            buy  = (r.get("analystRatingsBuy")       or 0) + (r.get("analystRatingsStrongBuy")  or 0)
+            hold = (r.get("analystRatingsHold")       or 0)
+            sell = (r.get("analystRatingsSell")       or 0) + (r.get("analystRatingsStrongSell") or 0)
+            total = buy + hold + sell
+            if total > 0:
+                bp = buy  / total
+                sp = sell / total
+                if bp >= 0.8:
+                    info["recommendationKey"] = "strong_buy"
+                elif bp >= 0.6:
+                    info["recommendationKey"] = "buy"
+                elif sp >= 0.5:
+                    info["recommendationKey"] = "sell"
+                elif sp >= 0.3:
+                    info["recommendationKey"] = "underperform"
+                else:
+                    info["recommendationKey"] = "hold"
+    except Exception:
+        pass
+
+    # ── 9. Price-target consensus ─────────────────────────────────────────────
+    # Stable endpoint: /stable/price-target-consensus?symbol=TICKER
+    try:
+        data = fmp_fetch("/stable/price-target-consensus", symbol=ticker)
+        pt = _one(data)
+        if pt:
+            info["targetMeanPrice"] = pt.get("targetConsensus")
+    except Exception:
+        pass
+
+    # ── 10. Short interest (v4 legacy – graceful if unavailable) ──────────────
+    # /api/v4/short-of-float-change?symbol=TICKER
+    try:
+        si_data = fmp_fetch("/api/v4/short-of-float-change", symbol=ticker)
+        si = _one(si_data)
+        if si:
+            sif = si.get("shortPercentOfFloat")
+            if sif is not None:
+                # FMP returns percent (e.g. 5.2); downstream expects decimal (0.052)
+                info["shortPercentOfFloat"] = sif / 100
+    except Exception:
+        pass
+
+    # ── 11. Institutional ownership % ────────────────────────────────────────
+    # Legacy v3 list endpoint + stable shares-float for denominator
+    try:
+        inst_data = fmp_fetch(f"/api/v3/institutional-holder/{ticker}")
+        if inst_data:
+            sf_data = fmp_fetch("/stable/shares-float", symbol=ticker)
+            sf = _one(sf_data)
+            float_shares = None
+            if sf:
+                float_shares = sf.get("outstandingShares") or sf.get("floatShares")
+            if float_shares:
+                total_inst = sum((h.get("shares") or 0) for h in inst_data)
+                info["institutionsPercentHeld"] = total_inst / float_shares
+    except Exception:
+        pass
+
+    return info
 
 # Allow requests from your site. In production replace "*" with your domain,
 # e.g. CORS(app, origins=["https://moneybymath.com"])
@@ -138,147 +401,64 @@ def ema(series, period):
     return series.ewm(span=period, adjust=False).mean()
 
 
-def get_earnings_days(t):
+def get_earnings_days(ticker):
     """
-    Return days until next earnings, or None.
-
-    Tries three sources in order:
-      1. t.calendar           - yfinance's dedicated upcoming-events dict
-      2. t.get_earnings_dates(limit=20) - recent + near-future dates via index
-      3. t.earnings_dates     - older yfinance attribute (some versions)
-
-    All timestamps are normalised to UTC before comparison.
+    Return days until next earnings (int), {"days": N, "estimated": True}, or None.
+    Uses FMP stable /stable/earnings?symbol=TICKER endpoint.
     """
     now = datetime.datetime.now(datetime.timezone.utc)
-
-    def normalise(d):
-        """Convert anything date-like to a tz-aware UTC datetime, or return None."""
-        if d is None:
+    try:
+        # Stable endpoint returns a list of earnings events, most recent first.
+        data = fmp_fetch("/stable/earnings", symbol=ticker)
+        if not isinstance(data, list) or not data:
             return None
-        try:
-            if isinstance(d, pd.Timestamp):
-                d = d.to_pydatetime()
-            if isinstance(d, datetime.datetime):
-                if d.tzinfo is None:
-                    d = d.replace(tzinfo=datetime.timezone.utc)
-                return d
-            if isinstance(d, datetime.date):
-                return datetime.datetime(d.year, d.month, d.day, tzinfo=datetime.timezone.utc)
-        except Exception:
-            pass
-        return None
 
-    def first_future(datetimes):
-        """Return days to nearest future datetime, or None."""
-        future = [d for d in datetimes if d is not None and d > now]
-        if not future:
-            return None
-        nearest = min(future)
-        return max(math.ceil((nearest - now).total_seconds() / 86400), 0)
+        future_dates = []
+        past_dates   = []
 
-    # ── Source 1: t.calendar ─────────────────────────────────────────────
-    try:
-        cal = t.calendar
-        if isinstance(cal, dict) and "Earnings Date" in cal:
-            raw = cal["Earnings Date"]
-            if not isinstance(raw, list):
-                raw = [raw]
-            days = first_future([normalise(d) for d in raw])
-            if days is not None:
-                return days
-    except Exception:
-        pass
-
-    # ── Source 2: t.get_earnings_dates ───────────────────────────────────
-    try:
-        df = t.get_earnings_dates(limit=20)
-        if df is not None and not df.empty:
-            days = first_future([normalise(idx) for idx in df.index])
-            if days is not None:
-                return days
-    except Exception:
-        pass
-
-    # ── Source 3: t.earnings_dates (older yfinance attribute) ────────────
-    try:
-        df2 = t.earnings_dates
-        if df2 is not None and not df2.empty:
-            days = first_future([normalise(idx) for idx in df2.index])
-            if days is not None:
-                return days
-    except Exception:
-        pass
-
-    # ── Source 4: Estimate - most recent past date + 91 days (≈3 months) ─
-    try:
-        all_past = []
-        for source in [
-            lambda: t.get_earnings_dates(limit=20),
-            lambda: t.earnings_dates,
-        ]:
+        for entry in data:
+            date_str = entry.get("date") or entry.get("reportedDate")
+            if not date_str:
+                continue
             try:
-                df3 = source()
-                if df3 is not None and not df3.empty:
-                    past = [normalise(idx) for idx in df3.index]
-                    past = [d for d in past if d is not None and d <= now]
-                    all_past.extend(past)
+                dt = datetime.datetime.strptime(str(date_str)[:10], "%Y-%m-%d").replace(
+                    tzinfo=datetime.timezone.utc
+                )
+                if dt > now:
+                    future_dates.append(dt)
+                else:
+                    past_dates.append(dt)
             except Exception:
-                pass
-        if all_past:
-            most_recent = max(all_past)
+                continue
+
+        if future_dates:
+            nearest = min(future_dates)
+            return max(math.ceil((nearest - now).total_seconds() / 86400), 0)
+
+        # Estimate: last known date + 91 days (~1 quarter)
+        if past_dates:
+            most_recent = max(past_dates)
             estimated   = most_recent + datetime.timedelta(days=91)
             days = max(math.ceil((estimated - now).total_seconds() / 86400), 0)
             return {"days": days, "estimated": True}
+
     except Exception:
         pass
 
     return None
 
 
-def get_options_data(t, spot):
-    """
-    Return (iv, spread_dollar, opt_expiry, atm_oi, atm_volume) or all Nones.
+# NOTE: get_options_data is commented out because FMP's options-chain endpoint
+# requires a premium subscription.  The /api/stock route returns None for all
+# options-related fields (iv, spreadDollar, optExpiry, atmOI, atmVolume) until
+# a suitable data source is configured.
+#
+# def get_options_data(t, spot):
+#     ...
 
-    iv           - average implied volatility of the 6 nearest ATM contracts
-                   (calls + puts combined) from Yahoo Finance. This is a
-                   Black-Scholes derived figure, delayed ~15 min, and does NOT
-                   account for volatility skew.
-    spread_dollar - average bid-ask spread of those same ATM contracts in $.
-    opt_expiry   - the expiration date string used for this snapshot.
-    atm_oi       - total open interest across those 6 ATM contracts.
-    atm_volume   - total options volume across those 6 ATM contracts today.
-    """
-    try:
-        expirations = t.options
-        min_date = (datetime.date.today() + datetime.timedelta(days=14)).isoformat()
-        chosen = next((e for e in expirations if e >= min_date), None) or (
-            expirations[0] if expirations else None
-        )
-        if not chosen:
-            return None, None, None, None, None
-
-        chain = t.option_chain(chosen)
-        frames = []
-        for df in (chain.calls, chain.puts):
-            sub = df[(df["bid"] > 0) & (df["ask"] > 0) & (df["impliedVolatility"] > 0.005)]
-            frames.append(sub)
-        all_c = pd.concat(frames).copy()
-        all_c["dist"] = (all_c["strike"] - spot).abs()
-        atm = all_c.nsmallest(6, "dist")
-
-        if atm.empty:
-            return None, None, chosen, None, None
-
-        iv     = round(float(atm["impliedVolatility"].mean()), 4)
-        spread = round(float((atm["ask"] - atm["bid"]).mean()), 4)
-
-        # Open interest & volume (sum across ATM rows; fill missing with 0)
-        atm_oi     = int(atm["openInterest"].fillna(0).sum())  if "openInterest" in atm.columns else None
-        atm_volume = int(atm["volume"].fillna(0).sum())        if "volume"        in atm.columns else None
-
-        return iv, spread, chosen, atm_oi, atm_volume
-    except Exception:
-        return None, None, None, None, None
+def get_options_data(_ticker, _spot):
+    """Stub – returns all Nones until a supported options data source is added."""
+    return None, None, None, None, None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -300,19 +480,14 @@ def stock():
         return jsonify({"error": "ticker is required"}), 400
 
     try:
-        # Pass the custom session here
-        t = yf.Ticker(ticker, session=yf_session)
-        info = t.info
-        
-        # If info is empty (common when blocked), trigger a fallback check
-        if not info or len(info) < 5:
-            raise Exception("Yahoo Finance returned empty data. This usually means the IP is temporarily throttled.")
-            
+        info = build_fmp_info(ticker)
+        if not info:
+            raise ValueError("FMP returned no data.")
     except Exception as e:
         err_str = str(e).lower()
         if any(x in err_str for x in ["timeout", "connection", "403", "404"]):
             resp = jsonify({
-                "error": "Yahoo Finance is limiting requests. Please try again in 10-15 seconds.",
+                "error": "FMP is limiting requests. Please try again in 10-15 seconds.",
                 "retryable": True,
             })
             resp.status_code = 503
@@ -326,7 +501,8 @@ def stock():
     )
     if not spot:
         return jsonify({"error": f'No price data found for "{ticker}". Symbol may be delisted or invalid.'}), 404
-    _ed            = get_earnings_days(t)
+
+    _ed            = get_earnings_days(ticker)
     earn_days      = _ed["days"]      if isinstance(_ed, dict) else _ed
     earn_estimated = _ed["estimated"] if isinstance(_ed, dict) else False
 
@@ -335,7 +511,7 @@ def stock():
     atr_pct = None
 
     try:
-        hist   = t.history(period="1y", interval="1d", auto_adjust=True)
+        hist   = get_fmp_history(ticker, days=365)
         closes = hist["Close"].dropna().tolist()
         highs  = hist["High"].dropna().tolist()
         lows   = hist["Low"].dropna().tolist()
@@ -356,8 +532,6 @@ def stock():
             rsi = round(100 - 100 / (1 + avg_g / avg_l), 1) if avg_l else 100.0
 
         # ── HVR - Historical Volatility Rank (21-day rolling HV, 1-year) ──
-        # Ranks today's realised vol within its own 52-week min/max range.
-        # This is a proxy for IV Rank; true IV Rank needs historical IV data.
         if len(closes) >= 30:
             log_rets = [math.log(closes[i] / closes[i-1])
                         for i in range(1, len(closes)) if closes[i-1] > 0]
@@ -384,25 +558,31 @@ def stock():
     except Exception:
         pass
 
-    iv, spread_dollar, opt_expiry, atm_oi, atm_volume = get_options_data(t, spot)
+    iv, spread_dollar, opt_expiry, atm_oi, atm_volume = get_options_data(ticker, spot)
 
-    # ── Dividend ex-date proximity ─────────────────────────────────────────
+    # ── Dividend ex-date proximity ──────────────────────────────────────────
     ex_div_days = None
     try:
-        ex_ts = info.get("exDividendDate")
-        if ex_ts:
-            # yfinance returns this as a Unix timestamp (int) or datetime
-            if isinstance(ex_ts, (int, float)):
-                ex_dt = datetime.datetime.fromtimestamp(ex_ts, tz=datetime.timezone.utc)
-            elif isinstance(ex_ts, datetime.datetime):
-                ex_dt = ex_ts if ex_ts.tzinfo else ex_ts.replace(tzinfo=datetime.timezone.utc)
-            else:
-                ex_dt = None
-            if ex_dt:
-                now_utc = datetime.datetime.now(datetime.timezone.utc)
-                delta   = (ex_dt - now_utc).days
-                if delta >= 0:
-                    ex_div_days = delta
+        # Stable endpoint: /stable/dividends?symbol=TICKER
+        # Returns list sorted newest first; each entry has "date" = ex-dividend date.
+        div_data = fmp_fetch("/stable/dividends", symbol=ticker)
+        if isinstance(div_data, list):
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            # Find the next upcoming ex-date (date >= today)
+            for entry in sorted(div_data, key=lambda x: x.get("date", ""), reverse=True):
+                ex_date_str = entry.get("date")
+                if not ex_date_str:
+                    continue
+                try:
+                    ex_dt = datetime.datetime.strptime(str(ex_date_str)[:10], "%Y-%m-%d").replace(
+                        tzinfo=datetime.timezone.utc
+                    )
+                    delta = (ex_dt - now_utc).days
+                    if delta >= 0:
+                        ex_div_days = delta
+                        break
+                except Exception:
+                    continue
     except Exception:
         pass
 
@@ -423,18 +603,18 @@ def stock():
         "revGrowth":    safe(info.get("revenueGrowth")),
         "totalCash":    safe(info.get("totalCash")),
         "totalDebt":    safe(info.get("totalDebt")),
-        "avgVolume":    safe(info.get("averageVolume")),      # NEW
+        "avgVolume":    safe(info.get("averageVolume")),
         "earnDays":          earn_days,
         "earnDaysEstimated": earn_estimated,
-        "exDivDays":    ex_div_days,                          # NEW
+        "exDivDays":    ex_div_days,
         "rsi":          rsi,
         "hvr":          hvr,         # renamed from ivr - see note above
-        "atrPct":       atr_pct,     # NEW - daily avg true range as % of price
+        "atrPct":       atr_pct,
         "iv":           iv,
         "spreadDollar": spread_dollar,
         "optExpiry":    opt_expiry,
-        "atmOI":        atm_oi,      # NEW
-        "atmVolume":    atm_volume,  # NEW
+        "atmOI":        atm_oi,
+        "atmVolume":    atm_volume,
     })
 
 
@@ -461,21 +641,17 @@ def buy_analysis():
         return jsonify({"error": "ticker is required"}), 400
 
     try:
-        # Pass the custom session
-        t = yf.Ticker(ticker, session=yf_session)
-        info = t.info
-        
-        # Fetch history using the same session-backed ticker object
-        hist = t.history(period="2y", interval="1d", auto_adjust=True)
-        
+        info = build_fmp_info(ticker)
+        hist = get_fmp_history(ticker, days=730)   # 2 years
+
         if hist.empty:
             return jsonify({"error": f'No historical data for "{ticker}".'}), 404
-            
+
     except Exception as e:
         err_str = str(e).lower()
         if any(x in err_str for x in ["timeout", "403", "404", "rate limit"]):
             resp = jsonify({
-                "error": "Yahoo Finance connection error. Retrying usually helps.",
+                "error": "FMP connection error. Retrying usually helps.",
                 "retryable": True,
             })
             resp.status_code = 503
@@ -490,30 +666,13 @@ def buy_analysis():
     if not spot:
         return jsonify({"error": f'No price data found for "{ticker}". Check the symbol.'}), 404
 
-    # 2 years of OHLCV - needed for MA200 and full indicator suite
-    try:
-        hist = t.history(period="2y", interval="1d", auto_adjust=True)
-        if hist.empty:
-            return jsonify({"error": f'No historical data for "{ticker}".'}), 404
-    except Exception as e:
-        err_str = str(e).lower()
-        if "timeout" in err_str or "connection" in err_str or "read timed out" in err_str:
-            resp = jsonify({
-                "error": "The server is warming up or Yahoo Finance is slow. Please try again in a few seconds.",
-                "retryable": True,
-            })
-            resp.status_code = 503
-            resp.headers["Retry-After"] = "5"
-            return resp
-        return jsonify({"error": f"Could not fetch history: {e}"}), 502
+    if len(hist) < 60:
+        return jsonify({"error": "Not enough price history (need at least 60 trading days)."}), 422
 
     close  = hist["Close"].dropna()
     high   = hist["High"].dropna()
     low    = hist["Low"].dropna()
     volume = hist["Volume"].dropna()
-
-    if len(close) < 60:
-        return jsonify({"error": "Not enough price history (need at least 60 trading days)."}), 422
 
     signals  = []
     bull_w   = 0.0
@@ -629,7 +788,7 @@ def buy_analysis():
     # Compares the stock's 63-day return against the S&P 500 ETF.
     # Outperforming the market is a meaningful independent bullish signal.
     try:
-        spy_hist = yf.Ticker("SPY").history(period="4mo", interval="1d", auto_adjust=True)["Close"].dropna()
+        spy_hist = get_fmp_history("SPY", days=130)["Close"].dropna()
         if len(spy_hist) >= 63 and len(close) >= 63:
             stock_ret = (float(close.iloc[-1]) - float(close.iloc[-63])) / float(close.iloc[-63]) * 100
             spy_ret   = (float(spy_hist.iloc[-1]) - float(spy_hist.iloc[-63])) / float(spy_hist.iloc[-63]) * 100
@@ -1067,7 +1226,7 @@ def buy_analysis():
     # ── 7. RISK ───────────────────────────────────────────────────────────────
 
     # 7a. Earnings proximity
-    _ed2           = get_earnings_days(t)
+    _ed2           = get_earnings_days(ticker)
     earn_days      = _ed2["days"]      if isinstance(_ed2, dict) else _ed2
     earn_estimated = _ed2["estimated"] if isinstance(_ed2, dict) else False
     est_tag        = " (estimated)" if earn_estimated else ""
@@ -1105,22 +1264,9 @@ def buy_analysis():
         add("Risk", "Short Interest", f"{short_pct:.1f}%", interp, sig, weight=1)
 
     # 7d. Institutional Ownership
-    # info dict rarely has this; major_holders is the reliable source.
-    # The "Breakdown" column is the DataFrame INDEX - labels live there, not in row.iloc[0].
     inst_pct = safe(info.get("institutionsPercentHeld"))
     if inst_pct is None:
         inst_pct = safe(info.get("institutionPercentHeld"))
-    if inst_pct is None:
-        try:
-            mh_inst = t.major_holders
-            if mh_inst is not None and not mh_inst.empty:
-                for label, row in mh_inst.iterrows():
-                    lbl = str(label).lower()
-                    if "institution" in lbl and "float" not in lbl and "count" not in lbl:
-                        inst_pct = safe(float(row.iloc[0]))
-                        break
-        except Exception:
-            pass
     if inst_pct is not None:
         ip = inst_pct * 100
         if   ip >= 70: sig = "bullish"; interp = f"{ip:.1f}% institutionally owned - strong conviction from funds and large investors."
@@ -1135,25 +1281,8 @@ def buy_analysis():
     buyback_value        = 0.0
     buyback_count        = 0
 
-    def normalise(d):
-        """Convert anything date-like to a tz-aware UTC datetime, or return None."""
-        if d is None:
-            return None
-        try:
-            if isinstance(d, pd.Timestamp):
-                d = d.to_pydatetime()
-            if isinstance(d, datetime.datetime):
-                if d.tzinfo is None:
-                    d = d.replace(tzinfo=datetime.timezone.utc)
-                return d
-            if isinstance(d, datetime.date):
-                return datetime.datetime(d.year, d.month, d.day, tzinfo=datetime.timezone.utc)
-        except Exception:
-            pass
-        return None
-
     now = datetime.datetime.now(datetime.timezone.utc)
-    
+
     # 1. Determine Market Cap Tiers (Adjust thresholds as needed)
     market_cap = safe(info.get("marketCap")) or 0
     is_large_cap = market_cap >= 10_000_000_000  # > $10B
@@ -1179,78 +1308,55 @@ def buy_analysis():
         neutral_threshold = 0.5
 
     try:
-        mh = t.major_holders
-        if mh is not None and not mh.empty:
-            # The "Breakdown" column is the DataFrame INDEX - not a data column.
-            # row.iloc[0] is the numeric Value; the label lives in the index (label).
-            for label, row in mh.iterrows():
-                label_low = str(label).lower()
-                if "insider" in label_low and "institution" not in label_low:
-                    try:
-                        insider_pct_held = round(float(row.iloc[0]) * 100, 4)
-                    except (ValueError, TypeError):
-                        pass
+        # ── Insider % held via FMP stable insider-ownership endpoint ─────────
+        # /stable/insider-ownership?symbol=TICKER
+        ins_own_data = fmp_fetch("/stable/insider-ownership", symbol=ticker)
+        ins_own = _one(ins_own_data)
+        if ins_own:
+            total_shares   = ins_own.get("sharesOutstanding") or ins_own.get("totalSharesOutstanding")
+            insider_shares = ins_own.get("insidersShares")    or ins_own.get("insidersSharesOwned")
+            if total_shares and insider_shares and total_shares > 0:
+                insider_pct_held = round(insider_shares / total_shares * 100, 4)
     except Exception:
         pass
 
     try:
-        idf = t.insider_transactions
-        if idf is not None and not idf.empty:
-            cutoff = now - datetime.timedelta(days=180)
+        # ── Insider trades via stable endpoint ──────────────────────────────
+        # /stable/insider-trading?symbol=TICKER&limit=100
+        idf_raw = fmp_fetch("/stable/insider-trading", symbol=ticker, limit=100)
+        if isinstance(idf_raw, list) and idf_raw:
+            cutoff    = now - datetime.timedelta(days=180)
             buys_180  = 0
             sells_180 = 0
 
-            for _, row in idf.iterrows():
-                # Basic data extraction
-                raw_date = row.get("Start Date") or row.get("Transaction Start Date")
-                dt = normalise(raw_date)
-                if dt is None: continue
+            for row in idf_raw:
+                txn_type = str(row.get("transactionType") or "").strip()
+                name_raw = str(row.get("reportingName")  or "").strip()
+                role_raw = str(row.get("typeOfOwner")    or "").strip()
 
-                txn_low  = str(row.get("Transaction") or row.get("Text") or "").lower().strip()
-                name_raw = str(row.get("Insider",   "") or "").strip()
-                name_low = name_raw.lower()
-                role_raw = str(row.get("Position",  "") or row.get("Title", "") or "").strip()
-                role_low = role_raw.lower()
-                
-                try:
-                    shares = int(str(row.get("Shares", 0)).replace(",", "") or 0)
-                    value  = float(str(row.get("Value", 0)).replace(",", "") or 0)
-                    if not math.isfinite(value): value = 0.0
-                except:
-                    shares, value = 0, 0.0
-
-                # 1. DETECT CORPORATE BUYBACKS
-                # Priority 1: corporate token in the Insider/name field
-                CORPORATE_NAME_TOKENS = ("issuer", "the company", "redemption", "repurchase", "buyback")
-                is_corporate = any(tok in txn_low for tok in CORPORATE_NAME_TOKENS)
-                # Priority 2: "issuer" in the Transaction text (yfinance uses this)
-                if not is_corporate:
-                    is_corporate = "issuer" in txn_low
-                # Priority 3: blank insider name + purchase/buy = automated buyback plan
-                # Real human insiders always have a name; blank name = company-level filing
-                if not is_corporate:
-                    is_corporate = (name_raw == "" and ("purchase" in txn_low or "buy" in txn_low))
-                # Priority 4: blank name + plan-style role
-                if not is_corporate:
-                    is_corporate = (
-                        name_raw == ""
-                        and any(tok in role_low for tok in ("10b5", "plan", "issuer"))
-                    )
-                if is_corporate:
-                    if "purchase" in txn_low or "buy" in txn_low:
-                        buyback_shares += shares
-                        buyback_value  += value
-                        buyback_count  += 1
-                    continue  # Never add the company itself to the human list
-
-                # 2. FILTER NOISE
-                if any(skip in txn_low for skip in ("automatic", "gift", "grant", "award", "option", "exercise")):
+                # Determine direction: FMP uses SEC transaction codes
+                is_buy  = txn_type in ("P-Purchase",)
+                is_sell = txn_type in ("S-Sale", "S-Sale+OE", "S-Sale+M")
+                if not is_buy and not is_sell:
                     continue
 
-                # 3. IDENTIFY HUMAN TRADES
-                is_buy  = "purchase" in txn_low
-                is_sell = "sale" in txn_low and not is_buy
-                if not is_buy and not is_sell: continue
+                date_str = row.get("transactionDate") or row.get("filingDate") or ""
+                dt = None
+                try:
+                    dt = datetime.datetime.strptime(date_str[:10], "%Y-%m-%d").replace(
+                        tzinfo=datetime.timezone.utc
+                    )
+                except Exception:
+                    continue
+
+                try:
+                    shares = int(row.get("securitiesTransacted") or 0)
+                    price  = float(row.get("price") or 0)
+                    value  = shares * price
+                    if not math.isfinite(value):
+                        value = 0.0
+                except Exception:
+                    shares, value = 0, 0.0
 
                 within_window = dt >= cutoff
                 if within_window:
@@ -1267,31 +1373,11 @@ def buy_analysis():
                     "recent":       within_window,
                     "is_corporate": False,
                 })
-            
 
-            # Trim human trades first so we always have the most recent human activity
+            # Trim to the 20 most recent human trades
             insider_transactions = insider_transactions[:20]
 
-            # 4. INSERT BUYBACK AT THE VERY TOP (display-only row, does not affect signal counts)
-            if buyback_count > 0:
-                insider_transactions.insert(0, {
-                    "date":         "--",
-                    "name":         "Corporate Buyback",
-                    "role":         f"{buyback_count} transaction{'s' if buyback_count != 1 else ''}",
-                    "type":         "buy",
-                    "shares":       buyback_shares,
-                    "value":        buyback_value,
-                    "recent":       True,
-                    "is_corporate": True,
-                })
-                add("Corporate Activity", "Share Buybacks",
-                    f"${buyback_value/1e6:.1f}M repurchased",
-                    f"The company has bought back ${buyback_value/1e6:.1f}M in shares across "
-                    f"{buyback_count} transaction{'s' if buyback_count != 1 else ''} - "
-                    "management believes shares are undervalued.",
-                    "bullish", weight=1)
-
-            # 5. SIGNAL LOGIC
+            # Signal logic (no corporate buyback row from FMP Form-4 data)
             total_human = buys_180 + sells_180
             if total_human > 0:
                 net = buys_180 - sells_180
@@ -1314,16 +1400,14 @@ def buy_analysis():
                 interp = (
                     f"{buys_180} insider buy{'s' if buys_180 != 1 else ''} vs "
                     f"{sells_180} sell{'s' if sells_180 != 1 else ''} in the last 6 months - "
-                    f"{msg}"#{buyback_note}"
+                    f"{msg}"
                 )
                 value_str = f"{buys_180}B / {sells_180}S"
                 add("Insider Activity", "Insider Buy/Sell (180d)", value_str, interp, sig, weight=2)
 
-                # 3. Apply the Logic
+                # Insider ownership %
                 if insider_pct_held is not None:
-                    # Build a context string for the description
                     cap_desc = "Mega Cap" if is_mega_cap else "Large Cap" if is_large_cap else "Small/Micro Cap" if is_small_cap else "Mid Cap"
-                    
                     if insider_pct_held >= bullish_threshold:
                         sentiment = "bullish"
                         explanation = f"High insider ownership for a {cap_desc} ({insider_pct_held:.2f}%) - significant skin in the game."
@@ -1333,17 +1417,12 @@ def buy_analysis():
                     else:
                         sentiment = "bearish"
                         explanation = f"Very low insider ownership for a {cap_desc} ({insider_pct_held:.2f}%) - lack of management alignment."
-
                     add("Insider Activity", "Insider Ownership %",
                         f"{insider_pct_held:.2f}% insider owned",
-                        explanation,
-                        sentiment, weight=1)
+                        explanation, sentiment, weight=1)
 
             elif insider_pct_held is not None:
-                # No recent human trades, but we have ownership data
-                # Build a context string for the description
                 cap_desc = "Large Cap" if is_large_cap else "Small/Micro Cap" if is_small_cap else "Mid Cap"
-                
                 if insider_pct_held >= bullish_threshold:
                     sentiment = "bullish"
                     explanation = f"High insider ownership for a {cap_desc} ({insider_pct_held:.2f}%) - significant skin in the game."
@@ -1353,20 +1432,9 @@ def buy_analysis():
                 else:
                     sentiment = "bearish"
                     explanation = f"Very low insider ownership for a {cap_desc} ({insider_pct_held:.2f}%) - lack of management alignment."
-
                 add("Insider Activity", "Insider Ownership %",
                     f"{insider_pct_held:.2f}% insider owned",
-                    explanation,
-                    sentiment, weight=1)
-
-            elif buyback_count > 0:
-                # No human trades and no ownership data, but company is buying back
-                add("Corporate Activity", "Share Buybacks",
-                    f"${buyback_value/1e6:.1f}M repurchased",
-                    f"The company has recently bought back ${buyback_value/1e6:.1f}M in shares across "
-                    f"{buyback_count} transaction{'s' if buyback_count != 1 else ''} - "
-                    "management believes shares are undervalued.",
-                    "bullish", weight=1)
+                    explanation, sentiment, weight=1)
 
     except Exception:
         pass
@@ -1419,8 +1487,6 @@ def buy_analysis():
 # ─────────────────────────────────────────────────────────────────────────────
 #  Mortgage Rate Getter
 # ─────────────────────────────────────────────────────────────────────────────
-
-load_dotenv()
 
 FRED_API_KEY = os.getenv("FRED_API_KEY")
 
