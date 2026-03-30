@@ -385,9 +385,13 @@ let resultCardIsOffScreen = false;
 function syncCarFloat() {
     const floatPill = document.getElementById('carFloat');
     const verdictText = document.getElementById('carVerdict').textContent;
+    const verdictTextEl = document.getElementById('carVerdict');
     const verdictValue = document.getElementById('carFloat-value');
 
     verdictValue.textContent = verdictText;
+    floatcolor = verdictTextEl.style.color
+    verdictValue.style.color = floatcolor;
+
     const isScrolledDown = window.scrollY > 150;
     
     if (resultCardIsOffScreen && isScrolledDown) {

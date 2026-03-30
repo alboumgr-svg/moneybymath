@@ -1148,6 +1148,7 @@ section {
     grid-template-columns: 2fr 1fr;
     gap: 3rem;
     margin-bottom: 2.5rem;
+    max-width: calc(100vw - 500px) !important; margin-left: auto !important; margin-right: auto !important;
 }
 
 .footer-brand p {
@@ -1189,7 +1190,7 @@ section {
     border: 1.5px solid #FCA5A5;
     border-radius: 8px;
     margin-bottom: 2rem;
-    max-width: calc(100vw - 50px) !important; margin-left: auto !important; margin-right: auto !important;
+    max-width: calc(100vw - 500px) !important; margin-left: auto !important; margin-right: auto !important;
 }
 
 .footer-disclaimer p {
