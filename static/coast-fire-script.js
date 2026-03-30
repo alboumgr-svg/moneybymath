@@ -1,4 +1,6 @@
 let coastChart = null;
+let resultFindOffScreen = false;
+let resultTrackOffScreen = false;
 
 const STATE_IDS = [
     'currentAge', 'retirementAge', 'currentSavings', 'annualSpending', 'withdrawalRate',
@@ -195,6 +197,119 @@ function getFutureDate(years, months) {
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
+// ── Floating pills ────────────────────────────────────────────────────────────
+function syncCoastFloat() {
+    const activeTab    = document.querySelector('.mode-btn.active')?.dataset.tab || 'find';
+    const isScrolledDown = window.scrollY > 150;
+
+    // ── Find pill ──────────────────────────────────────────
+    const findFloatEl  = document.getElementById('findFloat');
+    const findValueEl  = document.getElementById('findFloat-value');
+    const findSubEl    = document.getElementById('findFloat-sub');
+    // Grab the main text label (the first div without an ID)
+    const findLabelEl  = findFloatEl ? findFloatEl.querySelector('.float-label:not(#findFloat-sub)') : null;
+
+    // ── Track pill ─────────────────────────────────────────
+    const trackFloatEl = document.getElementById('trackFloat');
+    const trackValueEl = document.getElementById('trackFloat-value');
+    const trackSubEl   = document.getElementById('trackFloat-sub');
+    // Grab the main text label (the first div without an ID)
+    const trackLabelEl = trackFloatEl ? trackFloatEl.querySelector('.float-label:not(#trackFloat-sub)') : null;
+    const trackMonthlySavingsEl = document.getElementById('trackMonthlySavings');
+    const userSavingsRateEl = document.getElementById('userSavingsRate');
+
+    // ── Check for missing inputs ──────────────────────────
+    const ageRaw      = document.getElementById('currentAge')?.value.trim();
+    const retAgeRaw   = document.getElementById('retirementAge')?.value.trim();
+    const savingsRaw  = document.getElementById('currentSavings')?.value.trim();
+    const spendingRaw = document.getElementById('annualSpending')?.value.trim();
+    const wRateRaw    = document.getElementById('withdrawalRate')?.value.trim();
+    const rRateRaw    = document.getElementById('returnRate')?.value.trim();
+
+    const hasMissingInputs = !ageRaw || !retAgeRaw || !savingsRaw || !spendingRaw || !wRateRaw || !rRateRaw;
+
+    // Real-time rect check so tab switches are instant
+    const findCard = document.getElementById('results-find');
+    if (findCard && getComputedStyle(findCard).display !== 'none') {
+        const rect = findCard.getBoundingClientRect();
+        resultFindOffScreen = rect.bottom < 0 || rect.top > window.innerHeight;
+    }
+
+    const trackCard = document.getElementById('results-track');
+    if (trackCard && getComputedStyle(trackCard).display !== 'none') {
+        const rect = trackCard.getBoundingClientRect();
+        resultTrackOffScreen = rect.bottom < 0 || rect.top > window.innerHeight;
+    }
+
+    const coastNumText   = document.getElementById('coastNumber')?.textContent || '--';
+    const monthlySavText = document.getElementById('monthlySavings')?.textContent || '--';
+    const userCoastText  = document.getElementById('userCoastTime')?.textContent || '--';
+    const sourceEl       = document.getElementById('userCoastTime');
+    const userCoastColor = sourceEl ? sourceEl.style.color : 'inherit';
+    const userBalText    = document.getElementById('userBalAtCoast')?.textContent || '--';
+
+    // ── Fill values & hide components if incomplete ─────────
+    if (hasMissingInputs || coastNumText === '--') {
+        if (findValueEl) findValueEl.textContent = "Please fill in inputs";
+        if (findValueEl) findValueEl.style.color = '#6B7280';
+        if (findSubEl) findSubEl.textContent = "";
+        if (findLabelEl) findLabelEl.style.display = "none";
+        if (trackValueEl) trackValueEl.textContent = "Please fill in inputs";
+
+        if (trackSubEl) trackSubEl.textContent = "";
+        if (trackLabelEl) trackLabelEl.style.display = "none";
+        if (trackMonthlySavingsEl) trackMonthlySavingsEl.textContent = "";
+    } else {
+        if (findValueEl) findValueEl.textContent = coastNumText;
+        if (findValueEl) findValueEl.style.color = '';
+        if (findSubEl)   findSubEl.textContent   = 'Monthly Savings Needed: ' + monthlySavText;
+        if (findLabelEl) findLabelEl.style.display = "";
+
+        if (trackValueEl) trackValueEl.textContent = userCoastText;
+        if (trackValueEl) trackValueEl.style.color = userCoastColor;
+        if (trackSubEl)   trackSubEl.textContent   = (document.getElementById('userBalCardLabel')?.textContent || 'Portfolio at Coast') + ': ' + userBalText;
+        if (trackLabelEl) trackLabelEl.style.display = "";
+        if (trackMonthlySavingsEl && userSavingsRateEl) {
+            trackMonthlySavingsEl.textContent = userSavingsRateEl.textContent;
+        }
+    }
+
+    // ── Visibility ──────────────────────────────────────────
+    const canShowFind = resultTrackOffScreen && resultFindOffScreen && isScrolledDown;
+    if (findFloatEl) {
+        if (canShowFind) findFloatEl.classList.add('visible');
+        else             findFloatEl.classList.remove('visible');
+    }
+
+    const canShowTrack = resultFindOffScreen && resultTrackOffScreen && isScrolledDown && userCoastText !== '--';
+    if (trackFloatEl) {
+        if (canShowTrack) trackFloatEl.classList.add('visible');
+        else              trackFloatEl.classList.remove('visible');
+    }
+}
+
+function initCoastFloat() {
+    const findCard  = document.getElementById('results-find');
+    const trackCard = document.getElementById('results-track');
+    if (!findCard && !trackCard) return;
+
+    const observer = new IntersectionObserver(
+        entries => {
+            entries.forEach(entry => {
+                if (entry.target === findCard)  resultFindOffScreen  = !entry.isIntersecting;
+                if (entry.target === trackCard) resultTrackOffScreen = !entry.isIntersecting;
+            });
+            syncCoastFloat();
+        },
+        { threshold: 0.1 }
+    );
+
+    if (findCard)  observer.observe(findCard);
+    if (trackCard) observer.observe(trackCard);
+
+    window.addEventListener('scroll', syncCoastFloat);
+}
+
 // Safe money formatter - returns '--' for any non-finite value
 function safeMoney(value) {
     if (value === null || value === undefined || !isFinite(value) || isNaN(value)) {
@@ -239,6 +354,7 @@ function clearOutputs() {
         coastChart.destroy();
         coastChart = null;
     }
+    syncCoastFloat();
 }
 
 // Tab switching
@@ -254,6 +370,7 @@ function switchTab(tab) {
     document.getElementById('results-track').style.display = tab === 'track' ? '' : 'none';
     saveToStorage();
     calculateCoastFIRE();
+    syncCoastFloat();
 }
 
 // Coast FIRE Calculator Function
@@ -288,7 +405,20 @@ function calculateCoastFIRE() {
                                                     : (currentAge + (retirementAge - currentAge) / 2);
     const userMonthly    = userMonthlyRaw !== '' ? parseFormattedNumber(userMonthlyRaw) : 0;
 
+    // ── Update the dynamic card label with the user's monthly savings ──
+    const userSavingsRateEl = document.getElementById('userSavingsRate');
+
+    if (userMonthly && userSavingsRateEl) {
+        
+        // Format to a readable currency string
+        const formattedVal = '$' + userMonthly.toLocaleString('en-US');
+        
+        userSavingsRateEl.textContent = `Time Until Coast FIRE with ${formattedVal} saved per month`;
+    }
+
     updateTaxBuffer();
+
+    
 
     // 4. Logical Validation (bounds, NaNs, impossible scenarios)
     if (isNaN(currentAge) || currentAge < 1 || currentAge > 99) {
@@ -443,8 +573,9 @@ function calculateCoastFIRE() {
                     </div>
                     <div style="flex:1;height:2px;background:linear-gradient(to right,#86EFAC,#FCD34D);min-width:14px;"></div>
                     <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
-                        <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement (Age ${retirementAge})</div>
+                        <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                         <div style="font-weight:700;color:#D97706;">${safeMoney(retirementBal)}</div>
+                        <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
                     </div>
                 </div>
             `;
@@ -469,8 +600,9 @@ function calculateCoastFIRE() {
                     </div>
                     <div style="flex:1;height:0;border-top:2px dashed #9CA3AF;min-width:14px;"></div>
                     <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
-                        <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement (Age ${retirementAge})</div>
+                        <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                         <div style="font-weight:700;color:#D97706;">${safeMoney(fiNumber)}</div>
+                        <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
                     </div>
                 </div>
             `;
@@ -515,8 +647,9 @@ function calculateCoastFIRE() {
                         </div>
                         <div style="flex:1;height:0;border-top:2px dashed #9CA3AF;min-width:14px;"></div>
                         <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
-                            <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement (Age ${retirementAge})</div>
+                            <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                             <div style="font-weight:700;color:#D97706;">${safeMoney(retirementBal)}</div>
+                            <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
                         </div>
                     </div>
                 `;
@@ -575,8 +708,9 @@ function calculateCoastFIRE() {
                         </div>
                         <div style="flex:1;height:0;border-top:2px dashed #6EE7B7;min-width:14px;"></div>
                         <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
-                            <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement (Age ${retirementAge})</div>
+                            <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                             <div style="font-weight:700;color:#D97706;">${safeMoney(fiNumber)}</div>
+                            <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
                         </div>
                     </div>
                 `;
@@ -595,6 +729,7 @@ function calculateCoastFIRE() {
     // Update chart
     const activeTab = document.querySelector('.mode-btn.active') ? document.querySelector('.mode-btn.active').dataset.tab : 'find';
     updateCoastChart(currentAge, retirementAge, currentSavings, coastNumber, fiNumber, returnRate, monthlySavings, monthsToCoast, userMonthly, userMonthsToCoast, activeTab);
+    syncCoastFloat();
 }
 
 // Update Coast FIRE Chart
@@ -936,6 +1071,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     calculateCoastFIRE();
+    initCoastFloat();
 
     // Smooth scroll logic for shared links
     if (loadedFromUrl) {

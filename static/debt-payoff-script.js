@@ -325,9 +325,11 @@ function updateDebtChart(data1, data2, labels = ['Avalanche', 'Snowball']) {
     });
 }
 
+// Show/hide the float based on whether the original result-highlight card is on-screen
+let resultCardIsOffScreen = false;
+
 // ── Floating pills ───────────────────────────────────────────────────────────
 function syncDebtFloat() {
-    const offScreen        = window._debtCardOffScreen || false;
     const actionEl         = document.getElementById('actionPlan');
     const actionFloatEl    = document.getElementById('debtActionFloat');
     const actionFloatValEl = document.getElementById('debtActionFloat-value');
@@ -335,6 +337,8 @@ function syncDebtFloat() {
     const methodFloatEl    = document.getElementById('debtMethodFloat');
     const methodFloatValEl = document.getElementById('debtMethodFloat-value');
     const methodFloatSubEl = document.getElementById('debtMethodFloat-sub');
+    
+    const isScrolledDown = window.scrollY > 150;
 
     const best     = bestMethodEl ? bestMethodEl.textContent.trim() : '';
     const isFilled = (best === 'Avalanche' || best === 'Snowball');
@@ -347,7 +351,7 @@ function syncDebtFloat() {
         actionFloatEl.style.borderLeft = '4px solid var(--primary)';
     }
 
-    // ── Method pill ──────────────────────────────────────────────────────────
+    // ── Method pill Content ──────────────────────────────────────────────────
     if (methodFloatValEl) {
         if (isFilled) {
             methodFloatValEl.textContent = best;
@@ -368,18 +372,23 @@ function syncDebtFloat() {
         }
     }
     
-    // Toggle visibility based on scroll position
-    if (methodFloatEl) {
-        methodFloatEl.classList.toggle('visible', offScreen);
-    }
-
-    // ── Action pill ──────────────────────────────────────────────────────────
+    // ── Action pill Content ──────────────────────────────────────────────────
     if (actionFloatValEl && actionEl) {
         actionFloatValEl.innerHTML = actionEl.innerHTML;
     }
+
+    // ── Visibility Toggling ──────────────────────────────────────────────────
+    // Evaluate if the conditions are met to show the floaters
+    const canShow = resultCardIsOffScreen && isScrolledDown;
+
+    if (methodFloatEl) {
+        // Adds 'visible' if true, removes it if false
+        methodFloatEl.classList.toggle('visible', canShow);
+    }
+
     if (actionFloatEl) {
-        // Only visible when off-screen AND fields are filled
-        actionFloatEl.classList.toggle('visible', offScreen && isFilled);
+        // Only visible when off-screen, scrolled down, AND fields are filled
+        actionFloatEl.classList.toggle('visible', canShow && isFilled);
     }
 }
 
@@ -387,16 +396,17 @@ function initDebtFloat() {
     const originalCard = document.querySelector('#debtResults .result-card.result-highlight');
     if (!originalCard) return;
 
-    window._debtCardOffScreen = false;
-
     const observer = new IntersectionObserver(
         entries => {
-            window._debtCardOffScreen = !entries[0].isIntersecting;
+            resultCardIsOffScreen = !entries[0].isIntersecting;
             syncDebtFloat();
         },
-        { threshold: 0.5 }
+        { threshold: 0.1 }
     );
     observer.observe(originalCard);
+
+    // Disappears instantly when scrolling back to the top
+    window.addEventListener('scroll', syncDebtFloat);
 }
 
 // ── Sharing & Export ─────────────────────────────────────────────────────────

@@ -1,6 +1,122 @@
 {% extends "base.html" %}
 {% block title %}Coast FIRE Calculator - MoneyByMath{% endblock %}
 {% block content %}
+
+<style>
+    /* ── Floating "Find My Number" pill ─────────────────── */
+    #trackFloat {
+        position: fixed;
+        bottom: 9rem;
+        right: 1.75rem;
+        z-index: 999;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+        border: 1.5px solid #E5E7EB;
+        min-width: 210px;
+        max-width: 270px;
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #trackFloat.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    #trackFloat .float-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: 0.06em;
+        color: #9CA3AF;
+        margin-bottom: 5px;
+    }
+    #trackFloat .float-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+    @media (max-width: 480px) {
+        #trackFloat {
+            bottom: 7rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+    @media (min-width: 1024px) {
+        #trackFloat {
+            bottom: 10.5rem;
+            min-width: 280px;
+            max-width: 360px;
+            padding: 1.1rem 1.5rem;
+            border-radius: 16px;
+        }
+        #trackFloat .float-label { font-size: 0.95rem; }
+        #trackFloat .float-value { font-size: 1.65rem; }
+    }
+
+    /* ── Floating "My Savings Rate" pill ────────────────── */
+    #findFloat {
+        position: fixed;
+        bottom: 1.75rem;
+        right: 1.75rem;
+        z-index: 999;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+        border: 1.5px solid #E5E7EB;
+        min-width: 210px;
+        max-width: 270px;
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #findFloat.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    #findFloat .float-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: 0.06em;
+        color: #9CA3AF;
+        margin-bottom: 5px;
+    }
+    #findFloat .float-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+    @media (max-width: 480px) {
+        #findFloat {
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+        }
+    }
+    @media (min-width: 1024px) {
+        #findFloat {
+            min-width: 280px;
+            max-width: 360px;
+            padding: 1.1rem 1.5rem;
+            border-radius: 16px;
+        }
+        #findFloat .float-label { font-size: 0.95rem; }
+        #findFloat .float-value { font-size: 1.65rem; }
+    }
+</style>
+
     <section class="hero">
         <div class="hero-background"></div>
         <div class="container">
@@ -122,7 +238,7 @@
 
                     <div class="calculator-results" id="results-track" style="display:none;">
                         <div class="result-card">
-                            <div class="result-label">When You'll Hit Coast FIRE With Your Current Savings Rate</div>
+                            <div class="result-label" id="userSavingsRate">--</div>
                             <div class="result-value" id="userCoastTime">--</div>
                             <div class="result-subtitle" id="userCoastAge">Enter your monthly savings on the left</div>
                             <div class="date-display" id="userCoastDate"></div>
@@ -153,6 +269,24 @@
                 <div class="calculator-card chart-card">
                     <h3 class="card-title">Growth Projection</h3>
                     <canvas id="coastChart"></canvas>
+                </div>
+
+                <!-- Affilliate Link -->
+                <div class="calculator-card chart-card" id="affiliateShow">
+                    <h3 class="card-title">Now That You Know Your Coast FIRE Number... Take Action!</h3>
+                    <div class="affiliate-container">
+                        <p class="affiliate-text">
+                            Ready to put savings away to try and reach Coast FIRE? Open a retirement account or regular brokerage today with AFFILLIATENAME to start your journey!
+                        </p>
+                        
+                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                            Start Trading on AFFILLIATENAME
+                        </a>
+
+                        <div class="disclosure-box">
+                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                        </div>
+                    </div>
                 </div>
 
                 <div class="calculator-card">
@@ -190,24 +324,6 @@
                                                         If you don’t already have that amount, you must continue investing to reach it. During that time, your portfolio keeps growing from both contributions and compounding. As a result, by the time you actually hit Coast FIRE under the “My Savings Rate” scenario, your portfolio balance will typically be higher than the original “today” Coast number.
                                 </div>
                                 </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Affilliate Link -->
-                <div class="calculator-card chart-card">
-                    <h3 class="card-title">Now That You Know Your Coast FIRE Number... Take Action!</h3>
-                    <div class="affiliate-container">
-                        <p class="affiliate-text">
-                            Ready to put savings away to try and reach Coast FIRE? Open a retirement account or regular brokerage today with AFFILLIATENAME to start your journey!
-                        </p>
-                        
-                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
-                            Start Trading on AFFILLIATENAME
-                        </a>
-
-                        <div class="disclosure-box">
-                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
                         </div>
                     </div>
                 </div>
@@ -265,6 +381,21 @@
             </div>
         </div>
     </section>
+
+    <!-- Floating "My Savings Rate" pill -->
+    <div id="trackFloat" style="background:#f8fafc; border-left:4px solid var(--primary);">
+        <div class="float-label" id="trackMonthlySavings">--</div>
+        <div class="float-value" id="trackFloat-value">--</div>
+        <div class="float-label" id="trackFloat-sub" style="margin-top:5px; text-transform: none;"></div>
+    </div>
+
+    <!-- Floating "Find My Number" pill -->
+    <div id="findFloat" style="background:#f8fafc; border-left:4px solid var(--primary);">
+        <div class="float-label">Coast FIRE Number</div>
+        <div class="float-value" id="findFloat-value">--</div>
+        <div class="float-label" id="findFloat-sub" style="margin-top:5px; text-transform: none;"></div>
+    </div>
+
     {% endblock %}
 
 {% block scripts %}

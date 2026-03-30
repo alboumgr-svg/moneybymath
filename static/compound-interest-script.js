@@ -34,6 +34,7 @@ function syncFloat() {
     const floatEl        = document.getElementById('balanceFloat');
     const floatValueEl   = document.getElementById('balanceFloat-value');
     const floatYearsEl   = document.getElementById('yearsDisplayFloat');
+    const isScrolledDown = window.scrollY > 150;
 
     if (!floatEl || !finalBalanceEl) return;
     
@@ -43,26 +44,33 @@ function syncFloat() {
     // Mirror the left-border from the result card onto the float pill
     const card = finalBalanceEl.parentElement;
     if (card) floatEl.style.borderLeft = card.style.borderLeft || '1.5px solid #E5E7EB';
+
+    if (resultCardIsOffScreen && isScrolledDown) {
+        floatEl.classList.add('visible');
+    } else {
+        floatEl.classList.remove('visible');
+    }
 }
 
+// Show/hide the float based on whether the original result-highlight card is on-screen
+let resultCardIsOffScreen = false;
+
 function initResultFloat() {
-    const originalCard = document.querySelector('.result-card.result-highlight');
+    const originalCard = document.querySelector('.calculator-results');
     const floatEl      = document.getElementById('balanceFloat');
     if (!originalCard || !floatEl) return;
 
     const observer = new IntersectionObserver(
         entries => {
-            const isVisible = entries[0].isIntersecting;
-            if (isVisible) {
-                floatEl.classList.remove('visible');
-            } else {
-                syncFloat();
-                floatEl.classList.add('visible');
-            }
+            resultCardIsOffScreen = !entries[0].isIntersecting;
+            syncFloat();
         },
-        { threshold: 0.5 } 
+        { threshold: 0.1 }
     );
     observer.observe(originalCard);
+
+    // Disappears instantly when scrolling back to the top
+    window.addEventListener('scroll', syncFloat);
 }
 
 // ─── Reset UI ───────────────────────────────────────────────────────────────

@@ -1,41 +1,54 @@
 /* True Cost of Car Ownership calculator
-   - Toggle button for down payment (% ↔ $), shared across new/used
+   - Compares New, Used, and Leased (requires at least 2 to calculate)
+   - Side-by-side % and $ down payment inputs
    - Unified handleInput() + formatCurrencyInput()
-   - Required-field validation with "Missing: ..." display
-   - localStorage persistence
    - DOMContentLoaded init
 */
 
 let carChart = null;
-const STATE_IDS = ['newPrice','newRate','newTerm','usedPrice','usedRate','usedTerm',
-                 'newDownPayment','usedDownPayment','holdYears','marketReturn'];
+let winnerKey = null;
 
-// ─── Dual-mode field state ────────────────────────────────────────────────────
-const fieldModes = {
-    carDownPayment: 'percent'
+const STATE_IDS = [
+    'newPrice','newRate','newTerm','newDownPayment', 'newDownPaymentPct',
+    'usedPrice','usedRate','usedTerm','usedDownPayment', 'usedDownPaymentPct',
+    'leaseDueAtSigning','leaseMonthly','leaseTerm',
+    'holdYears','marketReturn'
+];
+
+const GROUPS = {
+    new: ['newPrice','newRate','newTerm','newDownPayment'],
+    used: ['usedPrice','usedRate','usedTerm','usedDownPayment'],
+    lease: ['leaseDueAtSigning','leaseMonthly','leaseTerm']
 };
 
-const TOGGLE_CONFIG = {
-    carDownPayment: {
-        percent: { label: 'Down Payment (%)', placeholder: 'e.g. 10',    inputType: 'percent',  min: 0, max: 100    },
-        dollar:  { label: 'Down Payment ($)', placeholder: 'e.g. 5,000', inputType: 'currency', min: 0, max: 200000 }
+const SHARED = ['holdYears','marketReturn'];
+
+// ─── Synchronize Dollar and Percent inputs ────────────────────────────────────
+
+function syncCarDownPayment(type, source) {
+    const priceId   = type === 'new' ? 'newPrice' : 'usedPrice';
+    const dollarId  = type === 'new' ? 'newDownPayment' : 'usedDownPayment';
+    const percentId = type === 'new' ? 'newDownPaymentPct' : 'usedDownPaymentPct';
+
+    const price     = parseFormattedNumber(document.getElementById(priceId).value);
+    const dollarEl  = document.getElementById(dollarId);
+    const percentEl = document.getElementById(percentId);
+
+    if (source === 'percent') {
+        const pct = parseFloat(percentEl.value) || 0;
+        const calcDollar = (price * pct) / 100;
+        dollarEl.value = calcDollar > 0 ? Math.round(calcDollar).toLocaleString('en-US') : '';
+    } else {
+        const dollar = parseFormattedNumber(dollarEl.value);
+        const calcPct = price > 0 ? (dollar / price) * 100 : 0;
+        percentEl.value = calcPct > 0 ? parseFloat(calcPct.toFixed(2)) : '';
     }
-};
 
-const REQUIRED_FIELDS = {
-    newPrice:        'New Car Price',
-    newRate:         'New Loan Rate',
-    newTerm:         'New Loan Term',
-    usedPrice:       'Used Car Price',
-    usedRate:        'Used Loan Rate',
-    usedTerm:        'Used Loan Term',
-    newDownPayment:  'New Down Payment',
-    usedDownPayment: 'Used Down Payment',
-    holdYears:       'Hold Time',
-    marketReturn:    'Market Return'
-};
+    calculateCarCost();
+    saveToStorage();
+}
 
-// ─── Currency formatting ──────────────────────────────────────────────────────
+// ─── Currency formatting & Parsing ────────────────────────────────────────────
 
 function formatCurrencyInput(input) {
     const raw       = input.value;
@@ -79,87 +92,11 @@ function clampInput(input) {
 function handleInput(input) {
     if (input.dataset.inputType === 'currency') formatCurrencyInput(input);
     clampInput(input);
+    saveToStorage();
     calculateCarCost();
 }
 
-// ─── Toggle buttons ───────────────────────────────────────────────────────────
-
-function toggleFieldMode(fieldId) {
-    const config = TOGGLE_CONFIG[fieldId];
-    fieldModes[fieldId] = fieldModes[fieldId] === 'percent' ? 'dollar' : 'percent';
-    const cfg = config[fieldModes[fieldId]];
-
-    // Both down payment inputs share the same toggle
-    const targets = (fieldId === 'carDownPayment')
-        ? ['newDownPayment', 'usedDownPayment']
-        : [fieldId];
-
-    targets.forEach(id => {
-        const input = document.getElementById(id);
-        if (!input) return;
-        input.value = '';
-        input.placeholder = cfg.placeholder;
-        input.dataset.inputType = cfg.inputType;
-        input.dataset.max = cfg.max;
-        const labelEl = document.querySelector(`label[for="${id}"]`);
-        if (labelEl) labelEl.textContent = cfg.label;
-    });
-
-    const btn = document.getElementById(fieldId + '-toggle');
-    if (btn) {
-        btn.textContent = fieldModes[fieldId] === 'percent' ? '%' : '$';
-        btn.dataset.mode = fieldModes[fieldId];
-    }
-
-    calculateCarCost();
-}
-
-function initToggleButtons() {
-    Object.keys(TOGGLE_CONFIG).forEach(fieldId => {
-        // Anchor the single toggle button to the newDownPayment input group
-        const anchorId = (fieldId === 'carDownPayment') ? 'newDownPayment' : fieldId;
-        const anchorInput = document.getElementById(anchorId);
-        if (!anchorInput) return;
-
-        const mode = fieldModes[fieldId];
-        const cfg  = TOGGLE_CONFIG[fieldId][mode];
-
-        // Apply initial config to both inputs
-        const targets = (fieldId === 'carDownPayment')
-            ? ['newDownPayment', 'usedDownPayment']
-            : [fieldId];
-
-        targets.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.dataset.inputType = cfg.inputType;
-            el.placeholder       = cfg.placeholder;
-            el.dataset.min       = cfg.min ?? '';
-            el.dataset.max       = cfg.max ?? '';
-            const labelEl = document.querySelector(`label[for="${id}"]`);
-            if (labelEl) labelEl.textContent = cfg.label;
-            el.setAttribute('oninput', 'handleInput(this)');
-        });
-
-        // Wrap the anchor input with the toggle button
-        const wrapper = document.createElement('div');
-        wrapper.className = 'input-toggle-wrapper';
-        anchorInput.parentNode.insertBefore(wrapper, anchorInput);
-        wrapper.appendChild(anchorInput);
-
-        const btn = document.createElement('button');
-        btn.type      = 'button';
-        btn.id        = fieldId + '-toggle';
-        btn.className = 'unit-toggle-btn';
-        btn.textContent  = mode === 'percent' ? '%' : '$';
-        btn.dataset.mode = mode;
-        btn.title        = 'Click to switch between % and $';
-        btn.addEventListener('click', () => toggleFieldMode(fieldId));
-        wrapper.appendChild(btn);
-    });
-}
-
-// ─── Validation helper ────────────────────────────────────────────────────────
+// ─── Results & UI Helpers ─────────────────────────────────────────────────────
 
 function setResultsEmpty() {
     ['monthlyPayments', 'totalInterest', 'totalDepreciation',
@@ -170,16 +107,20 @@ function setResultsEmpty() {
      'oppCostBreakdown', 'trueCostLossBreakdown', 'trueCostBreakdown']
         .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
 
+    document.querySelectorAll('.result-subtitle.dyn-labels').forEach(el => el.textContent = '--');
+
     if (carChart) { carChart.destroy(); carChart = null; }
 }
 
-// ─── Math helpers ─────────────────────────────────────────────────────────────
+function checkGroup(groupArr) {
+    return groupArr.every(id => {
+        const v = (document.getElementById(id)?.value || '').trim().replace(/,/g, '');
+        return v !== '' && !isNaN(parseFloat(v));
+    });
+}
 
-/**
- * Standard amortised monthly payment.
- * P × [r(1+r)^n] ÷ [(1+r)^n − 1]
- * where r = monthly rate, n = term in months.
- */
+// ─── Math Engine ──────────────────────────────────────────────────────────────
+
 function calcMonthlyPayment(principal, annualRatePct, months) {
     if (principal <= 0 || months <= 0) return 0;
     const r = annualRatePct / 100 / 12;
@@ -187,275 +128,216 @@ function calcMonthlyPayment(principal, annualRatePct, months) {
     return principal * (r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
 }
 
-/**
- * Depreciation loss over the hold period.
- * New car: 20 % drop in Year 1, then 15 %/yr thereafter.
- * Used car: 15 %/yr every year (Year-1 cliff already absorbed).
- * Returns: purchase price − residual value = total depreciation loss.
- */
 function calcDepreciation(price, years, isNew = true) {
     let value = price;
-    for (let y = 1; y <= years; y++) {
-        value *= (isNew && y === 1) ? 0.80 : 0.85;
-    }
-    return price - value;  // positive = amount lost
+    for (let y = 1; y <= years; y++) value *= (isNew && y === 1) ? 0.80 : 0.85;
+    return price - value;
 }
 
-/**
- * Investment GAINS on a lump-sum (e.g. down-payment difference).
- * Uses monthly compounding of the annual rate over the hold period.
- * Returns only the gains (FV − principal), not the full FV,
- * because the principal is money already accounted for as a car expense.
- */
 function calcFVLumpSumGains(principal, annualRatePct, years) {
     if (principal <= 0 || years <= 0) return 0;
-    const r      = annualRatePct / 100 / 12;
-    const months = years * 12;
+    const r = annualRatePct / 100 / 12;
     if (r === 0) return 0;
-    return principal * Math.pow(1 + r, months) - principal;
+    return principal * Math.pow(1 + r, years * 12) - principal;
 }
 
-/**
- * Investment GAINS on a recurring monthly contribution (payment difference).
- * FV of ordinary annuity: PMT × [(1+r)^n − 1] ÷ r
- * Returns only the gains (FV − total principal contributed).
- */
 function calcFVAnnuityGains(pmt, annualRatePct, months) {
     if (pmt <= 0 || months <= 0) return 0;
     const r = annualRatePct / 100 / 12;
     if (r === 0) return 0;
     const fv = pmt * (Math.pow(1 + r, months) - 1) / r;
-    return fv - (pmt * months);  // gains only
+    return fv - (pmt * months);
 }
 
 // ─── Main calculation ─────────────────────────────────────────────────────────
 
 function calculateCarCost() {
-    // Validate all required fields
-    const missing = [];
-    for (const [id, label] of Object.entries(REQUIRED_FIELDS)) {
-        const raw = (document.getElementById(id)?.value || '').trim().replace(/,/g, '');
-        if (raw === '' || isNaN(parseFloat(raw))) missing.push(label);
-    }
+    const hasShared = checkGroup(SHARED);
+    const hasNew    = checkGroup(GROUPS.new);
+    const hasUsed   = checkGroup(GROUPS.used);
+    const hasLease  = checkGroup(GROUPS.lease);
 
+    const activeCount = [hasNew, hasUsed, hasLease].filter(Boolean).length;
     const verdictEl  = document.getElementById('carVerdict');
     const subtitleEl = document.getElementById('carVerdictSubtitle');
+    const card       = verdictEl.parentElement;
+    const floatPill = document.getElementById('carFloat');
+    const floatLabelShowEl = document.getElementById('floatLabelShow');
 
-    if (missing.length > 0) {
+    if (!hasShared || activeCount < 2) {
         setResultsEmpty();
-        if (missing.length === Object.keys(REQUIRED_FIELDS).length || missing.length > 3) {
-            // If everything is missing OR more than 3 things are missing
-            verdictEl.textContent = 'Fill in fields to calculate';
-        } else {
-            // If 1-3 things are missing, list them
-            verdictEl.textContent = 'Missing: ' + missing.join(', ');
-        }
+        verdictEl.textContent = 'Fill in at least two car profiles and shared parameters to compare';
         verdictEl.style.color = '#6B7280';
         subtitleEl.textContent = '';
-        const card = verdictEl.parentElement;
         if (card) card.style.borderLeft = '4px solid var(--primary)';
+        if (floatPill) floatPill.style.borderLeft = '4px solid var(--primary)';
+        if (floatLabelShowEl) floatLabelShowEl.textContent = '';
+        syncCarFloat();
         return;
     }
+    
+    if (floatLabelShowEl) floatLabelShowEl.textContent = 'Winning Decision';
 
-    // ── Parse inputs ──────────────────────────────────────────────────────────
-    const newPrice  = parseFormattedNumber(document.getElementById('newPrice').value);
-    const usedPrice = parseFormattedNumber(document.getElementById('usedPrice').value);
-    const newRate   = parseFloat(document.getElementById('newRate').value);
-    const newTerm   = parseInt(document.getElementById('newTerm').value);
-    const usedRate  = parseFloat(document.getElementById('usedRate').value);
-    const usedTerm  = parseInt(document.getElementById('usedTerm').value);
-    const holdYears = parseInt(document.getElementById('holdYears').value);
-    const mktReturn = parseFloat(document.getElementById('marketReturn').value);
+    const holdYears  = parseInt(document.getElementById('holdYears').value);
+    const mktReturn  = parseFloat(document.getElementById('marketReturn').value);
     const holdMonths = holdYears * 12;
 
-    // ── Down payments ─────────────────────────────────────────────────────────
-    let downNew, downUsed;
-    if (fieldModes.carDownPayment === 'percent') {
-        const pctNew  = parseFloat(document.getElementById('newDownPayment').value  || 0) / 100;
-        const pctUsed = parseFloat(document.getElementById('usedDownPayment').value || 0) / 100;
-        downNew  = newPrice  * pctNew;
-        downUsed = usedPrice * pctUsed;
-    } else {
+    // ── Parse Optional Groups ─────────────────────────────────────────────────
+    let newPrice=0, newRate=0, newTerm=0, downNew=0, newMonthly=0, newInterest=0, newDeprec=0, newOOP=0, newOpp=null;
+    if (hasNew) {
+        newPrice = parseFormattedNumber(document.getElementById('newPrice').value);
+        newRate  = parseFloat(document.getElementById('newRate').value);
+        newTerm  = parseInt(document.getElementById('newTerm').value);
         downNew  = parseFormattedNumber(document.getElementById('newDownPayment').value);
-        downUsed = parseFormattedNumber(document.getElementById('usedDownPayment').value);
-        // Down payment can't exceed the car price
-        downNew  = Math.min(downNew,  newPrice);
-        downUsed = Math.min(downUsed, usedPrice);
+        
+        newMonthly  = calcMonthlyPayment(newPrice - downNew, newRate, newTerm);
+        newInterest = Math.max(0, newMonthly * newTerm - (newPrice - downNew));
+        newDeprec   = calcDepreciation(newPrice, holdYears, true);
+        newOOP      = downNew + (newMonthly * newTerm);
+        newOpp      = calcFVLumpSumGains(downNew, mktReturn, holdYears) + calcFVAnnuityGains(newMonthly, mktReturn, Math.min(newTerm, holdMonths));
     }
 
-    // ── Monthly loan payments ─────────────────────────────────────────────────
-    const newMonthly  = calcMonthlyPayment(newPrice  - downNew,  newRate,  newTerm);
-    const usedMonthly = calcMonthlyPayment(usedPrice - downUsed, usedRate, usedTerm);
-
-    // ── Total interest paid (over each car's full loan term) ──────────────────
-    const newInterest  = Math.max(0, newMonthly  * newTerm  - (newPrice  - downNew));
-    const usedInterest = Math.max(0, usedMonthly * usedTerm - (usedPrice - downUsed));
-
-    // ── Depreciation over the hold period ─────────────────────────────────────
-    const newDeprec  = calcDepreciation(newPrice,  holdYears, true);
-    const usedDeprec = calcDepreciation(usedPrice, holdYears, false);
-
-    // ── Opportunity cost: gains from investing the savings ────────────────────
-    //
-    // Down-payment difference: invested as a lump sum for the full hold period.
-    const downDiff    = Math.abs(downNew - downUsed);
-    const oppCostDown = calcFVLumpSumGains(downDiff, mktReturn, holdYears);
-
-    // Monthly-payment difference: invested each month.
-    // Cap the term at holdMonths - you can't invest savings beyond the hold period.
-    // Use the loan term of the car with the higher payment, capped at holdMonths.
-    const paymentDiff   = Math.abs(newMonthly - usedMonthly);
-    const relevantTerm  = Math.min(
-        newMonthly >= usedMonthly ? newTerm : usedTerm,
-        holdMonths
-    );
-    const oppCostMonthly = calcFVAnnuityGains(paymentDiff, mktReturn, relevantTerm);
-
-    const totalOppCost = oppCostDown + oppCostMonthly;
-
-    // ── Attribute full opportunity cost to the costlier car by total outflow ──
-    // Opportunity cost is the penalty for choosing the more expensive path overall.
-    // Splitting oppCostDown and oppCostMonthly independently (e.g. one car has
-    // higher down payment, the other higher monthly) leaves each car short by
-    // half the total - the True Cost would be understated by exactly the missing
-    // component. Instead: compare total cash outflow (down + all payments) and
-    // assign the entire penalty to whichever car costs more to own.
-    const newTotalOutflow  = downNew  + (newMonthly  * newTerm);
-    const usedTotalOutflow = downUsed + (usedMonthly * usedTerm);
-    const newIsCostlier    = newTotalOutflow >= usedTotalOutflow;
-
-    // ── True Cost = Interest + Depreciation + Opportunity Cost ────────────────
-    // Represents the total economic loss of ownership over the hold period.
-    const newAllIn  = newInterest  + newDeprec  + (newIsCostlier  ? totalOppCost : 0);
-    const usedAllIn = usedInterest + usedDeprec + (!newIsCostlier ? totalOppCost : 0);
-
-    // ── Total out-of-pocket cash spent (down payment + all loan payments) ─────
-    const newOOP  = downNew  + (newMonthly  * newTerm);
-    const usedOOP = downUsed + (usedMonthly * usedTerm);
-
-    // ── UI formatting helper ──────────────────────────────────────────────────
-    const fmt = v => '$' + Math.round(v).toLocaleString('en-US');
-
-    // ── Main result values ────────────────────────────────────────────────────
-    document.getElementById('monthlyPayments').textContent   = `${fmt(newMonthly)} / ${fmt(usedMonthly)}`;
-    document.getElementById('totalInterest').textContent     = `${fmt(newInterest)} / ${fmt(usedInterest)}`;
-    document.getElementById('totalDepreciation').textContent = `${fmt(newDeprec)} / ${fmt(usedDeprec)}`;
-    document.getElementById('opportunityCost').textContent   = fmt(totalOppCost);
-    document.getElementById('trueCost').textContent          = `${fmt(newOOP)} / ${fmt(usedOOP)}`;
-    document.getElementById('trueCostLoss').textContent      = `${fmt(newAllIn)} / ${fmt(usedAllIn)}`;
-
-    // ── Breakdown row helper ──────────────────────────────────────────────────
-    const breakdownRowStyle = `
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 5px 0; border-bottom: 1px solid #f1f5f9;
-        font-size: 0.82rem; gap: 12px;
-    `;
-    const breakdownLabelStyle = `color: #6b7280; white-space: nowrap;`;
-    const breakdownValueStyle = `font-weight: 700; color: #111827; white-space: nowrap;`;
-    const breakdownTotalStyle = `
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 7px 0 2px; font-size: 0.84rem; gap: 12px;
-    `;
-    const breakdownTotalLabelStyle = `font-weight: 700; color: #374151;`;
-    const breakdownTotalValueStyle = `font-weight: 800; color: var(--primary, #2563eb);`;
-
-    function bRow(label, val, isTotal = false) {
-        const rowS = isTotal ? breakdownTotalStyle     : breakdownRowStyle;
-        const lblS = isTotal ? breakdownTotalLabelStyle : breakdownLabelStyle;
-        const valS = isTotal ? breakdownTotalValueStyle : breakdownValueStyle;
-        return `<div style="${rowS}"><span style="${lblS}">${label}</span><span style="${valS}">${fmt(val)}</span></div>`;
+    let usedPrice=0, usedRate=0, usedTerm=0, downUsed=0, usedMonthly=0, usedInterest=0, usedDeprec=0, usedOOP=0, usedOpp=null;
+    if (hasUsed) {
+        usedPrice = parseFormattedNumber(document.getElementById('usedPrice').value);
+        usedRate  = parseFloat(document.getElementById('usedRate').value);
+        usedTerm  = parseInt(document.getElementById('usedTerm').value);
+        downUsed  = parseFormattedNumber(document.getElementById('usedDownPayment').value);
+            
+        usedMonthly  = calcMonthlyPayment(usedPrice - downUsed, usedRate, usedTerm);
+        usedInterest = Math.max(0, usedMonthly * usedTerm - (usedPrice - downUsed));
+        usedDeprec   = calcDepreciation(usedPrice, holdYears, false);
+        usedOOP      = downUsed + (usedMonthly * usedTerm);
+        usedOpp      = calcFVLumpSumGains(downUsed, mktReturn, holdYears) + calcFVAnnuityGains(usedMonthly, mktReturn, Math.min(usedTerm, holdMonths));
     }
 
-    // ── Breakdowns ────────────────────────────────────────────────────────────
-    document.getElementById('monthlyBreakdown').innerHTML = `
-        <div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:4px;">
-            ${bRow('New Car', newMonthly)}
-            ${bRow('Used Car', usedMonthly)}
-            ${bRow('Difference', Math.abs(newMonthly - usedMonthly), true)}
-        </div>
-    `;
+    let leaseDue=0, leasePmt=0, leaseTerm=0, numLeases=0, leaseInterest=0, leaseDeprec=0, leaseOOP=0, leaseOpp=null;
+    if (hasLease) {
+        leaseDue  = parseFormattedNumber(document.getElementById('leaseDueAtSigning').value);
+        leasePmt  = parseFormattedNumber(document.getElementById('leaseMonthly').value);
+        leaseTerm = parseInt(document.getElementById('leaseTerm').value);
+        
+        numLeases   = Math.ceil(holdMonths / leaseTerm);
+        leaseOOP    = (leaseDue * numLeases) + (leasePmt * holdMonths);
+        leaseDeprec = leaseOOP; 
+        leaseInterest = 0; 
+        
+        leaseOpp = 0;
+        for(let i=0; i<numLeases; i++) {
+            const yearsRemaining = holdYears - (i * leaseTerm / 12);
+            if (yearsRemaining > 0) leaseOpp += calcFVLumpSumGains(leaseDue, mktReturn, yearsRemaining);
+        }
+        leaseOpp += calcFVAnnuityGains(leasePmt, mktReturn, holdMonths);
+    }
 
-    document.getElementById('trueCostBreakdown').innerHTML = `
-        <div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:4px;">
-            ${bRow('New Car Total', newOOP)}
-            ${bRow('Used Car Total', usedOOP)}
-            ${bRow('Cash Savings', Math.abs(newOOP - usedOOP), true)}
-        </div>
-    `;
+    // ── Opportunity Cost Normalisation ────────────────────────────────────────
+    const validOpps = [newOpp, usedOpp, leaseOpp].filter(v => v !== null);
+    const minOpp    = validOpps.length > 0 ? Math.min(...validOpps) : 0;
 
-    document.getElementById('interestBreakdown').innerHTML = `
-        <div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:4px;">
-            ${bRow('New Car', newInterest)}
-            ${bRow('Used Car', usedInterest)}
-            ${bRow('Difference', Math.abs(newInterest - usedInterest), true)}
-        </div>
-    `;
+    const newOppAdj   = hasNew   ? newOpp - minOpp : null;
+    const usedOppAdj  = hasUsed  ? usedOpp - minOpp : null;
+    const leaseOppAdj = hasLease ? leaseOpp - minOpp : null;
 
-    document.getElementById('depreciationBreakdown').innerHTML = `
-        <div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:4px;">
-            ${bRow('New Car', newDeprec)}
-            ${bRow('Used Car', usedDeprec)}
-            ${bRow('Difference', Math.abs(newDeprec - usedDeprec), true)}
-        </div>
-    `;
-
-    document.getElementById('oppCostBreakdown').innerHTML = `
-        <div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:4px;">
-            <div style="color:#6b7280; font-size:0.82rem; margin-bottom:8px;">
-                Investment gains forfeited by choosing the costlier option:
-            </div>
-            ${bRow('Down Payment Gains (' + holdYears + ' yrs)', oppCostDown)}
-            ${bRow('Monthly Payment Gains (' + relevantTerm + ' mo)', oppCostMonthly)}
-            ${bRow('Total', totalOppCost, true)}
-        </div>
-    `;
-
-    document.getElementById('trueCostLossBreakdown').innerHTML = `
-        <div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:4px;">
-            <div style="color:#6b7280; font-size:0.82rem; margin-bottom:10px;">
-                True cost = total interest paid + depreciation loss + opportunity cost
-                of investing the cheaper option's savings at ${mktReturn}%/yr over ${holdYears} yrs.
-            </div>
-            ${bRow('New True Cost', newAllIn)}
-            ${bRow('Used True Cost', usedAllIn)}
-            ${bRow('Difference', Math.abs(newAllIn - usedAllIn), true)}
-        </div>
-    `;
+    const newAllIn   = hasNew   ? newInterest + newDeprec + newOppAdj : null;
+    const usedAllIn  = hasUsed  ? usedInterest + usedDeprec + usedOppAdj : null;
+    const leaseAllIn = hasLease ? leaseInterest + leaseDeprec + leaseOppAdj : null;
 
     // ── Verdict ───────────────────────────────────────────────────────────────
     verdictEl.style.color = '';
-    const savings = newAllIn - usedAllIn;
-    const card    = verdictEl.parentElement;
+    const fmtC = v => '$' + Math.round(v).toLocaleString('en-US');
+    
+    const results = [];
+    if (hasNew)   results.push({ name: 'New Car', cost: newAllIn,  color: '#2563EB' });
+    if (hasUsed)  results.push({ name: 'Used Car', cost: usedAllIn, color: '#10B981' });
+    if (hasLease) results.push({ name: 'Leased Car', cost: leaseAllIn, color: '#8B5CF6' });
 
-    if (savings > 500) {
-        verdictEl.textContent  = 'Used Car Wins';
-        subtitleEl.textContent = `Buying used saves you ${fmt(savings)} in true total cost.`;
-        card.style.borderLeft  = '4px solid #10B981';
-    } else if (savings < -500) {
-        verdictEl.textContent  = 'New Car Wins';
-        subtitleEl.textContent = `Surprisingly, the new car costs ${fmt(Math.abs(savings))} less in true total cost.`;
-        card.style.borderLeft  = '4px solid #2563EB';
-    } else {
-        verdictEl.textContent  = "It's a Toss-Up";
-        subtitleEl.textContent = `Difference is only ${fmt(Math.abs(savings))}. Reliability, mileage, and features should decide it.`;
-        card.style.borderLeft  = '4px solid #F59E0B';
+    results.sort((a, b) => a.cost - b.cost);
+    const winner = results[0];
+
+    if (winner.name === 'New Car') winnerKey = 'new';
+    if (winner.name === 'Used Car') winnerKey = 'used';
+    if (winner.name === 'Leased Car') winnerKey = 'lease';
+
+    function pickWinnerValue(n, u, l) {
+        if (winnerKey === 'new') return fmtC(n);
+        if (winnerKey === 'used') return fmtC(u);
+        if (winnerKey === 'lease') return fmtC(l);
+        return '--';
     }
 
-    // ── Chart ─────────────────────────────────────────────────────────────────
-    // Full opportunity cost goes on whichever car had the higher total outflow.
-    renderCarChart(
-        [Math.round(newInterest),  Math.round(usedInterest)],
-        [Math.round(newDeprec),    Math.round(usedDeprec)],
-        [newIsCostlier  ? Math.round(totalOppCost) : 0,
-        !newIsCostlier  ? Math.round(totalOppCost) : 0]
-    );
+    const runnerUp = results[1];
+    verdictEl.textContent = `${winner.name} Wins`;
+    card.style.borderLeft = `4px solid ${winner.color}`;
+    if (floatPill) floatPill.style.borderLeft = `4px solid ${winner.color}`;
 
+    if (results.length === 2) {
+        subtitleEl.textContent = `Saves you ${fmtC(runnerUp.cost - winner.cost)} over the ${runnerUp.name}.`;
+    } else {
+        const thirdPlace = results[2];
+        subtitleEl.textContent = `Saves ${fmtC(runnerUp.cost - winner.cost)} over ${runnerUp.name}, and ${fmtC(thirdPlace.cost - winner.cost)} over ${thirdPlace.name}.`;
+    }
+
+    let winnerLabel = winner.name;
+    document.querySelectorAll('.result-subtitle.dyn-labels').forEach(el => el.textContent = winnerLabel);
+
+    document.getElementById('monthlyPayments').textContent   = pickWinnerValue(newMonthly, usedMonthly, leasePmt);
+    document.getElementById('totalInterest').textContent     = pickWinnerValue(newInterest, usedInterest, leaseInterest);
+    document.getElementById('totalDepreciation').textContent = pickWinnerValue(newDeprec, usedDeprec, leaseDeprec);
+    document.getElementById('opportunityCost').textContent   = pickWinnerValue(newOppAdj, usedOppAdj, leaseOppAdj);
+    document.getElementById('trueCost').textContent          = pickWinnerValue(newOOP, usedOOP, leaseOOP);
+    document.getElementById('trueCostLoss').textContent      = pickWinnerValue(newAllIn, usedAllIn, leaseAllIn);
+
+    // ── Breakdowns ────────────────────────────────────────────────────────────
+    const rowS = `display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.82rem; gap: 12px;`;
+    const lblS = `color: #6b7280; white-space: nowrap;`;
+    const valS = `font-weight: 700; color: #111827; white-space: nowrap;`;
+    const totRowS = `display: flex; justify-content: space-between; align-items: center; padding: 7px 0 2px; font-size: 0.84rem; gap: 12px;`;
+    const totLblS = `font-weight: 700; color: #374151;`;
+    const totValS = `font-weight: 800; color: var(--primary, #2563eb);`;
+
+    function bRow(label, val, isTotal = false) {
+        return `<div style="${isTotal ? totRowS : rowS}"><span style="${isTotal ? totLblS : lblS}">${label}</span><span style="${isTotal ? totValS : valS}">${fmtC(val)}</span></div>`;
+    }
+
+    function buildBreakdown(title, nVal, uVal, lVal) {
+        let html = `<div style="margin-top:12px; border-top:1px solid #f1f5f9; padding-top:4px;">`;
+        if (title) html += `<div style="color:#6b7280; font-size:0.82rem; margin-bottom:8px;">${title}</div>`;
+        const vals = [];
+        if (hasNew)   { html += bRow('New Car', nVal); vals.push(nVal); }
+        if (hasUsed)  { html += bRow('Used Car', uVal); vals.push(uVal); }
+        if (hasLease) { html += bRow('Leased Car', lVal); vals.push(lVal); }
+        if (vals.length > 1) {
+            html += bRow('Difference (Highest vs Lowest)', Math.max(...vals) - Math.min(...vals), true);
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    document.getElementById('monthlyBreakdown').innerHTML      = buildBreakdown('', newMonthly, usedMonthly, leasePmt);
+    document.getElementById('trueCostBreakdown').innerHTML     = buildBreakdown('', newOOP, usedOOP, leaseOOP);
+    document.getElementById('interestBreakdown').innerHTML     = buildBreakdown('', newInterest, usedInterest, leaseInterest);
+    document.getElementById('depreciationBreakdown').innerHTML = buildBreakdown('', newDeprec, usedDeprec, leaseDeprec);
+    document.getElementById('oppCostBreakdown').innerHTML      = buildBreakdown('Investment gains forfeited by choosing the costlier option:', newOppAdj, usedOppAdj, leaseOppAdj);
+    document.getElementById('trueCostLossBreakdown').innerHTML = buildBreakdown(`Total interest paid + depreciation loss + opportunity cost of investing savings at ${mktReturn}%/yr over ${holdYears} yrs.`, newAllIn, usedAllIn, leaseAllIn);
+
+    document.getElementById('carFloat-value').textContent = winner.name;
+    syncCarFloat();
+
+    // ── Chart ─────────────────────────────────────────────────────────────────
+    const chartLabels = [];
+    const intData = [], depData = [], oppData = [];
+
+    if (hasNew) { chartLabels.push('New Car'); intData.push(Math.round(newInterest)); depData.push(Math.round(newDeprec)); oppData.push(Math.round(newOppAdj)); }
+    if (hasUsed) { chartLabels.push('Used Car'); intData.push(Math.round(usedInterest)); depData.push(Math.round(usedDeprec)); oppData.push(Math.round(usedOppAdj)); }
+    if (hasLease) { chartLabels.push('Leased Car'); intData.push(Math.round(leaseInterest)); depData.push(Math.round(leaseDeprec)); oppData.push(Math.round(leaseOppAdj)); }
+
+    renderCarChart(chartLabels, intData, depData, oppData);
     saveToStorage();
 }
 
 // ─── Chart ────────────────────────────────────────────────────────────────────
 
-function renderCarChart(interestData, deprecData, oppData) {
+function renderCarChart(labels, interestData, deprecData, oppData) {
     const canvas = document.getElementById('carChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -464,10 +346,10 @@ function renderCarChart(interestData, deprecData, oppData) {
     carChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['New Car', 'Used Car'],
+            labels: labels,
             datasets: [
                 { label: 'Interest Paid',    data: interestData, backgroundColor: '#3B82F6', borderRadius: 4 },
-                { label: 'Depreciation',     data: deprecData,   backgroundColor: '#EF4444', borderRadius: 4 },
+                { label: 'Depreciation / Rent', data: deprecData, backgroundColor: '#EF4444', borderRadius: 4 },
                 { label: 'Opportunity Cost', data: oppData,      backgroundColor: '#F59E0B', borderRadius: 4 }
             ]
         },
@@ -481,9 +363,7 @@ function renderCarChart(interestData, deprecData, oppData) {
                     stacked: true,
                     ticks: {
                         color: '#9CA3AF',
-                        callback: v => v >= 1000000
-                            ? '$' + (v / 1000000).toFixed(1) + 'M'
-                            : '$' + (v / 1000).toFixed(0) + 'k'
+                        callback: v => v >= 1000000 ? '$' + (v / 1000000).toFixed(1) + 'M' : '$' + (v / 1000).toFixed(0) + 'k'
                     },
                     grid: { color: '#E5E7EB' }
                 }
@@ -500,10 +380,40 @@ function renderCarChart(interestData, deprecData, oppData) {
     });
 }
 
-// ─── Local storage ────────────────────────────────────────────────────────────
+let resultCardIsOffScreen = false;
+
+function syncCarFloat() {
+    const floatPill = document.getElementById('carFloat');
+    const verdictText = document.getElementById('carVerdict').textContent;
+    const verdictValue = document.getElementById('carFloat-value');
+
+    verdictValue.textContent = verdictText;
+    const isScrolledDown = window.scrollY > 150;
+    
+    if (resultCardIsOffScreen && isScrolledDown) {
+        floatPill.classList.add('visible');
+    } else {
+        floatPill.classList.remove('visible');
+    }
+}
+
+function initCarFloat() {
+    const target = document.getElementById('resultsFloatShow');
+    if (!target) return;
+
+    const observer = new IntersectionObserver(entries => {
+        resultCardIsOffScreen = !entries[0].isIntersecting;
+        syncCarFloat();
+    }, { threshold: 0.1 });
+
+    observer.observe(target);
+    window.addEventListener('scroll', syncCarFloat);
+}
+
+// ─── Local Storage & State ────────────────────────────────────────────────────
 
 function saveToStorage() {
-    const data = { modes: { ...fieldModes } };
+    const data = {};
     STATE_IDS.forEach(id => { const el = document.getElementById(id); if (el) data[id] = el.value; });
     localStorage.setItem('carCostData', JSON.stringify(data));
 }
@@ -513,44 +423,21 @@ function loadFromStorage() {
     if (!saved) return;
     try {
         const data = JSON.parse(saved);
-        if (data.modes) Object.assign(fieldModes, data.modes);
         Object.keys(data).forEach(key => {
-            if (key === 'modes') return;
             const el = document.getElementById(key);
             if (el) el.value = data[key];
         });
     } catch (e) {}
 }
 
-// ─── Reset ────────────────────────────────────────────────────────────────────
-
 function clearAll() {
-    ['newPrice','newRate','newTerm','usedPrice','usedRate','usedTerm',
-     'newDownPayment','usedDownPayment','holdYears','marketReturn']
-        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-
-    // Reset down payment toggle back to percent mode
-    fieldModes.carDownPayment = 'percent';
-    const cfg = TOGGLE_CONFIG.carDownPayment.percent;
-    ['newDownPayment', 'usedDownPayment'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.placeholder       = cfg.placeholder;
-        el.dataset.inputType = cfg.inputType;
-        el.dataset.min       = cfg.min ?? '';
-        el.dataset.max       = cfg.max ?? '';
-        const labelEl = document.querySelector(`label[for="${id}"]`);
-        if (labelEl) labelEl.textContent = cfg.label;
-    });
-    const btn = document.getElementById('carDownPayment-toggle');
-    if (btn) { btn.textContent = '%'; btn.dataset.mode = 'percent'; }
-
+    STATE_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     localStorage.removeItem('carCostData');
     setResultsEmpty();
 
     const verdictEl = document.getElementById('carVerdict');
     if (verdictEl) {
-        verdictEl.textContent = 'Fill in fields to calculate';
+        verdictEl.textContent = 'Fill in at least two car profiles and shared parameters to compare';
         verdictEl.style.color = '#6B7280';
         const card = verdictEl.parentElement;
         if (card) card.style.borderLeft = '4px solid var(--primary)';
@@ -558,34 +445,23 @@ function clearAll() {
     document.getElementById('carVerdictSubtitle').textContent = '';
 }
 
-// ── Sharing & Export ─────────────────────────────────────────────────────────
+// ── Sharing ───────────────────────────────────────────────────────────────────
 
 function copyShareLink() {
     const params = new URLSearchParams();
-    
-    // Grab all current values and put them in the URL parameters
     STATE_IDS.forEach(id => {
         const el = document.getElementById(id);
-        if (el && el.value) {
-            params.set(id, el.value);
-        }
+        if (el && el.value) params.set(id, el.value);
     });
 
-    // Build the final URL
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-
-    // Copy to clipboard
     const btn = document.getElementById('shareLinkBtn');
     btn.disabled = true;
 
     navigator.clipboard.writeText(shareUrl).then(() => {
         const originalText = btn.textContent;
         btn.textContent = '✓ Link Copied!';
-
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }, 2000);
+        setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
     }).catch(err => {
         btn.disabled = false;
         console.error(err);
@@ -595,58 +471,32 @@ function copyShareLink() {
 function loadFromUrl() {
     const params = new URLSearchParams(window.location.search);
     let hasParams = false;
-
     STATE_IDS.forEach(id => {
         if (params.has(id)) {
             const el = document.getElementById(id);
-            if (el) {
-                el.value = params.get(id);
-                hasParams = true;
-            }
+            if (el) { el.value = params.get(id); hasParams = true; }
         }
     });
-
-    return hasParams; // Returns true if the URL had data in it
+    return hasParams;
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Check if the user arrived via a shared link
     const loadedFromUrl = loadFromUrl();
-
-    // 2. If no link data, try to load from their previous session
-    if (!loadedFromUrl) {
-        loadFromStorage();
-    }
+    if (!loadedFromUrl) loadFromStorage();
 
     if (loadedFromUrl) {
         setTimeout(() => {
             const el = document.querySelector('.share-btn');
             if (el) {
-                const yOffset = -120; // adjust this (px above the button)
+                const yOffset = -120;
                 const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-
-                window.scrollTo({
-                    top: y,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         }, 50);
     }
 
-    initToggleButtons();
-
-    const hasData = Object.keys(REQUIRED_FIELDS).every(id => {
-        const v = (document.getElementById(id)?.value || '').trim().replace(/,/g, '');
-        return v !== '' && !isNaN(parseFloat(v));
-    });
-
-    if (hasData) {
-        calculateCarCost();
-    } else {
-        setResultsEmpty();
-        const verdictEl = document.getElementById('carVerdict');
-        if (verdictEl) { verdictEl.textContent = 'Fill in fields to calculate'; verdictEl.style.color = '#6B7280'; }
-    }
+    initCarFloat();
+    calculateCarCost();
 });

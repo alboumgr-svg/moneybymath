@@ -182,6 +182,9 @@ function setResultsEmpty() {
     if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
 }
 
+// ── State ────────────────────────────────────────────────────────────────────
+let resultCardIsOffScreen = false;
+
 // ─── Floating verdict pill ────────────────────────────────────────────────────
 
 // Copy current verdict card state into the floating pill
@@ -189,33 +192,42 @@ function syncFloat() {
     const verdictEl    = document.getElementById('verdict');
     const floatEl      = document.getElementById('verdictFloat');
     const floatValueEl = document.getElementById('verdictFloat-value');
+    
     if (!floatEl || !verdictEl) return;
+    
     floatValueEl.textContent = verdictEl.textContent;
     floatValueEl.style.color = verdictEl.style.color || '#6B7280';
+    
     // Mirror the left-border colour that updateVerdict sets on the card
     const card = verdictEl.parentElement;
     if (card) floatEl.style.borderLeft = card.style.borderLeft || '1.5px solid #E5E7EB';
+
+    // Must be scrolled down past the top section AND the original results must be off-screen
+    const isScrolledDown = window.scrollY > 150;
+    
+    if (resultCardIsOffScreen && isScrolledDown) {
+        floatEl.classList.add('visible');
+    } else {
+        floatEl.classList.remove('visible');
+    }
 }
 
 // Show/hide the float based on whether the original result-highlight card is on-screen
 function initVerdictFloat() {
-    const originalCard = document.querySelector('.result-card.result-highlight');
-    const floatEl      = document.getElementById('verdictFloat');
-    if (!originalCard || !floatEl) return;
+    const originalCard = document.getElementById('stopfloaterhere');
+    if (!originalCard) return;
 
     const observer = new IntersectionObserver(
         entries => {
-            const isVisible = entries[0].isIntersecting;
-            if (isVisible) {
-                floatEl.classList.remove('visible');
-            } else {
-                syncFloat();
-                floatEl.classList.add('visible');
-            }
+            resultCardIsOffScreen = !entries[0].isIntersecting;
+            syncFloat();
         },
-        { threshold: 0.5 }
+        { threshold: 0.1 } // Triggers sooner to ensure smooth transitions
     );
     observer.observe(originalCard);
+
+    // Also trigger on scroll so they disappear instantly when you hit the top
+    window.addEventListener('scroll', syncFloat);
 }
 
 // ─── Mortgage helper ──────────────────────────────────────────────────────────

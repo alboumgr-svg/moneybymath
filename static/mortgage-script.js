@@ -3,6 +3,7 @@ let mortgageChart = null;
 let amortData     = [];       // full month-by-month schedule
 let amortView     = 'annual'; // 'annual' | 'monthly'
 let resultCardIsOffScreen = false;
+let breakdownIsOnScreen   = false; 
 
 const API_BASE = window.location.origin; 
 
@@ -155,7 +156,9 @@ function syncFloat() {
     const floatEl      = document.getElementById('payoffFloat');
     const floatValueEl = document.getElementById('payoffFloat-value');
     const floatTimeEl  = document.getElementById('payoffFloat-time');
+    
     if (!floatEl || !payoffEl) return;
+    
     floatValueEl.textContent = payoffEl.textContent;
     floatValueEl.style.color = payoffEl.style.color;
     if (floatTimeEl) {
@@ -170,41 +173,54 @@ function syncFloat() {
     }
 
     const monthlyFloatEl = document.getElementById('monthlyFloat');
+    const hasCalcRun     = !!document.getElementById('totalMonthlyValue');
+    
+    // THE RULES: Must be scrolled down past the hero, original card must be off-screen, 
+    // AND the breakdown container must NOT be visible.
+    const isScrolledDown = window.scrollY > 150;
+    const canShow = resultCardIsOffScreen && isScrolledDown && !breakdownIsOnScreen;
+
     if (monthlyFloatEl) {
-        const hasCalcRun = !!document.getElementById('totalMonthlyValue');
-        if (resultCardIsOffScreen && hasCalcRun) {
+        if (canShow && hasCalcRun) {
             monthlyFloatEl.classList.add('visible');
         } else {
             monthlyFloatEl.classList.remove('visible');
         }
     }
+
+    if (canShow) {
+        floatEl.classList.add('visible');
+    } else {
+        floatEl.classList.remove('visible');
+    }
 }
 
 function initPayoffFloat() {
-    const originalCard  = document.querySelector('.result-card.result-highlight');
-    const floatEl       = document.getElementById('payoffFloat');
-    const monthlyFloatEl = document.getElementById('monthlyFloat');
-    if (!originalCard || !floatEl) return;
+    const originalCard  = document.getElementById('mortgageResults');
+    const breakdownCard = document.getElementById('paymentBreakdownContainer');
+    if (!originalCard) return;
 
+    // Observe BOTH the original result card and the breakdown container
     const observer = new IntersectionObserver(
         entries => {
-            const isVisible = entries[0].isIntersecting;
-            resultCardIsOffScreen = !isVisible;
-            if (isVisible) {
-                floatEl.classList.remove('visible');
-                if (monthlyFloatEl) monthlyFloatEl.classList.remove('visible');
-            } else {
-                syncFloat();
-                floatEl.classList.add('visible');
-                if (monthlyFloatEl) {
-                    const hasCalcRun = !!document.getElementById('totalMonthlyValue');
-                    if (hasCalcRun) monthlyFloatEl.classList.add('visible');
+            entries.forEach(entry => {
+                if (entry.target === originalCard) {
+                    resultCardIsOffScreen = !entry.isIntersecting;
                 }
-            }
+                if (entry.target === breakdownCard) {
+                    breakdownIsOnScreen = entry.isIntersecting;
+                }
+            });
+            syncFloat();
         },
-        { threshold: 0.5 }
+        { threshold: 0.1 } // Triggers as soon as 10% of the element is visible
     );
+    
     observer.observe(originalCard);
+    if (breakdownCard) observer.observe(breakdownCard);
+
+    // Also trigger on scroll so they disappear instantly when you hit the top
+    window.addEventListener('scroll', syncFloat);
 }
 
 function toggleArmFields() {

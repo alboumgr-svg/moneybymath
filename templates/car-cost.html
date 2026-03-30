@@ -1,8 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Used or New Car? - MoneyByMath{% endblock %}
+{% block title %}Used, New, or Leased Car? - MoneyByMath{% endblock %}
 {% block content %}
 
 <style>
+/* ── Layout helpers ─────────────────────────────────── */
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+@media (max-width: 480px) {
+    .input-row { grid-template-columns: 1fr; }
+}
+
 /* ── Toggle button styles ──────────────────────────────────────────────── */
 .input-toggle-wrapper {
     display: flex;
@@ -33,6 +43,67 @@
 }
 .unit-toggle-btn:hover  { opacity: 0.85; }
 .unit-toggle-btn:active { opacity: 0.70; }
+
+/* ── Floating verdict pill ──────────────────────────────────────────────── */
+#carFloat {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    z-index: 999;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+    border: 1.5px solid #E5E7EB;
+    min-width: 210px;
+    max-width: 270px;
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+#carFloat.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+#carFloat .float-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9CA3AF;
+    margin-bottom: 5px;
+}
+#carFloat .float-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: inherit;
+    line-height: 1.2;
+}
+@media (max-width: 480px) {
+    #carFloat {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+    }
+}
+@media (min-width: 1024px) {
+    #carFloat {
+        min-width: 280px;
+        max-width: 360px;
+        padding: 1.1rem 1.5rem;
+        border-radius: 16px;
+    }
+    #carFloat .float-label {
+        font-size: 0.95rem;
+    }
+    #carFloat .float-value {
+        font-size: 1.65rem;
+    }
+}
+
 </style>
 
 <section class="hero">
@@ -40,8 +111,8 @@
     <div class="container">
         <div class="hero-content">
             <div class="hero-badge">Smart Spending</div>
-            <h1 class="hero-title">Used or <span class="gradient-text">New Car?</span></h1>
-            <p class="hero-subtitle">New vs. used. Depreciation, interest, and opportunity cost exposed - side by side. The number the dealership doesn't want you to calculate.</p>
+            <h1 class="hero-title">Used, <span class="gradient-text">New, or Lease?</span></h1>
+            <p class="hero-subtitle">Compare depreciation, interest, and opportunity cost side by side. Fill out at least two profiles to see the true cost of ownership.</p>
         </div>
     </div>
 </section>
@@ -58,16 +129,23 @@
                         <input type="text" inputmode="decimal" id="newPrice"
                                placeholder="e.g. 35,000"
                                data-input-type="currency" data-min="1000" data-max="500000"
-                               oninput="handleInput(this)">
+                               oninput="handleInput(this); syncCarDownPayment('new', 'dollar');">
                     </div>
-                    <!-- Toggle: % or $ (button injected by JS) -->
-                    <div class="input-group">
-                        <label for="newDownPayment">Down Payment (%)</label>
-                        <input type="text" inputmode="decimal" id="newDownPayment"
-                               placeholder="e.g. 10"
-                               data-input-type="percent"
-                               oninput="handleInput(this)">
-                        <small class="input-note">As a % or $ value, applies proportionally to each vehicle's price.</small>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Down Payment ($)</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="newDownPayment" placeholder="e.g. 5,000"
+                                    oninput="handleInput(this); syncCarDownPayment('new', 'dollar');">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Down Payment (%)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="newDownPaymentPct" placeholder="e.g. 10" step="0.5"
+                                    oninput="syncCarDownPayment('new', 'percent');">
+                            </div>
+                        </div>
                     </div>
                     <div class="input-group">
                         <label for="newRate">Loan Interest Rate (%)</label>
@@ -93,16 +171,23 @@
                         <input type="text" inputmode="decimal" id="usedPrice"
                                placeholder="e.g. 18,000"
                                data-input-type="currency" data-min="1000" data-max="500000"
-                               oninput="handleInput(this)">
+                               oninput="handleInput(this); syncCarDownPayment('used', 'dollar');">
                     </div>
-                    <!-- Toggle: % or $ (button injected by JS) -->
-                    <div class="input-group">
-                        <label for="usedDownPayment">Down Payment (%)</label>
-                        <input type="text" inputmode="decimal" id="usedDownPayment"
-                               placeholder="e.g. 10"
-                               data-input-type="percent"
-                               oninput="handleInput(this)">
-                        <small class="input-note">As a % or $ value, applies proportionally to each vehicle's price.</small>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Down Payment ($)</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="usedDownPayment" placeholder="e.g. 3,000"
+                                    oninput="handleInput(this); syncCarDownPayment('used', 'dollar');">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Down Payment (%)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="usedDownPaymentPct" placeholder="e.g. 15" step="0.5"
+                                    oninput="syncCarDownPayment('used', 'percent');">
+                            </div>
+                        </div>
                     </div>
                     <div class="input-group">
                         <label for="usedRate">Loan Interest Rate (%)</label>
@@ -120,6 +205,32 @@
                                oninput="handleInput(this)">
                     </div>
                 </div>
+
+                <h3 class="card-title" style="margin-top:1rem;">Leased Car</h3>
+                <div class="calculator-inputs">
+                    <div class="input-group">
+                        <label for="leaseDueAtSigning">Total Due at Signing ($)</label>
+                        <input type="text" inputmode="decimal" id="leaseDueAtSigning"
+                               placeholder="e.g. 3,000"
+                               data-input-type="currency"
+                               oninput="handleInput(this)">
+                        <small class="input-note">Down payment, acquisition fee, 1st month, etc.</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="leaseMonthly">Monthly Payment ($)</label>
+                        <input type="text" inputmode="decimal" id="leaseMonthly"
+                               placeholder="e.g. 450"
+                               data-input-type="currency"
+                               oninput="handleInput(this)">
+                    </div>
+                    <div class="input-group">
+                        <label for="leaseTerm">Lease Term (months)</label>
+                        <input type="number" id="leaseTerm"
+                               placeholder="e.g. 36"
+                               min="12" max="72" step="1"
+                               oninput="handleInput(this)">
+                    </div>
+                </div>
             </div>
 
             <div class="calculator-card">
@@ -127,7 +238,7 @@
                 <div class="calculator-inputs">
 
                     <div class="input-group">
-                        <label for="holdYears">How Long You'll Keep It (years)</label>
+                        <label for="holdYears">How Long You'll Keep A Car (years)</label>
                         <input type="number" id="holdYears"
                                placeholder="e.g. 5"
                                min="1" max="20" step="1"
@@ -159,7 +270,7 @@
                             </button>
                         </div>
                     </h3>
-                <div class="calculator-results">
+                <div class="calculator-results" id="resultsFloatShow">
 
                     <div class="result-card result-highlight" style="background:#f8fafc; border-left:4px solid var(--primary);">
                         <div class="result-label">Verdict</div>
@@ -172,42 +283,42 @@
                         <div class="result-card" style="margin:0;">
                             <div class="result-label">Monthly Payment</div>
                             <div class="result-value" id="monthlyPayments">--</div>
-                            <div class="result-subtitle" style="color:#6b7280; font-size:0.82rem;">New / Used</div>
+                            <div class="result-subtitle dyn-labels" style="color:#6b7280; font-size:0.82rem;">--</div>
                             <div id="monthlyBreakdown"></div>
                         </div>
 
                         <div class="result-card" style="margin:0;">
-                            <div class="result-label">Total Money Paid for Car (Loan + Down Payment)</div>
+                            <div class="result-label">Total Money Paid for Car (Out of Pocket)</div>
                             <div class="result-value" id="trueCost">--</div>
-                            <div class="result-subtitle" style="color:#6b7280; font-size:0.82rem;">New / Used</div>
+                            <div class="result-subtitle dyn-labels" style="color:#6b7280; font-size:0.82rem;">--</div>
                             <div id="trueCostBreakdown"></div>
                         </div>
 
                         <div class="result-card" style="margin:0;">
                             <div class="result-label">Total Interest Paid</div>
                             <div class="result-value" id="totalInterest">--</div>
-                            <div class="result-subtitle" style="color:#6b7280; font-size:0.82rem;">New / Used</div>
+                            <div class="result-subtitle dyn-labels" style="color:#6b7280; font-size:0.82rem;">--</div>
                             <div id="interestBreakdown"></div>
                         </div>
 
                         <div class="result-card" style="margin:0;">
-                            <div class="result-label">Total Depreciation</div>
+                            <div class="result-label">Total Sunk Costs (Depreciation / Lease Payments)</div>
                             <div class="result-value" id="totalDepreciation">--</div>
-                            <div class="result-subtitle" style="color:#6b7280; font-size:0.82rem;">New / Used</div>
+                            <div class="result-subtitle dyn-labels" style="color:#6b7280; font-size:0.82rem;">--</div>
                             <div id="depreciationBreakdown"></div>
                         </div>
 
                         <div class="result-card" style="margin:0;">
                             <div class="result-label">Investment Opportunity Cost</div>
                             <div class="result-value" id="opportunityCost">--</div>
-                            <div class="result-subtitle" style="color:#6b7280; font-size:0.82rem;">New / Used</div>
+                            <div class="result-subtitle dyn-labels" style="color:#6b7280; font-size:0.82rem;">--</div>
                             <div id="oppCostBreakdown"></div>
                         </div>
 
                         <div class="result-card" style="margin:0;">
-                            <div class="result-label">True Cost</div>
+                            <div class="result-label">True Economic Cost</div>
                             <div class="result-value" id="trueCostLoss">--</div>
-                            <div class="result-subtitle" style="color:#6b7280; font-size:0.82rem;">New / Used</div>
+                            <div class="result-subtitle dyn-labels" style="color:#6b7280; font-size:0.82rem;">--</div>
                             <div id="trueCostLossBreakdown"></div>
                         </div>
 
@@ -218,8 +329,7 @@
                 </div>
             </div>
 
-            <!-- Affilliate Link -->
-            <div class="calculator-card chart-card">
+            <div class="calculator-card chart-card" id="affiliateShow">
                 <h3 class="card-title">You Chose a Car that Would Save You Money... What Now?</h3>
                     <div class="affiliate-container">
                         <p class="affiliate-text">
@@ -239,23 +349,27 @@
             <div class="calculator-card chart-card">
                 <h3 class="card-title">How It's Calculated</h3>
                 <div class="formula">
-                    <strong>Monthly Payment:</strong> Standard amortized loan - P × [r(1+r)ⁿ] ÷ [(1+r)ⁿ−1], where r = monthly rate and n = loan term in months.
+                    <strong>Monthly Payment:</strong> Standard amortized loan - P × [r(1+r)ⁿ] ÷ [(1+r)ⁿ−1].
                 </div>
                 <div class="formula">
-                    <strong>Depreciation Curve:</strong> 20% drop in Year 1, then 15% each subsequent year. A used car that already absorbed the Year 1 cliff loses value far more slowly - that's the hidden advantage.
+                    <strong>Depreciation Curve:</strong> New cars drop 20% in Year 1, then 15% each subsequent year. Used cars drop a flat 15% a year. Leases have 100% loss (all money paid is a sunk cost).
                 </div>
                 <div class="formula">
-                    <strong>Opportunity Cost:</strong> Monthly payment difference run through the Future Value of an Annuity - PMT × [(1+r)ⁿ−1] ÷ r - at your expected market return over the hold period.
+                    <strong>Opportunity Cost:</strong> We look at the actual cash out of pocket (down payments + monthlies) over the exact duration you hold the car. That money could have been in the market compounding. The "cheapest" option gets an Opportunity Cost of $0, and the more expensive options are penalized by the investment gains you forfeited by choosing them.
                 </div>
                 <div class="formula">
-                    <strong>True Cost:</strong> Down payment + total interest paid + total depreciation. For the higher-payment option, the opportunity cost of not investing that difference is added on top.
+                    <strong>True Cost:</strong> Total interest paid + total asset depreciation + opportunity cost penalty. This represents the total wealth you sacrificed.
                 </div>
-                <p class="formula-note">The used car wins in almost all realistic scenarios. The gap grows the longer you hold and the larger the price difference. A lower new-car rate rarely compensates for Year 1 depreciation.</p>
             </div>
 
         </div>
     </div>
 </section>
+
+<div id="carFloat">
+    <div class="float-label" id="floatLabelShow">Winning Decision</div>
+    <div id="carFloat-value" class="float-value">Calculating...</div>
+</div>
 
 {% endblock %}
 {% block scripts %}
