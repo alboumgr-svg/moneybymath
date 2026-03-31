@@ -586,14 +586,9 @@ function renderAnnualTable(container) {
  
     container.innerHTML = `
         <div class="amort-table-wrapper">
-            <table class="amort-table" style="table-layout: fixed; width: 100%;">
-                <colgroup>
-                    <col style="width: 10%"><col style="width: 23%">
-                    <col style="width: 23%"><col style="width: 23%">
-                    <col style="width: 23%">
-                </colgroup>
+            <table class="amort-table">
                 <thead>
-                    <tr style="text-align: left; text-decoration: underline;">
+                    <tr>
                         <th>Year</th>
                         <th>Principal</th>
                         <th>Interest</th>
@@ -620,16 +615,11 @@ function renderMonthlyTable(container) {
     const showAll = container.dataset.showAll === 'true';
     const rows    = showAll ? amortData : amortData.slice(0, 24);
  
-    container.innerHTML = `
+        container.innerHTML = `
         <div class="amort-table-wrapper">
-            <table class="amort-table" style="table-layout: fixed; width: 100%;">
-                <colgroup>
-                    <col style="width: 14%"><col style="width: 17%">
-                    <col style="width: 17%"><col style="width: 17%">
-                    <col style="width: 17%"><col style="width: 17%">
-                </colgroup>
+            <table class="amort-table">
                 <thead>
-                    <tr style="text-align: left; text-decoration: underline;">
+                    <tr>
                         <th>Month</th>
                         <th>Payment</th>
                         <th>Principal</th>

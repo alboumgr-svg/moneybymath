@@ -224,40 +224,77 @@
     margin-top: 0.5rem;
 }
 
-/* Tax Table & Paycheck Formatting */
+/* ── Tax Table Wrapper (Enables smooth mobile scrolling) ── */
+.tax-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+}
+
+/* ── Base Table Styles ── */
 .tax-table {
     width: 100%;
+    min-width: 480px; /* Prevents columns from crushing on small screens */
     border-collapse: collapse;
-    margin-top: 15px;
     font-size: 0.9rem;
 }
-.tax-table th, .tax-table td {
-    padding: 10px;
+
+.tax-table th, 
+.tax-table td {
+    padding: 12px 14px;
     border-bottom: 1px solid #e2e8f0;
     text-align: right;
+    vertical-align: top; /* Aligns text nicely when left column wraps */
 }
-.tax-table th:first-child, .tax-table td:first-child {
+
+/* Left column gets more room and is allowed to wrap */
+.tax-table th:first-child, 
+.tax-table td:first-child {
     text-align: left;
+    white-space: normal;
+    line-height: 1.4;
+    width: 50%; /* Dedicate half the table to the descriptions */
 }
-.tax-table th { background: #f1f5f9; font-weight: 600; }
+
+/* Force numbers to stay on one line and align cleanly */
+.tax-table th:not(:first-child),
+.tax-table td:not(:first-child) {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums; 
+}
+
+.tax-table th { 
+    background: #f1f5f9; 
+    font-weight: 600; 
+    color: var(--text-primary);
+}
+
 .col-blue { color: #2563eb; }
 .col-green { color: #059669; }
 .col-red { color: #dc2626; font-weight: 600; }
 .col-purple { color: #7c3aed; }
 
-
-.tax-table td,
-.tax-table th {
-    white-space: nowrap;
-}
+/* ── Mobile Adjustments ── */
 @media (max-width: 768px) {
-    .tax-table td,
-    .tax-table th {
-        white-space: normal;
-        font-size: 0.78rem;
+    .tax-table {
+        font-size: 0.8rem; 
+    }
+    .tax-table th, 
+    .tax-table td {
+        padding: 10px 12px; /* Slightly tighter padding */
+    }
+    
+    /* Make the section headers stick to the left when scrolling right */
+    .tax-table tr[style*="background:#f8fafc"] td {
+        position: sticky;
+        left: 0;
+        z-index: 2;
     }
 }
-
 
 
 </style>

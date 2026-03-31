@@ -3963,81 +3963,89 @@ html { -webkit-overflow-scrolling: touch; }
    🏡 MORTGAGE & AFFORD HOUSE - TARGETED MOBILE FIXES
    ========================================================================== */
 
-@media (max-width: 768px) {
-    /* 1. Force all side-by-side inputs (% / $) to stack neatly */
-    .input-row {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
-    }
-
-    /* 2. Catch ALL inline grids in results (Afford House) and force them to stack */
-    .calculator-results div[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
-    }
-
-}
-
 /* ── Amortization table ─────────────────────────────── */
 .amort-table-wrapper {
+    width: 100%;
     overflow-x: auto;
     max-height: 420px;
     overflow-y: auto;
     border: 1px solid #e2e8f0;
     border-radius: 0.5rem;
+    -webkit-overflow-scrolling: touch;
 }
+
 .amort-table {
+    /* Use 100% by default; the mobile media query will handle the expansion */
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
 }
+
 .amort-table thead {
     position: sticky;
     top: 0;
     background: #f8fafc;
     z-index: 1;
 }
+
 .amort-table th {
-    padding: 0.6rem 0.8rem;
+    /* Increased horizontal padding (1.5rem) to space columns out */
+    padding: 0.6rem 1.5rem; 
     text-align: right;
     font-weight: 600;
     color: #475569;
     border-bottom: 2px solid #e2e8f0;
     white-space: nowrap;
 }
-.amort-table th:first-child { text-align: left; }
+
 .amort-table td {
-    padding: 0.5rem 0.8rem;
+    /* Increased horizontal padding (1.5rem) to space columns out */
+    padding: 0.6rem 1.5rem;
     text-align: right;
     color: #1e293b;
     border-bottom: 1px solid #f1f5f9;
     white-space: nowrap !important;
 }
-.amort-table td:first-child { text-align: left; font-weight: 500; }
-.amort-table tbody tr:hover { background: #f8fafc; }
+
+.amort-table th:first-child,
+.amort-table td:first-child { 
+    text-align: left; 
+}
+
+.amort-table td:first-child { 
+    font-weight: 500; 
+}
+
+.amort-table tbody tr:hover { 
+    background: #f8fafc; 
+}
 
 @media (max-width: 768px) {
-
     .amort-table {
         font-size: 0.72rem;
-        width: max-content;
+        
+        /* Forces the table to be as wide as its content needs, 
+           triggering the scrollbar in .amort-table-wrapper */
+        width: max-content; 
         min-width: 100%;
-        border-spacing: 40px 0 !important;
+        
+        /* Remove overflow-x: auto from the table itself; 
+           the wrapper handles the scrolling */
+        overflow-x: visible; 
     }
 
     .amort-table th,
     .amort-table td {
-        padding: 0.35rem 0.6rem !important; 
+        padding: 0.5rem 1.25rem !important; 
         white-space: nowrap !important;
     }
 
     .amort-table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        width: 100%;
+        /* Ensure the wrapper itself doesn't exceed the phone screen */
+        display: block; 
+        max-width: 100%; 
     }
 }
-
 /* ══════════════════════════════════════════════════════════════
    1 — GLOBAL RESETS & iOS FIXES
    ══════════════════════════════════════════════════════════════ */

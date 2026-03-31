@@ -394,91 +394,78 @@ function calculate() {
             : 'Social Security, Medicare &amp; State Taxes';
 
         const html = `
-        <table class="tax-table">
-            <thead>
-                <tr>
-                    <th style="text-align:left;">Earnings &amp; Deductions</th>
-                    <th>Per ${periodLabel}</th>
-                    <th>Monthly</th>
-                </tr>
-            </thead>
-            <tbody>
+            <div class="tax-table-wrapper">
+                <table class="tax-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">Earnings &amp; Deductions</th>
+                            <th>Per ${periodLabel}</th>
+                            <th>Monthly</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Gross Earnings</td></tr>
+                        <tr>
+                            <td>${grossLabel}${isGrossEstimated ? ' <span style="font-size:0.7rem;color:var(--text-muted);display:block;margin-top:2px;">(enter gross salary for exact figure)</span>' : ''}</td>
+                            <td class="col-green">${fmtDollar(grossPerPeriod)}</td>
+                            <td class="col-green">${mo(grossMonthly)}</td>
+                        </tr>
+                        ${sideIncome > 0 ? `<tr><td>Side Income / Freelance</td><td>-</td><td class="col-green">+${mo(sideIncome)}</td></tr>` : ''}
 
-                <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Gross Earnings</td></tr>
-                <tr>
-                    <td>${grossLabel}${isGrossEstimated ? ' <span style="font-size:0.7rem;color:var(--text-muted);">(enter gross salary for exact figure)</span>' : ''}</td>
-                    <td class="col-green">${fmtDollar(grossPerPeriod)}</td>
-                    <td class="col-green">${mo(grossMonthly)}</td>
-                </tr>
-                ${sideIncome > 0 ? `<tr><td>Side Income / Freelance</td><td>-</td><td class="col-green">+${mo(sideIncome)}</td></tr>` : ''}
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Pre-Tax Deductions</td></tr>
+                        ${contrib401kMo > 0 ? `<tr><td>Traditional 401(k) Contribution</td><td class="col-red">−${pp(contrib401kMo)}</td><td class="col-red">−${mo(contrib401kMo)}</td></tr>` : ''}
+                        ${healthIns > 0 ? `<tr><td>Health Insurance</td><td class="col-red">−${pp(healthIns)}</td><td class="col-red">−${mo(healthIns)}</td></tr>` : ''}
+                        ${hsaFsa > 0 ? `<tr><td>HSA / FSA</td><td class="col-red">−${pp(hsaFsa)}</td><td class="col-red">−${mo(hsaFsa)}</td></tr>` : ''}
+                        ${otherPreTax > 0 ? `<tr><td>Other Pre-Tax Deductions</td><td class="col-red">−${pp(otherPreTax)}</td><td class="col-red">−${mo(otherPreTax)}</td></tr>` : ''}
+                        ${preTaxDeductionsMonthly === 0 ? `<tr><td colspan="3" style="color:var(--text-muted);font-style:italic;text-align:center;font-size:0.8rem;">No pre-tax deductions entered</td></tr>` : ''}
 
-                <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Pre-Tax Deductions (reduce taxable income)</td></tr>
-                ${contrib401kMo > 0
-                    ? `<tr><td>Traditional 401(k) Contribution</td><td class="col-red">−${pp(contrib401kMo)}</td><td class="col-red">−${mo(contrib401kMo)}</td></tr>`
-                    : ''}
-                ${healthIns > 0
-                    ? `<tr><td>Health Insurance</td><td class="col-red">−${pp(healthIns)}</td><td class="col-red">−${mo(healthIns)}</td></tr>`
-                    : ''}
-                ${hsaFsa > 0
-                    ? `<tr><td>HSA / FSA</td><td class="col-red">−${pp(hsaFsa)}</td><td class="col-red">−${mo(hsaFsa)}</td></tr>`
-                    : ''}
-                ${otherPreTax > 0
-                    ? `<tr><td>Other Pre-Tax Deductions</td><td class="col-red">−${pp(otherPreTax)}</td><td class="col-red">−${mo(otherPreTax)}</td></tr>`
-                    : ''}
-                ${preTaxDeductionsMonthly === 0
-                    ? `<tr><td colspan="3" style="color:var(--text-muted);font-style:italic;text-align:center;font-size:0.8rem;">No pre-tax deductions entered</td></tr>`
-                    : ''}
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">After-Tax Deductions</td></tr>
+                        ${roth401kMo > 0 ? `<tr><td>Roth 401(k) Contribution</td><td class="col-red">−${pp(roth401kMo)}</td><td class="col-red">−${mo(roth401kMo)}</td></tr>` : `<tr><td colspan="3" style="color:var(--text-muted);font-style:italic;text-align:center;font-size:0.8rem;">No after-tax paycheck deductions entered</td></tr>`}
 
-                <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">After-Tax Deductions (from Paycheck)</td></tr>
-                ${roth401kMo > 0
-                    ? `<tr><td>Roth 401(k) Contribution</td><td class="col-red">−${pp(roth401kMo)}</td><td class="col-red">−${mo(roth401kMo)}</td></tr>`
-                    : `<tr><td colspan="3" style="color:var(--text-muted);font-style:italic;text-align:center;font-size:0.8rem;">No after-tax paycheck deductions entered</td></tr>`}
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Taxes</td></tr>
+                        <tr>
+                            <td>Federal Income Tax${!hasGross ? ' <span style="font-size:0.7rem;color:var(--text-muted);display:block;margin-top:2px;">(estimated)</span>' : ' <span style="font-size:0.7rem;color:var(--text-muted);display:block;margin-top:2px;">(estimated from gross)</span>'}</td>
+                            <td class="col-red">−${pp(fedTaxMonthly)}</td>
+                            <td class="col-red">−${mo(fedTaxMonthly)}</td>
+                        </tr>
+                        <tr>
+                            <td>${otherTaxLabel}${(hasGross && hasPaycheck) ? ' <span style="font-size:0.7rem;color:var(--text-muted);display:block;margin-top:2px;">(reconciled to your paycheck)</span>' : ''}</td>
+                            <td class="col-red">−${pp(otherTaxesMonthly)}</td>
+                            <td class="col-red">−${mo(otherTaxesMonthly)}</td>
+                        </tr>
 
-                <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Taxes</td></tr>
-                <tr>
-                    <td>Federal Income Tax${!hasGross ? ' <span style="font-size:0.7rem;color:var(--text-muted);">(estimated)</span>' : ' <span style="font-size:0.7rem;color:var(--text-muted);">(estimated from gross)</span>'}</td>
-                    <td class="col-red">−${pp(fedTaxMonthly)}</td>
-                    <td class="col-red">−${mo(fedTaxMonthly)}</td>
-                </tr>
-                <tr>
-                    <td>${otherTaxLabel}${(hasGross && hasPaycheck) ? ' <span style="font-size:0.7rem;color:var(--text-muted);">(reconciled to your paycheck)</span>' : ''}</td>
-                    <td class="col-red">−${pp(otherTaxesMonthly)}</td>
-                    <td class="col-red">−${mo(otherTaxesMonthly)}</td>
-                </tr>
+                        ${employerMatchMonthly > 0 ? `
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Employer Contributions</td></tr>
+                        <tr>
+                            <td>Employer 401(k) Match <span style="font-size:0.7rem;color:#065f46;display:block;margin-top:2px;">(free money - not in your paycheck)</span></td>
+                            <td class="col-green">+${pp(employerMatchMonthly)}</td>
+                            <td class="col-green">+${mo(employerMatchMonthly)}</td>
+                        </tr>
+                        ` : ''}
 
-                ${employerMatchMonthly > 0 ? `
-                <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Employer Contributions</td></tr>
-                <tr style="background:var(--green-bg);">
-                    <td>Employer 401(k) Match <span style="font-size:0.7rem;color:#065f46;">(free money - not in your paycheck)</span></td>
-                    <td class="col-green">+${pp(employerMatchMonthly)}</td>
-                    <td class="col-green">+${mo(employerMatchMonthly)}</td>
-                </tr>
-                ` : ''}
-
-                <tr style="background:#e0f2fe; border-top:2px solid #0284c7;">
-                    <td style="font-weight:800; font-size:1rem; color:#0369a1; padding:0.65rem 0.6rem;">
-                        NET ${periodLabel.toUpperCase()} PAYCHECK${hasPaycheck ? ' (entered)' : ' (estimated)'}
-                    </td>
-                    <td style="font-weight:800; font-size:1rem; color:#0369a1; text-align:right;">${fmtDollar(bankDepositPerPeriod)}</td>
-                    <td style="font-weight:800; font-size:1rem; color:#0369a1; text-align:right;">${mo(bankDepositMonthly)}</td>
-                </tr>
-                ${sideIncome > 0 ? `
-                <tr style="background:#f0fdf4;">
-                    <td style="font-weight:700; color:#15803d;">Total Cash Available (paycheck + side income)</td>
-                    <td style="font-weight:700; color:#15803d; text-align:right;">-</td>
-                    <td style="font-weight:700; color:#15803d; text-align:right;">${mo(availableCashMonthly)}</td>
-                </tr>` : ''}
-                ${employerMatchMonthly > 0 ? `
-                <tr style="background:#f0fdf4;">
-                    <td style="font-weight:700; color:#15803d; font-size:0.82rem;">Total Retirement Saved This Period (your contrib. + match)</td>
-                    <td style="font-weight:700; color:#15803d; text-align:right; font-size:0.82rem;">${pp(contrib401kMo + roth401kMo + employerMatchMonthly)}</td>
-                    <td style="font-weight:700; color:#15803d; text-align:right; font-size:0.82rem;">${mo(contrib401kMo + roth401kMo + employerMatchMonthly)}</td>
-                </tr>` : ''}
-
-            </tbody>
-        </table>
-        ${isGrossEstimated ? `<p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;font-style:italic;">⚠️ Gross salary is estimated (~28% effective tax rate assumed). Enter your Gross Annual Salary for a precise breakdown and more accurate ratios.</p>` : ''}`;
-
+                        <tr style="background:#e0f2fe; border-top:2px solid #0284c7;">
+                            <td style="font-weight:800; font-size:0.85rem; color:#0369a1; padding:0.8rem 0.6rem;">
+                                NET ${periodLabel.toUpperCase()} PAYCHECK${hasPaycheck ? ' <span style="font-size:0.7rem;font-weight:600;opacity:0.8;display:block;">(entered)</span>' : ' <span style="font-size:0.7rem;font-weight:600;opacity:0.8;display:block;">(estimated)</span>'}
+                            </td>
+                            <td style="font-weight:800; font-size:1rem; color:#0369a1; text-align:right; vertical-align:middle;">${fmtDollar(bankDepositPerPeriod)}</td>
+                            <td style="font-weight:800; font-size:1rem; color:#0369a1; text-align:right; vertical-align:middle;">${mo(bankDepositMonthly)}</td>
+                        </tr>
+                        ${sideIncome > 0 ? `
+                        <tr style="background:#f0fdf4;">
+                            <td style="font-weight:700; color:#15803d; padding:0.8rem 0.6rem;">Total Cash Available <span style="font-size:0.7rem;font-weight:600;opacity:0.8;display:block;">(paycheck + side income)</span></td>
+                            <td style="font-weight:700; color:#15803d; text-align:right; vertical-align:middle;">-</td>
+                            <td style="font-weight:700; color:#15803d; text-align:right; vertical-align:middle;">${mo(availableCashMonthly)}</td>
+                        </tr>` : ''}
+                        ${employerMatchMonthly > 0 ? `
+                        <tr style="background:#f0fdf4;">
+                            <td style="font-weight:700; color:#15803d; padding:0.8rem 0.6rem;">Total Retirement Saved <span style="font-size:0.7rem;font-weight:600;opacity:0.8;display:block;">(your contrib. + match)</span></td>
+                            <td style="font-weight:700; color:#15803d; text-align:right; vertical-align:middle;">${pp(contrib401kMo + roth401kMo + employerMatchMonthly)}</td>
+                            <td style="font-weight:700; color:#15803d; text-align:right; vertical-align:middle;">${mo(contrib401kMo + roth401kMo + employerMatchMonthly)}</td>
+                        </tr>` : ''}
+                    </tbody>
+                </table>
+            </div>
+            ${isGrossEstimated ? `<p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.75rem;font-style:italic;">⚠️ Gross salary is estimated (~28% effective tax rate assumed). Enter your Gross Annual Salary for a precise breakdown and more accurate ratios.</p>` : ''}`;
         document.getElementById('paycheckBreakdown').innerHTML = html;
     } else {
         document.getElementById('paycheckBreakdown').innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted);">Enter your gross salary or actual paycheck above to see a full breakdown.</p>';
