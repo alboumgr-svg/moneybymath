@@ -344,6 +344,10 @@ def federal_tax():
 def mortgage_calculator():
     return render_template("mortgage-calculator.html")
 
+@app.route("/budget")
+def budget():
+    return render_template("budget.html")
+
 @app.route("/newsletter")
 def newsletter():
     return render_template("newsletter.html", article=LATEST_ARTICLE)

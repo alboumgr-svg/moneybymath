@@ -1,0 +1,824 @@
+{% extends "base.html" %}
+{% block title %}Budget - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+.input-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+/* ── Input row 2-col ─────────────────────────── */
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+@media (max-width: 480px) { .input-row { grid-template-columns: 1fr; } }
+
+/* ── Section sub-header within card ─────────── */
+.input-section-header {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--primary);
+    padding: 0.5rem 0 0.25rem;
+    margin-top: 0.5rem;
+    border-top: 1px dashed var(--border);
+}
+.input-section-header:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+
+.result-card--success { background: var(--green-bg); border-color: var(--green-border); }
+.result-card--success .result-label, .result-card--success .result-value { color: #047857; }
+.result-card--caution { background: var(--yellow-bg); border-color: var(--yellow-border); }
+.result-card--danger  { background: var(--red-bg);   border-color: var(--red-border); }
+.result-card--danger .result-label,  .result-card--danger .result-value  { color: #b91c1c; }
+
+.split-results { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+@media (max-width: 600px) { .split-results { grid-template-columns: 1fr; } }
+
+/* ── Responsive grid for main layout ─────────── */
+@media (min-width: 900px) {
+    .inputs-results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+}
+
+/* ── Category status rows ────────────────────── */
+.category-status-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.category-status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 0.85rem;
+}
+.category-status-row .cs-icon { font-size: 1rem; flex-shrink: 0; }
+.category-status-row .cs-name { font-weight: 600; flex: 1; }
+.category-status-row .cs-amount { font-weight: 700; color: var(--text); margin-left: auto; }
+.category-status-row .cs-pct { font-size: 0.75rem; color: var(--text-muted); }
+.category-status-row.cs-ok    { background: var(--green-bg);  border-color: var(--green-border); }
+.category-status-row.cs-warn  { background: var(--yellow-bg); border-color: var(--yellow-border); }
+.category-status-row.cs-bad   { background: var(--red-bg);   border-color: var(--red-border); }
+
+/* ── Priority list ───────────────────────────── */
+.priority-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.priority-item {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    padding: 0.85rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+.priority-item.p-critical { background: var(--red-bg); border-color: var(--red-border); }
+.priority-item.p-important { background: var(--yellow-bg); border-color: var(--yellow-border); }
+.priority-item.p-good { background: var(--green-bg); border-color: var(--green-border); }
+.priority-num {
+    width: 22px; height: 22px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.priority-num.pn-red { background: var(--red); }
+.priority-num.pn-yellow { background: var(--yellow); }
+.priority-num.pn-green { background: var(--green); }
+.priority-text strong { display: block; font-size: 0.88rem; margin-bottom: 0.15rem; }
+.priority-text p { color: var(--text-muted); line-height: 1.6; }
+
+/* ── 50/30/20 bars ───────────────────────────── */
+.three-bar-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; }
+.three-bar-cell {
+    text-align: center;
+    padding: 0.85rem 0.5rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.three-bar-cell .tbc-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.4rem; }
+.three-bar-cell .tbc-pct { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.three-bar-cell .tbc-target { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; }
+.three-bar-cell.tbc-ok .tbc-pct   { color: var(--green); }
+.three-bar-cell.tbc-warn .tbc-pct { color: var(--yellow); }
+.three-bar-cell.tbc-bad .tbc-pct  { color: var(--red); }
+
+/* ── DTI indicator ───────────────────────────── */
+.dti-indicator { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.88rem; border: 1px solid transparent; margin-bottom: 0.75rem; }
+.dti-safe    { background: var(--green-bg); border-color: var(--green-border); color: #065f46; }
+.dti-caution { background: var(--yellow-bg); border-color: var(--yellow-border); color: #92400e; }
+.dti-danger  { background: var(--red-bg); border-color: var(--red-border); color: #991b1b; }
+
+/* ── Budget score badge ──────────────────────── */
+.budget-score-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 5px solid var(--green);
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--green);
+    background: var(--green-bg);
+    margin: 0 auto 0.3rem;
+    transition: all 0.4s ease;
+}
+.budget-score-badge.grade-b { border-color: #34d399; color: #34d399; }
+.budget-score-badge.grade-c { border-color: var(--yellow); color: var(--yellow); background: var(--yellow-bg); }
+.budget-score-badge.grade-d { border-color: #fb923c; color: #fb923c; background: #fff7ed; }
+.budget-score-badge.grade-f { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+
+/* ── Floating pill ───────────────────────────── */
+#budgetFloat {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    z-index: 999;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+    border: 1.5px solid var(--border);
+    min-width: 210px;
+    max-width: 270px;
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    background: #f8fafc;
+    border-left: 4px solid var(--primary);
+}
+#budgetFloat.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+#budgetFloat .float-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 5px; text-transform: uppercase; }
+#budgetFloat .float-value { font-size: 1.1rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+@media (max-width: 480px) {
+    #budgetFloat { bottom: 1rem; right: 1rem; left: 1rem; max-width: none; }
+}
+@media (min-width: 1024px) {
+    #budgetFloat { min-width: 280px; max-width: 360px; padding: 1.1rem 1.5rem; border-radius: 16px; }
+    #budgetFloat .float-label { font-size: 0.95rem; }
+    #budgetFloat .float-value { font-size: 1.65rem; }
+}
+
+/* ── Select styling ─────────────────────────────────── */
+.calculator-inputs select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background: #fff;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+    transition: border-color 0.2s;
+}
+.calculator-inputs select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ── Shared Utility & Retirement Matching ─────────────────── */
+.inline-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: 0.4rem;
+}
+.tag-ok { background: var(--green-bg); color: #065f46; border: 1px solid var(--green-border); }
+
+.info-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
+    color: #1e40af;
+    line-height: 1.6;
+    margin-top: 0.5rem;
+}
+
+/* Tax Table & Paycheck Formatting */
+.tax-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+.tax-table th, .tax-table td {
+    padding: 10px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: right;
+}
+.tax-table th:first-child, .tax-table td:first-child {
+    text-align: left;
+}
+.tax-table th { background: #f1f5f9; font-weight: 600; }
+.col-blue { color: #2563eb; }
+.col-green { color: #059669; }
+.col-red { color: #dc2626; font-weight: 600; }
+.col-purple { color: #7c3aed; }
+
+
+.tax-table td,
+.tax-table th {
+    white-space: nowrap;
+}
+@media (max-width: 768px) {
+    .tax-table td,
+    .tax-table th {
+        white-space: normal;
+        font-size: 0.78rem;
+    }
+}
+
+
+
+</style>
+
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Budget Properly</div>
+            <h1 class="hero-title">How Does My <span class="gradient-text">Budget Look?</span></h1>
+            <p class="hero-subtitle">Enter your full financial picture - income, deductions, spending, debt, and savings - and get a detailed, honest analysis of your budget with category-by-category feedback and a clear action plan. See the <a href="/retirement" class="inlineLinks">Retirement Calculator</a> to plan for the long term.</p>
+        </div>
+    </div>
+</section>
+
+<section id="budget-calc" class="calculator-section">
+    <div class="container">
+        <div class="calculator-grid">
+            <div class="calculator-card">
+                <h3 class="card-title">Income &amp; Paycheck</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="grossSalary">Gross Annual Salary ($)</label>
+                            <input type="text" id="grossSalary" placeholder="e.g. 85,000" oninput="fmt(this); calculate(); saveToStorage(); syncContrib401kFromPct(); syncRoth401kFromPct();">
+                        </div>
+                        <div class="input-group">
+                            <label for="actualPaycheck">Actual Net Paycheck ($) <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">- optional</span></label>
+                            <input type="text" id="actualPaycheck" placeholder="e.g. 2,500" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+                    <small class="input-note" style="margin-top: 0rem;">If your per-paycheck take-home deposit is left blank, it is estimated from gross. If entered, gross salary is not required; the breakdown will reconcile to this amount.</small>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="payFreq">Pay Frequency</label>
+                            <select id="payFreq" onchange="calculate(); saveToStorage()">
+                                <option value="26">Biweekly (26x)</option>
+                                <option value="24" selected>Semimonthly (24x)</option>
+                                <option value="12">Monthly (12x)</option>
+                                <option value="52">Weekly (52x)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="filingStatus">Filing Status</label>
+                            <select id="filingStatus" onchange="calculate(); saveToStorage()">
+                                <option value="single">Single</option>
+                                <option value="mfj">Married Filing Jointly</option>
+                                <option value="hoh">Head of Household</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-section-header">Pre-Tax Deductions (from each paycheck)</div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="contrib401kPct">401(k) Contribution (%)</label>
+                            <input type="number" id="contrib401kPct" placeholder="e.g. 6" min="0" max="100" step="0.5" oninput="syncContrib401kFromPct(); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="contrib401kAmt">401(k) Contribution ($/mo)</label>
+                            <input type="text" id="contrib401kAmt" placeholder="e.g. 425" oninput="fmt(this); syncContrib401kFromAmt(); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group" style="margin-top: 1rem;">
+                        <label for="employerMatch">Employer 401(k) Match (%)<span class="inline-tag tag-ok">Free Money</span></label>
+                        <input type="number" id="employerMatch" placeholder="e.g. 3" min="0" max="100" step="0.5" oninput="calculate(); saveToStorage()">
+                        <small class="input-note">Enter the % your employer matches (e.g. 3% = they match up to 3% of your salary).</small>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="healthInsurance">Health Insurance ($/mo)</label>
+                            <input type="text" id="healthInsurance" placeholder="e.g. 180" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="hsaFsa">HSA / FSA ($/mo)</label>
+                            <input type="text" id="hsaFsa" placeholder="e.g. 100" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="otherPreTax">Other Pre-Tax Deductions ($/mo)</label>
+                        <input type="text" id="otherPreTax" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        <small class="input-note">Dental, vision, life insurance, transit benefits, etc.</small>
+                    </div>
+
+                    <div class="input-section-header">After-Tax / Extra Income</div>
+
+                    <div class="input-group">
+                        <label for="sideIncome">Side Income / Freelance ($/mo)</label>
+                        <input type="text" id="sideIncome" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card" style="margin-bottom:1.5rem;">
+                <h3 class="card-title">Savings &amp; Investments</h3>
+                <div class="calculator-inputs">
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="roth401kPct">Roth 401(k) Contribution (%)</label>
+                            <input type="number" id="roth401kPct" placeholder="e.g. 5" min="0" max="100" step="0.5" oninput="syncRoth401kFromPct(); calculate(); saveToStorage()">
+                            <small class="input-note">Deducted from your paycheck after taxes.</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="roth401kAmt">Roth 401(k) Contribution ($/mo)</label>
+                            <input type="text" id="roth401kAmt" placeholder="e.g. 350" oninput="fmt(this); syncRoth401kFromAmt(); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="emergencyFund">Emergency Fund Contribution ($/mo)</label>
+                            <input type="text" id="emergencyFund" placeholder="e.g. 200" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="currentEmergencyFund">Current Emergency Fund Balance ($)</label>
+                            <input type="text" id="currentEmergencyFund" placeholder="e.g. 5,000" oninput="fmt(this); calculate(); saveToStorage()">
+                            <small class="input-note">Used to calculate how many months of expenses you have covered.</small>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="rothIRA">Roth IRA Contribution ($/mo)</label>
+                            <input type="text" id="rothIRA" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                            <small class="input-note">Paid from your bank account, not your paycheck.</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="brokerageInvest">Brokerage Investing ($/mo)</label>
+                            <input type="text" id="brokerageInvest" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="otherSavings">Other Savings Goals ($/mo)</label>
+                        <input type="text" id="otherSavings" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        <small class="input-note">House down payment, car fund, college savings, etc.</small>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Housing</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="housingType">Housing Type</label>
+                        <select id="housingType" onchange="calculate(); saveToStorage()">
+                            <option value="rent">Renter</option>
+                            <option value="own">Homeowner</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="rentMortgage">Rent / Mortgage Payment ($/mo)</label>
+                        <input type="text" id="rentMortgage" placeholder="e.g. 1,800" oninput="fmt(this); calculate(); saveToStorage()">
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="utilities">Utilities – Electric/Gas ($/mo)</label>
+                            <input type="text" id="utilities" placeholder="e.g. 150" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="internet">Internet / Cable ($/mo)</label>
+                            <input type="text" id="internet" placeholder="e.g. 80" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="rentersInsurance">Renter's / Home Insurance ($/mo)</label>
+                            <input type="text" id="rentersInsurance" placeholder="e.g. 40" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="hoaMaint">HOA / Maintenance ($/mo)</label>
+                            <input type="text" id="hoaMaint" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Transportation</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="carPayment">Car Payment ($/mo)</label>
+                            <input type="text" id="carPayment" placeholder="e.g. 450" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="carInsurance">Car Insurance ($/mo)</label>
+                            <input type="text" id="carInsurance" placeholder="e.g. 130" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="gas">Gas / Fuel ($/mo)</label>
+                            <input type="text" id="gas" placeholder="e.g. 120" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="parkingTolls">Parking / Tolls / Transit ($/mo)</label>
+                            <input type="text" id="parkingTolls" placeholder="e.g. 50" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="carMaintenance">Car Maintenance / Registration ($/mo avg)</label>
+                        <input type="text" id="carMaintenance" placeholder="e.g. 75" oninput="fmt(this); calculate(); saveToStorage()">
+                        <small class="input-note">Spread annual costs (oil changes, tires, tags) over 12 months.</small>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Food &amp; Dining</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="groceries">Groceries ($/mo)</label>
+                            <input type="text" id="groceries" placeholder="e.g. 400" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="diningOut">Dining Out / Takeout ($/mo)</label>
+                            <input type="text" id="diningOut" placeholder="e.g. 250" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="coffeeSnacks">Coffee / Snacks / Drinks ($/mo)</label>
+                        <input type="text" id="coffeeSnacks" placeholder="e.g. 60" oninput="fmt(this); calculate(); saveToStorage()">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Debt Payments</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="creditCardMin">Credit Card Min Payment ($/mo)</label>
+                            <input type="text" id="creditCardMin" placeholder="e.g. 75" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="creditCardBalance">Credit Card Total Balance ($)</label>
+                            <input type="text" id="creditCardBalance" placeholder="e.g. 5,000" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="creditCardAPR">Credit Card APR (%)</label>
+                        <input type="number" id="creditCardAPR" placeholder="e.g. 22" min="0" max="60" step="0.1" oninput="calculate(); saveToStorage()">
+                        <small class="input-note">Used to calculate true monthly interest cost.</small>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="studentLoan">Student Loan ($/mo)</label>
+                            <input type="text" id="studentLoan" placeholder="e.g. 300" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="personalLoan">Personal Loan ($/mo)</label>
+                            <input type="text" id="personalLoan" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="otherDebt">Other Debt Payments ($/mo)</label>
+                        <input type="text" id="otherDebt" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        <small class="input-note">Medical debt, back taxes, etc.</small>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Lifestyle &amp; Personal</h3>
+                <div class="calculator-inputs">
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="subscriptions">Subscriptions ($/mo)</label>
+                            <input type="text" id="subscriptions" placeholder="e.g. 60" oninput="fmt(this); calculate(); saveToStorage()">
+                            <small class="input-note">Streaming, gym, apps, etc.</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="entertainment">Entertainment &amp; Hobbies ($/mo)</label>
+                            <input type="text" id="entertainment" placeholder="e.g. 150" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="clothing">Clothing &amp; Shopping ($/mo)</label>
+                            <input type="text" id="clothing" placeholder="e.g. 80" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                        <div class="input-group">
+                            <label for="personalCare">Personal Care ($/mo)</label>
+                            <input type="text" id="personalCare" placeholder="e.g. 60" oninput="fmt(this); calculate(); saveToStorage()">
+                            <small class="input-note">Hair, skincare, gym toiletries, etc.</small>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="healthcare">Out-of-Pocket Healthcare ($/mo)</label>
+                            <input type="text" id="healthcare" placeholder="e.g. 50" oninput="fmt(this); calculate(); saveToStorage()">
+                            <small class="input-note">Copays, prescriptions, dental, therapy, etc.</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="petExpenses">Pet Expenses ($/mo)</label>
+                            <input type="text" id="petExpenses" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="travel">Travel / Vacations ($/mo avg)</label>
+                            <input type="text" id="travel" placeholder="e.g. 100" oninput="fmt(this); calculate(); saveToStorage()">
+                            <small class="input-note">Spread annual vacation costs over 12 months.</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="gifts">Gifts &amp; Donations ($/mo)</label>
+                            <input type="text" id="gifts" placeholder="e.g. 50" oninput="fmt(this); calculate(); saveToStorage()">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="miscOther">Miscellaneous / Other ($/mo)</label>
+                        <input type="text" id="miscOther" placeholder="e.g. 100" oninput="fmt(this); calculate(); saveToStorage()">
+                    </div>
+
+                </div>
+                <div style="margin-top: 1rem;">
+                    <button class="btnprimary" onclick="resetAll()">Reset</button>
+                </div>
+            </div>
+
+            <div class="calculator-card" id="paycheckCard">
+                <h3 class="card-title">Paycheck Breakdown</h3>
+                <div id="paycheckBreakdown">
+                    <p style="font-size:0.85rem; color:var(--text-muted);">Enter your gross salary above to see a full paycheck breakdown.</p>
+                </div>
+            </div>
+
+            <div class="calculator-card" id="resultsCard" style="margin-bottom:1.5rem;">
+                <h3 class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    Budget Analysis
+                    <div class="share-actions">
+                        <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">
+                            📎︎ Share Results
+                        </button>
+                        <button class="share-btn primary" onclick="downloadPDF()" id="downloadPdfBtn">
+                            📄 Save PDF
+                        </button>
+                    </div>
+                </h3>
+
+                <div id="scorePlaceholder" style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-size:0.9rem;">
+                    Fill in your income and spending to get your budget analysis.
+                </div>
+
+                <div id="scoreSection" style="display:none;">
+                    <div id="overallScoreCard" class="result-card result-highlight" style="margin-bottom:1rem;">
+                        <div class="result-label">Overall Budget Grade</div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;">
+                            <div id="gradeBadge" class="budget-score-badge">A</div>
+                            <div>
+                                <div id="gradeText" class="result-value" style="font-size:1.2rem;"></div>
+                                <div id="gradeSub" class="result-subtitle"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="split-results" style="margin-bottom:1rem;">
+                        <div class="result-card result-card--success">
+                            <div class="result-label">Available Cash</div>
+                            <div class="result-value" id="resTakeHome">--</div>
+                            <div class="result-subtitle">Bank deposit + side income</div>
+                        </div>
+                        <div class="result-card" id="leftoverCard">
+                            <div class="result-label">Monthly Leftover</div>
+                            <div class="result-value" id="resLeftover">--</div>
+                            <div class="result-subtitle" id="resLeftoverSub">After all spending</div>
+                        </div>
+                    </div>
+
+                    <div id="dtiIndicator" class="dti-indicator dti-safe"></div>
+
+                    <div style="margin: 1rem 0; max-height:auto; display:flex;justify-content:center;">
+                        <canvas id="spendingChart" style="max-height:200px;"></canvas>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="calculator-card" id="ruleCard" style="display:none;margin-bottom:1.5rem;">
+                <h3 class="card-title">50/30/20 Budget Rule Analysis</h3>
+                <div class="info-box" style="margin-bottom:0.75rem;">
+                    The 50/30/20 rule suggests: <strong>50%</strong> to Needs, <strong>30%</strong> to Wants, <strong>20%</strong> to Savings/Debt payoff - all as a % of <em>take-home pay</em>.
+                </div>
+                <div class="three-bar-grid" id="threeBarGrid"></div>
+                <div id="ruleNarrative" style="font-size:0.83rem;color:var(--text-muted);margin-top:0.75rem;line-height:1.7;"></div>
+            </div>
+
+            <div class="calculator-card" id="categoryCard" style="display:none;margin-bottom:1.5rem;">
+                <h3 class="card-title">Category-by-Category Review</h3>
+                <div id="categoryStatusList" class="category-status-list"></div>
+            </div>
+
+            <div class="calculator-card" id="priorityCard" style="display:none;margin-bottom:1.5rem;">
+                <h3 class="card-title">Your Action Plan</h3>
+                <div id="priorityList" class="priority-list"></div>
+            </div>
+
+            <!-- Affilliate Link -->
+            <div class="calculator-card chart-card" id="affiliateShow">
+                <h3 class="card-title">So You Want a Better Budget, Huh?</h3>
+                    <div class="affiliate-container">
+                    <p class="affiliate-text">
+                        You will need to save and get a clear picture. Open an account with AFFILLIATENAME to start saving and looking deeping into your budget today.
+                    </p>
+                    
+                    <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
+                        Start Saving with AFFILLIATENAME
+                    </a>
+
+                    <div class="disclosure-box">
+                        <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="learn-section">
+    <div class="container">
+        <div class="calculator-card chart-card" id="understandingCard" style="margin-top:0;">
+                <h3 class="card-title">Understanding the Rules &amp; Useful Tips</h3>
+                <div class="strategy-breakdown">
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">50/30/20 Rule</div>
+                            <div class="step-desc">Allocate 50% of take-home to needs (housing, utilities, groceries, minimum debt payments), 30% to wants (dining out, entertainment, subscriptions), and 20% to savings and extra debt payoff. It's a framework, not a law - adjust based on your income and goals.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Housing Ratio (28% Rule)</div>
+                            <div class="step-desc">Your total housing costs (rent/mortgage + utilities + insurance) should stay below 28% of your gross monthly income. Lenders use this as the front-end DTI threshold for mortgage qualification.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Debt-to-Income Ratio (DTI)</div>
+                            <div class="step-desc">Total monthly debt payments (housing + car + credit cards + loans) divided by gross monthly income. Under 36% is considered healthy. 36–43% is manageable but tight. Over 43% is a red flag that lenders and financial advisors use to identify financial stress.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Savings Rate</div>
+                            <div class="step-desc">Total monthly savings (401k + Roth IRA + emergency fund + brokerage) as a % of gross income. Below 10% leaves retirement at risk. 15–20% is solid. Above 20% is exceptional and will significantly accelerate financial independence.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Emergency Fund</div>
+                            <div class="step-desc">You should have 3–6 months of essential expenses in a liquid account (HYSA or similar). This is your financial safety net before any investing makes sense. Without it, any unexpected expense forces you into debt.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Transportation Rule (15% of take-home)</div>
+                            <div class="step-desc">Total car costs (payment + insurance + gas + maintenance) should ideally stay below 15–20% of take-home pay. Many Americans overspend here, which crowds out savings and retirement contributions.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Credit Card Debt</div>
+                            <div class="step-desc">Carrying a balance on a card with a 20–29% APR is one of the fastest ways to destroy a budget. Monthly interest on a $5,000 balance at 24% APR is roughly $100 - money that does nothing for you. Paying it off is guaranteed to return a rate equal to the APR.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Pay Yourself First</div>
+                            <div class="step-desc">Automate savings and investments before your paycheck hits your checking account. 401(k) contributions happen pre-paycheck. Set up automatic transfers for your Roth IRA and emergency fund the day you get paid.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Capture the Match</div>
+                            <div class="step-desc">If your employer offers a 401(k) match and you're not contributing at least enough to get the full match, you're leaving part of your compensation on the table. That match is an instant 50–100% return on your contribution.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Eliminate High-Interest Debt First</div>
+                            <div class="step-desc">Use the avalanche method: pay minimums on everything, then throw every extra dollar at the highest-APR debt. At 22%+ APR, credit card debt destroys wealth faster than almost any investment can build it.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">The 3–6 Month Buffer</div>
+                            <div class="step-desc">Before aggressive investing, build a cash emergency fund in a high-yield savings account. Without it, one car repair or medical bill forces you into debt or pulls from investments at the worst time.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Housing is a Lifestyle Choice, Not an Investment</div>
+                            <div class="step-desc">Keeping housing costs below 28% of gross income gives you flexibility for savings, enjoyment, and financial shocks. Stretching on housing crowds out every other category.</div>
+                        </div>
+                    </div>
+                    <div class="breakdown-step">
+                        <div class="step-icon">►</div>
+                        <div class="step-details">
+                            <div class="step-title">Lifestyle Creep is the Silent Budget Killer</div>
+                            <div class="step-desc">Every raise is an opportunity to increase savings before you adjust your lifestyle. Divert at least 50% of any raise increase to savings or debt payoff before touching your standard of living.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</section>
+
+<div id="budgetFloat">
+    <div class="float-label">Budget Health</div>
+    <div class="float-value" id="budgetFloatValue">Enter your income to start</div>
+    <div class="float-label" id="budgetFloatSub" style="margin-top:5px; text-transform:none;"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='budget-script.js') }}"></script>
+{% endblock %}
