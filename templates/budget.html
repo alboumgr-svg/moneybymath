@@ -9,13 +9,23 @@
     margin-top: 0.15rem;
 }
 
-/* ── Input row 2-col ─────────────────────────── */
+/* ── Layout helpers ─────────────────────────────────── */
 .input-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
-@media (max-width: 480px) { .input-row { grid-template-columns: 1fr; } }
+@media (max-width: 480px) {
+    .input-row { grid-template-columns: 1fr; }
+}
+
+.calculator-card {
+    min-width: 0;
+}
+
+.input-row > .input-group {
+    min-width: 0;
+}
 
 /* ── Section sub-header within card ─────────── */
 .input-section-header {
@@ -229,7 +239,6 @@
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    margin-top: 15px;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: #fff;
@@ -241,6 +250,8 @@
     min-width: 480px; /* Prevents columns from crushing on small screens */
     border-collapse: collapse;
     font-size: 0.9rem;
+    margin-top: 0rem;
+    padding-top: 0rem;
 }
 
 .tax-table th, 
@@ -281,22 +292,33 @@
 /* ── Mobile Adjustments ── */
 @media (max-width: 768px) {
     .tax-table {
+        /* Drop font size to fit more data on screen */
         font-size: 0.8rem; 
     }
+    
     .tax-table th, 
     .tax-table td {
-        padding: 10px 12px; /* Slightly tighter padding */
+        /* Tighter padding vertically and horizontally */
+        padding: 8px 10px; 
     }
-    
-    /* Make the section headers stick to the left when scrolling right */
+
+    /* Adjust the inline styling applied via JS specifically for mobile */
     .tax-table tr[style*="background:#f8fafc"] td {
+        font-size: 0.65rem !important; /* Make section headers smaller */
+        padding: 6px 10px !important;
+        
+        /* Make the section headers stick to the left when scrolling right */
         position: sticky;
         left: 0;
         z-index: 2;
     }
+
+    .tax-table tr[style*="background:#e0f2fe"] td {
+        /* Scale down the final net paycheck row slightly on mobile */
+        font-size: 0.8rem !important; 
+        padding: 10px !important;
+    }
 }
-
-
 </style>
 
 <section class="hero">
@@ -394,7 +416,7 @@
                 </div>
             </div>
 
-            <div class="calculator-card" style="margin-bottom:1.5rem;">
+            <div class="calculator-card">
                 <h3 class="card-title">Savings &amp; Investments</h3>
                 <div class="calculator-inputs">
                     
@@ -586,6 +608,12 @@
             <div class="calculator-card">
                 <h3 class="card-title">Lifestyle &amp; Personal</h3>
                 <div class="calculator-inputs">
+
+                    <div class="input-group">
+                        <label for="familyCare">Family Care ($/mo)</label>
+                        <input type="text" id="familyCare" placeholder="e.g. 400" oninput="fmt(this); calculate(); saveToStorage()">
+                        <small class="input-note">Child care, parent care, dependent care, etc.</small>
+                    </div>
 
                     <div class="input-row">
                         <div class="input-group">

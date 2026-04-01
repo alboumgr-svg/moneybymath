@@ -12,7 +12,7 @@ const STATE_IDS = [
     'internet', 'rentersInsurance', 'hoaMaint', 'carPayment', 'carInsurance', 'gas',
     'parkingTolls', 'carMaintenance', 'groceries', 'diningOut', 'coffeeSnacks',
     'creditCardMin', 'creditCardBalance', 'creditCardAPR', 'studentLoan', 'personalLoan',
-    'otherDebt', 'subscriptions', 'entertainment', 'clothing', 'personalCare',
+    'otherDebt', 'subscriptions', 'entertainment', 'clothing', 'personalCare', 'familyCare',
     'healthcare', 'petExpenses', 'travel', 'gifts', 'miscOther'
 ];
 
@@ -190,6 +190,28 @@ function calculate() {
     /* ── 1. GATHER INPUTS ── */
     const grossSalaryInputted  = parseFmt('grossSalary');
     const actualPaycheck       = parseFmt('actualPaycheck');
+
+    if (grossSalaryInputted <= 0 && actualPaycheck <= 0) {
+        // Show placeholder and hide results
+        document.getElementById('paycheckBreakdown').innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted);">Enter your gross salary or actual paycheck above to see a full breakdown.</p>';
+        document.getElementById('scorePlaceholder').style.display = 'block';
+        document.getElementById('scoreSection').style.display = 'none';
+        document.getElementById('ruleCard').style.display = 'none';
+        document.getElementById('categoryCard').style.display = 'none';
+        document.getElementById('priorityCard').style.display = 'none';
+        
+        // Hide floating widget
+        floatPill = document.getElementById('budgetFloat');
+        if (floatPill) {
+            floatPill.classList.remove('visible')
+        }
+        
+        // Clean up the chart memory so it doesn't leave ghost renders
+        if (spendingChartInst) { spendingChartInst.destroy(); spendingChartInst = null; }
+
+        return; // Halt execution
+    }
+
     const payFreq              = parseInt(val('payFreq')) || 12;
     const filingStatus         = val('filingStatus') || 'single';
 
@@ -227,6 +249,7 @@ function calculate() {
     const entertainment        = parseFmt('entertainment');
     const clothing             = parseFmt('clothing');
     const personalCare         = parseFmt('personalCare');
+    const familyCare           = parseFmt('familyCare');
     const healthcare           = parseFmt('healthcare');
     const petExp               = parseFmt('petExpenses');
     const travel               = parseFmt('travel');
@@ -325,7 +348,7 @@ function calculate() {
     const totalTransport     = carPayment + carInsurance + gas + parkingTolls + carMaint;
     const totalFood          = groceries + diningOut + coffeeSnacks;
     const totalDebtPayments  = ccMin + studentLoan + personalLoan + otherDebt;
-    const totalLifestyle     = subscriptions + entertainment + clothing + personalCare + healthcare + petExp + travel + gifts + miscOther;
+    const totalLifestyle     = subscriptions + entertainment + clothing + personalCare + familyCare + healthcare + petExp + travel + gifts + miscOther;
     
     // After-tax savings paid from the bank account (NOT the paycheck)
     const totalAfterTaxSavingsFromBank = emergencyFundContrib + rothIRA + brokerageInvest + otherSavings;
@@ -361,7 +384,7 @@ function calculate() {
     const afterTaxIncome = Math.max(grossMonthly - totalTaxMonthly + sideIncome, availableCashMonthly);
     
     // Needs: housing + essential transport + groceries + healthcare + min debt payments
-    const needs2    = totalHousing + totalTransport + groceries + healthcare + totalDebtPayments;
+    const needs2    = totalHousing + totalTransport + groceries + healthcare + familyCare + totalDebtPayments;
     // Wants: all discretionary lifestyle
     const wants2    = diningOut + coffeeSnacks + subscriptions + entertainment + clothing + personalCare + petExp + travel + gifts + miscOther;
     // Savings: all savings including pre-tax 401k and Roth 401k from paycheck
@@ -476,6 +499,7 @@ function calculate() {
     if (!hasSomeIncome) return;
 
     let score = 100;
+    let scoreCap = 100;
 
     // Housing ratio (28% rule vs gross)
     if (housingRatioPct > 45)       { score -= 20; }
@@ -488,10 +512,12 @@ function calculate() {
     else if (dtiPct > 36)  { score -= 8; }
 
     // Savings rate (of gross, including employer match)
-    if (savingsRate < 5)         { score -= 20; }
-    else if (savingsRate < 10)   { score -= 12; }
-    else if (savingsRate < 15)   { score -= 6; }
-    else if (savingsRate >= 20)  { score += 5; }
+    if (savingsRate >= 20) {
+    score += 5; // Reward excellent savings
+    } else {
+        // Continuously penalize for being under the 20% target
+        score -= (20 - savingsRate) * 1.5; 
+    }
 
     // Employer match capture (combined trad + roth must reach the match threshold)
     if (empMatchPct > 0 && (contrib401kMo + roth401kMo) < (grossMonthly * empMatchPct / 100)) {
@@ -515,15 +541,42 @@ function calculate() {
     if (transportRatioPct > 25) { score -= 8; }
     else if (transportRatioPct > 20) { score -= 4; }
 
-    // Monthly leftover (negative = overspending)
-    if (leftover < 0)                              { score -= 20; }
-    else if (leftover < availableCashMonthly * 0.02) { score -= 10; }
+    const overspendRatio = availableCashMonthly > 0 && leftover < 0 ? Math.abs(leftover) / availableCashMonthly : 0;
+    const bufferRatio    = availableCashMonthly > 0 ? leftover / availableCashMonthly : 0;
+
+    // Monthly leftover / buffer
+    if (overspendRatio >= 0.20) {
+        score -= 45;
+        scoreCap = Math.min(scoreCap, 25);
+    } else if (overspendRatio >= 0.10) {
+        score -= 36;
+        scoreCap = Math.min(scoreCap, 39);
+    } else if (overspendRatio >= 0.05) {
+        score -= 30;
+        scoreCap = Math.min(scoreCap, 49);
+    } else if (overspendRatio > 0) {
+        score -= 24;
+        scoreCap = Math.min(scoreCap, 59);
+    } else if (bufferRatio < 0.02) {
+        score -= 12;
+    } else if (bufferRatio < 0.05) {
+        score -= 6;
+    } else if (bufferRatio >= 0.15) {
+        score += 3;
+    }
 
     // 50/30/20 compliance bonus/penalty
     if (needsPct <= 50 && wantsPct <= 30 && savingsPct2 >= 20) { score += 5; }
+    else if (needsPct > 80) { score -= 15; }
     else if (needsPct > 70) { score -= 8; }
+    else if (needsPct > 60) { score -= 4; }
 
+    if (wantsPct > 45)      { score -= 10; }
+    else if (wantsPct > 35) { score -= 5; }
+
+    score = Math.min(score, scoreCap);
     score = Math.max(0, Math.min(100, score));
+    score = Math.round(score);
 
     /* ── 8. SHOW RESULTS ── */
     document.getElementById('scorePlaceholder').style.display = 'none';
@@ -1011,6 +1064,7 @@ async function downloadPDF() {
                     { label: 'Subscriptions',         value: get('subscriptions') ? '$' + get('subscriptions') : '' },
                     { label: 'Entertainment',         value: get('entertainment') ? '$' + get('entertainment') : '' },
                     { label: 'Clothing',              value: get('clothing') ? '$' + get('clothing') : '' },
+                    { label: 'Family Care',           value: get('familyCare') ? '$' + get('familyCare') : '' },
                 ].filter(i => i.value)
             },
             {

@@ -4127,10 +4127,6 @@ html { -webkit-overflow-scrolling: touch; }
     }
 }
 
-#affiliateShow {
-    display: none;
-}
-
 /* ── Prevent injected tables from expanding calculator cards ── */
 
 /* 1. Allow cards to shrink in grid/flex contexts (min-width: auto is the default culprit) */
@@ -4152,4 +4148,8 @@ html { -webkit-overflow-scrolling: touch; }
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+}
+
+#affiliateShow {
+    display: none;
 }
