@@ -21,13 +21,13 @@
             }
             /* Target the labels and values inside the node */
             .cf-node div {
-                font-size: 0.35rem !important; 
+                font-size: 0.4rem !important; 
                 line-height: 1.5;
             }
             /* Specific fix for the bold dollar amounts to keep them tiny */
             .cf-node div[style*="font-weight:700"], 
             .cf-node div[style*="font-weight: 700"] {
-                font-size: 0.35rem !important;
+                font-size: 0.4rem !important;
             }
             .cf-line {
                 min-width: 5px;
@@ -630,7 +630,7 @@ function calculateCoastFIRE() {
     } 
     else if (!userMonthly || userMonthly <= 0) {
         if (userTimeEl) { userTimeEl.textContent = '--'; userTimeEl.style.color = ''; }
-        if (userAgeEl) { userAgeEl.textContent = 'Enter your monthly savings on the left'; userAgeEl.style.color = '#DC2626'; userAgeEl.style.fontWeight = '600';}
+        if (userAgeEl) { userAgeEl.textContent = 'Enter your monthly savings'; userAgeEl.style.color = '#DC2626'; userAgeEl.style.fontWeight = '600';}
         if (userDateEl) userDateEl.textContent = '';
         if (explanationWording) {
             explanationWording.innerHTML = `
