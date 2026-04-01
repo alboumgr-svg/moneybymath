@@ -292,7 +292,7 @@ function updateDebtChart(data1, data2, labels = ['Avalanche', 'Snowball']) {
 
     if (debtChart) debtChart.destroy();
 
-    const isMobile = window.innerWidth < 480;
+    const isMobile = window.innerWidth < 600;
 
     debtChart = new Chart(ctx, {
         type: 'line',

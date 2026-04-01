@@ -247,7 +247,7 @@ function updateCompoundChart(years, balanceData, contributionsData) {
     
     if (compoundChart) compoundChart.destroy();
 
-    const isMobile = window.innerWidth < 480;
+    const isMobile = window.innerWidth < 600;
     
     compoundChart = new Chart(ctx, {
         type: 'line',

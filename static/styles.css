@@ -4162,12 +4162,6 @@ html { -webkit-overflow-scrolling: touch; }
     will-change: transform;
 }
 
-@media (max-width: 600px) {
-    .chartCardShow {
-        display: none !important;
-    }
-}
-
 #affiliateShow {
     display: none;
 }

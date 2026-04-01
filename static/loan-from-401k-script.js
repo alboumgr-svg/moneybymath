@@ -242,7 +242,7 @@ function renderRetChart(taxPenalty, wealthLost, loanInterest, loanOppCost) {
     const ctx = canvas.getContext('2d');
     if (retChart) retChart.destroy();
 
-    const isMobile = window.innerWidth < 480;
+    const isMobile = window.innerWidth < 600;
 
     retChart = new Chart(ctx, {
         type: 'bar',

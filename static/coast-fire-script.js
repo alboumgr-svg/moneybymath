@@ -1,3 +1,42 @@
+/* ── Mobile sizing for chartCardShow nodes ── */
+(function() {
+    if (document.getElementById('cfChartNodeStyle')) return;
+    const s = document.createElement('style');
+    s.id = 'cfChartNodeStyle';
+    s.textContent = `
+        .cf-node {
+            border-radius: 6px;
+            padding: 5px 10px;
+            text-align: center;
+            min-width: 80px;
+        }
+        .cf-line {
+            flex: 1;
+            min-width: 14px;
+        }
+        @media (max-width: 550px) {
+            .cf-node {
+                padding: 3px 5px;
+                min-width: 54px;
+            }
+            /* Target the labels and values inside the node */
+            .cf-node div {
+                font-size: 0.32rem !important; 
+                line-height: 1.5;
+            }
+            /* Specific fix for the bold dollar amounts to keep them tiny */
+            .cf-node div[style*="font-weight:700"], 
+            .cf-node div[style*="font-weight: 700"] {
+                font-size: 0.32rem !important;
+            }
+            .cf-line {
+                min-width: 5px;
+            }
+        }
+    `;
+    document.head.appendChild(s);
+})();
+
 let coastChart = null;
 let resultFindOffScreen = false;
 let resultTrackOffScreen = false;
@@ -360,8 +399,8 @@ function clearOutputs() {
 // Tab switching
 function switchTab(tab) {
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    const activeBtn = document.querySelector('.mode-btn[data-tab="' + tab + '"]');
-    if(activeBtn) activeBtn.classList.add('active');
+    const activeBtns = document.querySelectorAll('.mode-btn[data-tab="' + tab + '"]');
+    activeBtns.forEach(btn => btn.classList.add('active'));
 
     document.getElementById('tab-find').style.display  = tab === 'find'  ? '' : 'none';
     document.getElementById('tab-track').style.display = tab === 'track' ? '' : 'none';
@@ -385,6 +424,10 @@ function calculateCoastFIRE() {
     const rRateRaw    = document.getElementById('returnRate').value.trim();
     const coastTargetAgeRaw = document.getElementById('coastTargetAge').value.trim();
     const userMonthlyRaw    = document.getElementById('userMonthlySavings').value.trim();
+
+    if (spendingRaw) {
+        updateTaxBuffer();
+    }
 
     // 2. If any strictly required field is blank, clear outputs silently and wait for them to type
     if (!ageRaw || !retAgeRaw || !savingsRaw || !spendingRaw || !wRateRaw || !rRateRaw ) {
@@ -566,17 +609,17 @@ function calculateCoastFIRE() {
             explanationWording.innerHTML = `
                 You've already hit your Coast FIRE number! Your current portfolio of <strong>${safeMoney(currentSavings)}</strong> exceeds the required <strong>${safeMoney(coastNumber)}</strong>. Even without another dollar of contributions, compound growth alone will carry you to <strong>${safeMoney(retirementBal)}</strong> by age <strong>${retirementAge}</strong>.
                 <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
-                    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                    <div class="cf-node" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;text-align:center">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                         <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
                     </div>
-                    <div style="flex:1;height:2px;background:linear-gradient(to right,#BFDBFE,#86EFAC);min-width:14px;"></div>
-                    <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                    <div class="cf-line" style="height:2px;background:linear-gradient(to right,#BFDBFE,#86EFAC)"></div>
+                    <div class="cf-node" style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;text-align:center">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Coast FIRE ✓</div>
                         <div style="font-weight:700;color:#16A34A;">Already there!</div>
                     </div>
-                    <div style="flex:1;height:2px;background:linear-gradient(to right,#86EFAC,#FCD34D);min-width:14px;"></div>
-                    <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                    <div class="cf-line" style="height:2px;background:linear-gradient(to right,#86EFAC,#FCD34D)"></div>
+                    <div class="cf-node" style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;text-align:center">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                         <div style="font-weight:700;color:#D97706;">${safeMoney(retirementBal)}</div>
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
@@ -593,17 +636,17 @@ function calculateCoastFIRE() {
             explanationWording.innerHTML = `
                 Your portfolio sits at <strong>${safeMoney(currentSavings)}</strong> today. You need to reach <strong>${safeMoney(coastNumber)}</strong> to coast - enter a monthly savings amount on the left to see exactly when you'll get there and how your balance grows to <strong>${safeMoney(fiNumber)}</strong> by retirement.
                 <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
-                    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                    <div class="cf-node" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;text-align:center">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                         <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
                     </div>
-                    <div style="flex:1;height:0;border-top:2px dashed #9CA3AF;min-width:14px;"></div>
-                    <div style="background:#F9FAFB;border:1px dashed #9CA3AF;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                    <div class="cf-line" style="height:0;border-top:2px dashed #9CA3AF"></div>
+                    <div class="cf-node" style="background:#F9FAFB;border:1px dashed #9CA3AF;border-radius:6px;text-align:center">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Coast FIRE</div>
                         <div style="font-weight:700;color:#6B7280;">${safeMoney(coastNumber)}</div>
                     </div>
-                    <div style="flex:1;height:0;border-top:2px dashed #9CA3AF;min-width:14px;"></div>
-                    <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                    <div class="cf-line" style="height:0;border-top:2px dashed #9CA3AF"></div>
+                    <div class="cf-node" style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;text-align:center">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                         <div style="font-weight:700;color:#D97706;">${safeMoney(fiNumber)}</div>
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
@@ -639,18 +682,18 @@ function calculateCoastFIRE() {
                 explanationWording.innerHTML = `
                     At <strong>${safeMoney(userMonthly)}/mo</strong>, your portfolio grows from <strong>${safeMoney(currentSavings)}</strong> to <strong>${safeMoney(retirementBal)}</strong> by age <strong>${retirementAge}</strong> - but it never crosses your Coast FIRE threshold before then. You'll need to increase your monthly savings to reach Coast FIRE before retirement.
                     <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
-                        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                        <div class="cf-node" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;text-align:center">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                             <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
                             <div style="color:#6B7280;font-size:0.67rem;">+${safeMoney(userMonthly)}/mo</div>
                         </div>
-                        <div style="flex:1;height:0;border-top:2px solid #FCA5A5;min-width:14px;"></div>
-                        <div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                        <div class="cf-line" style="height:0;border-top:2px solid #FCA5A5"></div>
+                        <div class="cf-node" style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;text-align:center">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Coast FIRE</div>
                             <div style="font-weight:700;color:#DC2626;">Not reached</div>
                         </div>
-                        <div style="flex:1;height:0;border-top:2px dashed #9CA3AF;min-width:14px;"></div>
-                        <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                        <div class="cf-line" style="height:0;border-top:2px dashed #9CA3AF"></div>
+                        <div class="cf-node" style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;text-align:center">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                             <div style="font-weight:700;color:#D97706;">${safeMoney(retirementBal)}</div>
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
@@ -699,19 +742,19 @@ function calculateCoastFIRE() {
                 explanationWording.innerHTML = `
                     By saving <strong>${safeMoney(userMonthly)}/mo</strong> for <strong>${ts}</strong>, your portfolio grows from <strong>${safeMoney(currentSavings)}</strong> to <strong>${safeMoney(balU)}</strong> - hitting your Coast FIRE number at age <strong>${cAgeYrs}</strong>. From there, you can stop contributing entirely and let compounding do the work for <strong>${growTimeString}</strong>, carrying your portfolio to <strong>${safeMoney(fiNumber)}</strong> by retirement.
                     <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
-                        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                        <div class="cf-node" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;text-align:center">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                             <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
                             <div style="color:#6B7280;font-size:0.67rem;">+${safeMoney(userMonthly)}/mo</div>
                         </div>
-                        <div style="flex:1;height:0;border-top:2px solid #93C5FD;min-width:14px;"></div>
-                        <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                        <div class="cf-line" style="height:0;border-top:2px solid #93C5FD"></div>
+                        <div class="cf-node" style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;text-align:center">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Coast FIRE (Age ${cAgeYrs})</div>
                             <div style="font-weight:700;color:#16A34A;">${safeMoney(balU)}</div>
                             <div style="color:#6B7280;font-size:0.67rem;">stop contributing</div>
                         </div>
-                        <div style="flex:1;height:0;border-top:2px dashed #6EE7B7;min-width:14px;"></div>
-                        <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
+                        <div class="cf-line" style="height:0;border-top:2px dashed #6EE7B7"></div>
+                        <div class="cf-node" style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;text-align:center">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Retirement</div>
                             <div style="font-weight:700;color:#D97706;">${safeMoney(fiNumber)}</div>
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Age ${retirementAge}</div>
@@ -739,7 +782,7 @@ function calculateCoastFIRE() {
 // Update Coast FIRE Chart
 function updateCoastChart(currentAge, retirementAge, currentSavings, coastNumber, fiNumber, returnRate, monthlySavings, monthsToCoast, userMonthly, userMonthsToCoast, activeTab) {
     
-    const isMobile = window.innerWidth < 480;
+    const isMobile = window.innerWidth < 600;
     
     const ctx = document.getElementById('coastChart').getContext('2d');
 

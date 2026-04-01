@@ -655,7 +655,7 @@ function updateMortgageChart(balanceBase, balanceExtra) {
     const maxLen = Math.max(balanceBase.length, balanceExtra.length);
     const labels = Array.from({ length: maxLen }, (_, i) => i + 1);
 
-    const isMobile = window.innerWidth < 480;
+    const isMobile = window.innerWidth < 600;
 
     if (mortgageChart) mortgageChart.destroy();
 
