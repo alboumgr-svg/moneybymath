@@ -404,7 +404,7 @@ function calculate() {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Gross Earnings</td></tr>
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.7rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Gross Earnings</td></tr>
                         <tr>
                             <td>${grossLabel}${isGrossEstimated ? ' <span style="font-size:0.7rem;color:var(--text-muted);display:block;margin-top:2px;">(enter gross salary for exact figure)</span>' : ''}</td>
                             <td class="col-green">${fmtDollar(grossPerPeriod)}</td>
@@ -412,17 +412,17 @@ function calculate() {
                         </tr>
                         ${sideIncome > 0 ? `<tr><td>Side Income / Freelance</td><td>-</td><td class="col-green">+${mo(sideIncome)}</td></tr>` : ''}
 
-                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Pre-Tax Deductions</td></tr>
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.7rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Pre-Tax Deductions</td></tr>
                         ${contrib401kMo > 0 ? `<tr><td>Traditional 401(k) Contribution</td><td class="col-red">−${pp(contrib401kMo)}</td><td class="col-red">−${mo(contrib401kMo)}</td></tr>` : ''}
                         ${healthIns > 0 ? `<tr><td>Health Insurance</td><td class="col-red">−${pp(healthIns)}</td><td class="col-red">−${mo(healthIns)}</td></tr>` : ''}
                         ${hsaFsa > 0 ? `<tr><td>HSA / FSA</td><td class="col-red">−${pp(hsaFsa)}</td><td class="col-red">−${mo(hsaFsa)}</td></tr>` : ''}
                         ${otherPreTax > 0 ? `<tr><td>Other Pre-Tax Deductions</td><td class="col-red">−${pp(otherPreTax)}</td><td class="col-red">−${mo(otherPreTax)}</td></tr>` : ''}
                         ${preTaxDeductionsMonthly === 0 ? `<tr><td colspan="3" style="color:var(--text-muted);font-style:italic;text-align:center;font-size:0.8rem;">No pre-tax deductions entered</td></tr>` : ''}
 
-                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">After-Tax Deductions</td></tr>
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.7rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">After-Tax Deductions</td></tr>
                         ${roth401kMo > 0 ? `<tr><td>Roth 401(k) Contribution</td><td class="col-red">−${pp(roth401kMo)}</td><td class="col-red">−${mo(roth401kMo)}</td></tr>` : `<tr><td colspan="3" style="color:var(--text-muted);font-style:italic;text-align:center;font-size:0.8rem;">No after-tax paycheck deductions entered</td></tr>`}
 
-                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Taxes</td></tr>
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.7rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Taxes</td></tr>
                         <tr>
                             <td>Federal Income Tax${!hasGross ? ' <span style="font-size:0.7rem;color:var(--text-muted);display:block;margin-top:2px;">(estimated)</span>' : ' <span style="font-size:0.7rem;color:var(--text-muted);display:block;margin-top:2px;">(estimated from gross)</span>'}</td>
                             <td class="col-red">−${pp(fedTaxMonthly)}</td>
@@ -435,7 +435,7 @@ function calculate() {
                         </tr>
 
                         ${employerMatchMonthly > 0 ? `
-                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.8rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Employer Contributions</td></tr>
+                        <tr style="background:#f8fafc;"><td colspan="3" style="font-weight:700; font-size:0.7rem; color:var(--primary); text-transform:uppercase; letter-spacing:0.05em; padding:0.5rem 0.6rem;">Employer Contributions</td></tr>
                         <tr>
                             <td>Employer 401(k) Match <span style="font-size:0.7rem;color:#065f46;display:block;margin-top:2px;">(free money - not in your paycheck)</span></td>
                             <td class="col-green">+${pp(employerMatchMonthly)}</td>

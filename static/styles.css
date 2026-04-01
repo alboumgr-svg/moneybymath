@@ -4130,3 +4130,26 @@ html { -webkit-overflow-scrolling: touch; }
 #affiliateShow {
     display: none;
 }
+
+/* ── Prevent injected tables from expanding calculator cards ── */
+
+/* 1. Allow cards to shrink in grid/flex contexts (min-width: auto is the default culprit) */
+.calculator-card {
+    min-width: 0;
+}
+
+/* 2. Contain the two injectable table containers — the scrollable wrapper inside handles actual scrolling */
+#paycheckBreakdown,
+#amortTableContainer {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* 3. Ensure both scrollable wrappers are fully box-contained before overflow-x kicks in */
+.tax-table-wrapper,
+.amort-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
