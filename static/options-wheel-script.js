@@ -5,6 +5,8 @@ let currentStrategy = 'wheel'; // Default strategy: 'csp', 'cc', or 'wheel'
 const DAILY_LIMIT = 200;
 const STORAGE_KEY = 'stock_lookups'; // use a different key per page if you want separate limits
 
+const API_BASE = window.location.origin; 
+
 function getRateLimitData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -819,8 +821,6 @@ window.addEventListener('scroll', () => {
 //  Calls your Flask backend on Render - no CORS issues, no API keys in JS.
 //  Change API_BASE to your Render service URL once deployed.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const API_BASE = 'http://localhost:5000' //'https://your-service-name.onrender.com';  // ← update after deploy
 
 // ── Main entry point ──────────────────────────────────────────────────────────
 async function runChecker() {

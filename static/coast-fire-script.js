@@ -21,13 +21,13 @@
             }
             /* Target the labels and values inside the node */
             .cf-node div {
-                font-size: 0.32rem !important; 
+                font-size: 0.35rem !important; 
                 line-height: 1.5;
             }
             /* Specific fix for the bold dollar amounts to keep them tiny */
             .cf-node div[style*="font-weight:700"], 
             .cf-node div[style*="font-weight: 700"] {
-                font-size: 0.32rem !important;
+                font-size: 0.35rem !important;
             }
             .cf-line {
                 min-width: 5px;
