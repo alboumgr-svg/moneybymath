@@ -6,7 +6,7 @@
 
 const API_BASE = window.location.origin; 
 
-const DAILY_LIMIT = 200;
+const DAILY_LIMIT = 3;
 const STORAGE_KEY = 'stock_lookups'; // use a different key per page if you want separate limits
 
 function getRateLimitData() {
@@ -71,7 +71,7 @@ async function runBuyAnalysis() {
     loadingEl.style.display = 'flex';
 
     try {
-        const res  = await fetch(`${API_BASE}/api/buy-analysis?ticker=${encodeURIComponent(ticker)}`);
+        const res  = await fetch(`${API_BASE}/api/stock-data?ticker=${encodeURIComponent(ticker)}`);
         const data = await res.json();
 
         if (!res.ok) {
