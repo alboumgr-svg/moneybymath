@@ -292,6 +292,8 @@ function updateDebtChart(data1, data2, labels = ['Avalanche', 'Snowball']) {
 
     if (debtChart) debtChart.destroy();
 
+    const isMobile = window.innerWidth < 480;
+
     debtChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -310,7 +312,7 @@ function updateDebtChart(data1, data2, labels = ['Avalanche', 'Snowball']) {
         },
         options: {
             responsive: true,
-            aspectRatio: 2,
+            aspectRatio: isMobile ? 0.5 : 2,
             plugins: {
                 legend: { display: true, position: 'top' }
             },

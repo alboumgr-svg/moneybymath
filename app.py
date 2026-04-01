@@ -1559,9 +1559,26 @@ def mortgage_rate():
 def health():
     return jsonify({"status": "ok"})
 
+# ─────────────────────────────────────────────────────────────────────────────
+#  Privacy Policy Page
+# ─────────────────────────────────────────────────────────────────────────────
+
 @app.route("/privacy")
 def privacy():
     return render_template("privacy.html")
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  IS_PROD
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.context_processor
+def inject_is_prod():
+    # If debug is False, we are likely in Production
+    return dict(IS_PROD=not app.debug)
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MAIN FUNCITON
+# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

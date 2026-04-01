@@ -655,6 +655,8 @@ function updateMortgageChart(balanceBase, balanceExtra) {
     const maxLen = Math.max(balanceBase.length, balanceExtra.length);
     const labels = Array.from({ length: maxLen }, (_, i) => i + 1);
 
+    const isMobile = window.innerWidth < 480;
+
     if (mortgageChart) mortgageChart.destroy();
 
     const datasets = [{
@@ -682,7 +684,7 @@ function updateMortgageChart(balanceBase, balanceExtra) {
         data: { labels, datasets },
         options: {
             responsive: true,
-            aspectRatio: 2,
+            aspectRatio: isMobile ? 0.5 : 2,
             animation: false,
             plugins: {
                 legend: { display: true, position: 'top' },

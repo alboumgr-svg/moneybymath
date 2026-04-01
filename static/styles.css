@@ -4150,6 +4150,24 @@ html { -webkit-overflow-scrolling: touch; }
     box-sizing: border-box;
 }
 
+.money-particle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    color: rgb(0, 156, 26);
+    font-size: 24px;
+    z-index: 9999;
+    user-select: none;
+    will-change: transform;
+}
+
+@media (max-width: 480px) {
+    .chartCardShow {
+        display: none !important;
+    }
+}
+
 #affiliateShow {
     display: none;
 }

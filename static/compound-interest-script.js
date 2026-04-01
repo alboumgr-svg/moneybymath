@@ -246,6 +246,8 @@ function updateCompoundChart(years, balanceData, contributionsData) {
     const interestData = balanceData.map((balance, index) => balance - contributionsData[index]);
     
     if (compoundChart) compoundChart.destroy();
+
+    const isMobile = window.innerWidth < 480;
     
     compoundChart = new Chart(ctx, {
         type: 'line',
@@ -290,7 +292,7 @@ function updateCompoundChart(years, balanceData, contributionsData) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 2,
+            aspectRatio: isMobile ? 0.5 : 2,
             plugins: {
                 legend: {
                     display: true,
@@ -308,21 +310,34 @@ function updateCompoundChart(years, balanceData, contributionsData) {
                     padding: 12,
                     displayColors: true,
                     callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label ? context.dataset.label + ': ' : '';
-                            label += '$' + context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
-                            return label;
+                            
+                            title: function(context) {
+                                let year = context[0].label;
+                                return parseFloat(year).toFixed(2) + ' Years';
+                            },
+                            label: function(context) {
+                                let label = context.dataset.label ? context.dataset.label + ': ' : '';
+                                label += '$' + context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                                return label;
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                x: {
-                    display: true,
-                    title: { display: true, text: 'Years', color: '#6B7280', font: { size: 12, weight: '600' } },
-                    ticks: { color: '#9CA3AF', font: { size: 11 } },
-                    grid: { color: '#E5E7EB', drawTicks: false }
                 },
+                scales: {
+                    x: {
+                        display: true,
+                        title: { display: true, text: 'Years', color: '#6B7280', font: { size: 12, weight: '600' } },
+                        ticks: { 
+                            color: '#9CA3AF', 
+                            font: { size: 11 },
+                            callback: function(val) {
+                                // Retrieves the actual number from your 'years' array
+                                const value = this.getLabelForValue(val);
+                                return parseFloat(value).toFixed(2);
+                            }
+                        },
+                        grid: { color: '#E5E7EB', drawTicks: false }
+                    },
                 y: {
                     display: true,
                     title: { display: true, text: 'Value ($)', color: '#6B7280', font: { size: 12, weight: '600' } },

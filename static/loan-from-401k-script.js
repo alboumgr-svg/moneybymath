@@ -242,6 +242,8 @@ function renderRetChart(taxPenalty, wealthLost, loanInterest, loanOppCost) {
     const ctx = canvas.getContext('2d');
     if (retChart) retChart.destroy();
 
+    const isMobile = window.innerWidth < 480;
+
     retChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -264,7 +266,7 @@ function renderRetChart(taxPenalty, wealthLost, loanInterest, loanOppCost) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 2,
+            aspectRatio: isMobile ? 0.5 : 2,
             scales: {
                 x: { stacked: true, grid: { display: false } },
                 y: {

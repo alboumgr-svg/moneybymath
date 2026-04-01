@@ -1118,7 +1118,7 @@ function rw_updateChart(current, optimized, showOptimized) {
         data: { labels: ages, datasets },
         options: {
             responsive: true,
-            aspectRatio: window.innerWidth < 600 ? 1.1 : 1.75,
+            aspectRatio: window.innerWidth < 600 ? 0.8 : 1.75,
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 13, padding: 10 } },

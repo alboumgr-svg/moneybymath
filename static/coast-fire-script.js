@@ -416,6 +416,10 @@ function calculateCoastFIRE() {
         userSavingsRateEl.textContent = `Time Until Coast FIRE with ${formattedVal} saved per month`;
     }
 
+    else {
+        userSavingsRateEl.textContent = `Time Until Coast FIRE`;
+    }
+
     updateTaxBuffer();
 
     
@@ -561,7 +565,7 @@ function calculateCoastFIRE() {
         if (explanationWording) {
             explanationWording.innerHTML = `
                 You've already hit your Coast FIRE number! Your current portfolio of <strong>${safeMoney(currentSavings)}</strong> exceeds the required <strong>${safeMoney(coastNumber)}</strong>. Even without another dollar of contributions, compound growth alone will carry you to <strong>${safeMoney(retirementBal)}</strong> by age <strong>${retirementAge}</strong>.
-                <div style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
+                <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
                     <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                         <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
@@ -588,7 +592,7 @@ function calculateCoastFIRE() {
         if (explanationWording) {
             explanationWording.innerHTML = `
                 Your portfolio sits at <strong>${safeMoney(currentSavings)}</strong> today. You need to reach <strong>${safeMoney(coastNumber)}</strong> to coast - enter a monthly savings amount on the left to see exactly when you'll get there and how your balance grows to <strong>${safeMoney(fiNumber)}</strong> by retirement.
-                <div style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
+                <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
                     <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
                         <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                         <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
@@ -634,7 +638,7 @@ function calculateCoastFIRE() {
             if (explanationWording) {
                 explanationWording.innerHTML = `
                     At <strong>${safeMoney(userMonthly)}/mo</strong>, your portfolio grows from <strong>${safeMoney(currentSavings)}</strong> to <strong>${safeMoney(retirementBal)}</strong> by age <strong>${retirementAge}</strong> - but it never crosses your Coast FIRE threshold before then. You'll need to increase your monthly savings to reach Coast FIRE before retirement.
-                    <div style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
+                    <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
                         <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                             <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
@@ -694,7 +698,7 @@ function calculateCoastFIRE() {
             if (explanationWording) {
                 explanationWording.innerHTML = `
                     By saving <strong>${safeMoney(userMonthly)}/mo</strong> for <strong>${ts}</strong>, your portfolio grows from <strong>${safeMoney(currentSavings)}</strong> to <strong>${safeMoney(balU)}</strong> - hitting your Coast FIRE number at age <strong>${cAgeYrs}</strong>. From there, you can stop contributing entirely and let compounding do the work for <strong>${growTimeString}</strong>, carrying your portfolio to <strong>${safeMoney(fiNumber)}</strong> by retirement.
-                    <div style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
+                    <div class="chartCardShow" style="margin-top:12px;display:flex;align-items:center;gap:0;font-size:0.75rem;flex-wrap:wrap;">
                         <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:5px 10px;text-align:center;min-width:80px;">
                             <div style="color:#6B7280;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;">Today</div>
                             <div style="font-weight:700;color:#1D4ED8;">${safeMoney(currentSavings)}</div>
@@ -734,6 +738,9 @@ function calculateCoastFIRE() {
 
 // Update Coast FIRE Chart
 function updateCoastChart(currentAge, retirementAge, currentSavings, coastNumber, fiNumber, returnRate, monthlySavings, monthsToCoast, userMonthly, userMonthsToCoast, activeTab) {
+    
+    const isMobile = window.innerWidth < 480;
+    
     const ctx = document.getElementById('coastChart').getContext('2d');
 
     const monthlyRate = returnRate / 12;
@@ -825,7 +832,7 @@ function updateCoastChart(currentAge, retirementAge, currentSavings, coastNumber
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 2,
+            aspectRatio: isMobile ? 0.5 : 2,
             plugins: {
                 legend: {
                     display: true,
