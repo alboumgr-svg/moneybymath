@@ -877,11 +877,11 @@ def privacy():
 #  IS_PROD
 # ─────────────────────────────────────────────────────────────────────────────
 
-@app.context_processor
-def inject_is_prod():
-    # This will be True if the variable exists at all in Render's "Environment" tab
-    is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
-    return dict(IS_PROD=is_prod)
+#@app.context_processor
+#def inject_is_prod():
+#    # This will be True if the variable exists at all in Render's "Environment" tab
+#    is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
+#    return dict(IS_PROD=is_prod)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  MAIN FUNCITON
