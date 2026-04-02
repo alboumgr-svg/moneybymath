@@ -210,79 +210,65 @@ def build_fmp_info(ticker):
         pass
         #print(f"DEBUG: Section 7 (Income) failed for {ticker}: {e}")
 
-    # ── 8. Analyst recommendations ────────────────────────────────────────────
-    """ Issue: Not Found 
-
+    # ── 8. Analyst grades consensus ───────────────────────────────────────────
     try:
-        data = fmp_fetch(f"/stable/analyst-stock-recommendations", symbol=ticker)
-        r = _one(data)
-        if r:
-            buy  = (r.get("analystRatingsBuy")       or 0) + (r.get("analystRatingsStrongBuy")  or 0)
-            hold = (r.get("analystRatingsHold")       or 0)
-            sell = (r.get("analystRatingsSell")       or 0) + (r.get("analystRatingsStrongSell") or 0)
-            total = buy + hold + sell
+        data = fmp_fetch("/stable/grades-consensus", symbol=ticker)
+        g = _one(data)
+        if g:
+            strong_buy  = g.get("strongBuy")  or 0
+            buy         = g.get("buy")         or 0
+            hold        = g.get("hold")        or 0
+            sell        = g.get("sell")        or 0
+            strong_sell = g.get("strongSell")  or 0
+            total = strong_buy + buy + hold + sell + strong_sell
             if total > 0:
-                bp = buy  / total
-                sp = sell / total
-                if bp >= 0.8:
-                    info["recommendationKey"] = "strong_buy"
-                elif bp >= 0.6:
-                    info["recommendationKey"] = "buy"
-                elif sp >= 0.5:
-                    info["recommendationKey"] = "sell"
-                elif sp >= 0.3:
-                    info["recommendationKey"] = "underperform"
-                else:
-                    info["recommendationKey"] = "hold"
+                bp = (strong_buy + buy) / total
+                sp = (sell + strong_sell) / total
+                info["analystBuyCount"]  = strong_buy + buy
+                info["analystHoldCount"] = hold
+                info["analystSellCount"] = sell + strong_sell
+                info["analystTotal"]     = total
+                if   bp >= 0.8: info["recommendationKey"] = "strong_buy"
+                elif bp >= 0.6: info["recommendationKey"] = "buy"
+                elif sp >= 0.5: info["recommendationKey"] = "sell"
+                elif sp >= 0.3: info["recommendationKey"] = "underperform"
+                else:           info["recommendationKey"] = "hold"
     except Exception as e:
-        print(f"DEBUG: Section 8 (Recommendations) failed for {ticker}: {e}")
+        pass
+        #print(f"DEBUG: Section 8 (Grades Consensus) failed for {ticker}: {e}")
 
-    """
-    # ── 9. Price-target consensus ─────────────────────────────────────────────
-    """ Issue: Forbidden 
+    # ── 9. Financial health scores (Piotroski + Altman Z) ────────────────────
     try:
-        data = fmp_fetch("/api/v4/price-target-consensus", symbol=ticker)
-        pt = _one(data)
-        if pt:
-            info["targetMeanPrice"] = pt.get("targetConsensus")
+        data = fmp_fetch("/stable/financial-scores", symbol=ticker)
+        fs = _one(data)
+        if fs:
+            info["piotroskiScore"] = fs.get("piotroskiScore")
+            info["altmanZScore"]   = fs.get("altmanZScore")
     except Exception as e:
-        print(f"DEBUG: Section 9 (Price Target) failed for {ticker}: {e}")
-    
-    """
+        pass
+        #print(f"DEBUG: Section 9 (Financial Scores) failed for {ticker}: {e}")
 
-    # ── 10. Short interest ────────────────────────────────────────────────────
-    """ Issue: Forbidden
-
+    # ── 10. Multi-period price returns ────────────────────────────────────────
     try:
-        si_data = fmp_fetch("/api/v4/short-of-float-change", symbol=ticker)
-        si = _one(si_data)
-        if si:
-            sif = si.get("shortPercentOfFloat")
-            if sif is not None:
-                info["shortPercentOfFloat"] = sif / 100
+        data = fmp_fetch("/stable/stock-price-change", symbol=ticker)
+        pc = _one(data)
+        if pc:
+            info["ret3M"] = pc.get("3M")
+            info["ret6M"] = pc.get("6M")
+            info["ret1Y"] = pc.get("1Y")
     except Exception as e:
-        print(f"DEBUG: Section 10 (Short Interest) failed for {ticker}: {e}")
+        pass
+        #print(f"DEBUG: Section 10 (Price Change) failed for {ticker}: {e}")
 
-    """
-
-    # ── 11. Institutional ownership % ─────────────────────────────────────────
-    """ Issue: Not Found 
-
+    # ── 11. DCF intrinsic value ───────────────────────────────────────────────
     try:
-        inst_data = fmp_fetch(f"/stable/institutional-holder", symbol=ticker)
-        if inst_data:
-            sf_data = fmp_fetch(f"/api/v4/shares_float", symbol=ticker)
-            sf = _one(sf_data)
-            float_shares = None
-            if sf:
-                float_shares = sf.get("outstandingShares") or sf.get("floatShares")
-            if float_shares:
-                total_inst = sum((h.get("shares") or 0) for h in inst_data)
-                info["institutionsPercentHeld"] = total_inst / float_shares
+        data = fmp_fetch("/stable/discounted-cash-flow", symbol=ticker)
+        dcf = _one(data)
+        if dcf:
+            info["dcfValue"] = dcf.get("dcf")
     except Exception as e:
-        print(f"DEBUG: Section 11 (Institutional) failed for {ticker}: {e}")
-    
-    """
+        pass
+        #print(f"DEBUG: Section 11 (DCF) failed for {ticker}: {e}")
 
     return info
 
@@ -509,6 +495,48 @@ def get_options_data(_ticker, _spot):
     return None, None, None, None, None
 
 
+def get_insider_data(ticker):
+    """
+    Fetch recent insider trades for a ticker via FMP free stable endpoint.
+    Filters to open-market purchases (P) and sales (S) only - excludes gifts,
+    option exercises, and automatic plan transactions.
+    Returns (transactions_list, pct_held_or_None).
+    """
+    try:
+        data = fmp_fetch("/stable/insider-trading/search", symbol=ticker, limit=20)
+        if not isinstance(data, list):
+            return [], None
+
+        OPEN_MARKET = {"P", "S"}
+        cutoff = datetime.date.today() - datetime.timedelta(days=180)
+        txns = []
+        for t in data:
+            tx_type = (t.get("transactionType") or "").strip().upper()
+            if tx_type not in OPEN_MARKET:
+                continue
+            date_str = str(t.get("transactionDate") or t.get("filingDate") or "")[:10]
+            try:
+                tx_date = datetime.date.fromisoformat(date_str)
+                recent  = tx_date >= cutoff
+            except Exception:
+                recent = False
+            shares = t.get("securitiesTransacted")
+            price  = t.get("price") or 0
+            txns.append({
+                "date":   date_str,
+                "type":   "buy" if tx_type == "P" else "sell",
+                "name":   t.get("reportingName"),
+                "role":   t.get("typeOfOwner"),
+                "shares": shares,
+                "value":  (shares or 0) * price,
+                "recent": recent,
+            })
+
+        return txns[:15], None  # pct_held requires premium tier
+    except Exception:
+        return [], None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  UNIFIED API: /api/stock-data
 #  Serves BOTH the Options Wheel Checker and the Comprehensive Buy Analyzer.
@@ -533,7 +561,7 @@ def stock_data():
         err_str = str(e).lower()
         if any(x in err_str for x in ["timeout", "403", "404", "rate limit", "429", "too many requests"]):
             resp = jsonify({
-                "error": "FMP connection error or rate limit hit. Please try again.",
+                "error": "FMP rate limit hit. Please try again.",
                 "retryable": True,
             })
             resp.status_code = 503
@@ -619,6 +647,7 @@ def stock_data():
         pass
 
     iv, spread_dollar, opt_expiry, atm_oi, atm_volume = get_options_data(ticker, spot)
+    insider_transactions, insider_pct_held = get_insider_data(ticker)
 
     # =========================================================================
     # BUY ANALYZER LOGIC
@@ -725,6 +754,88 @@ def stock_data():
             "More cash than debt - strong balance sheet." if dcr < 1 else f"Debt is {dcr:.1f}x cash - manageable." if dcr <= 3 else f"Debt is {dcr:.1f}x cash - high leverage.",
             "bullish" if dcr < 1 else "neutral" if dcr <= 3 else "bearish", weight=2)
 
+    # Piotroski F-Score
+    ps = safe(info.get("piotroskiScore"))
+    if ps is not None and not is_etf:
+        psi = int(ps)
+        if   psi >= 7: sig, interp = "bullish", f"Piotroski Score {psi}/9 - strong profitability, leverage, and efficiency signals."
+        elif psi >= 5: sig, interp = "neutral",  f"Piotroski Score {psi}/9 - average financial health."
+        else:          sig, interp = "bearish",  f"Piotroski Score {psi}/9 - multiple weak financial health signals."
+        add("Fundamentals", "Piotroski F-Score", f"{psi}/9", interp, sig, weight=2)
+
+    # Altman Z-Score
+    az = safe(info.get("altmanZScore"))
+    if az is not None and not is_etf:
+        if   az > 2.99: sig, interp = "bullish", f"Altman Z-Score {az:.2f} - safe zone, low bankruptcy risk."
+        elif az > 1.81: sig, interp = "neutral",  f"Altman Z-Score {az:.2f} - grey zone, monitor financial health."
+        else:           sig, interp = "bearish",  f"Altman Z-Score {az:.2f} - distress zone, elevated financial risk."
+        add("Fundamentals", "Altman Z-Score", f"{az:.2f}", interp, sig, weight=2)
+
+    # DCF intrinsic value
+    dcf_val = safe(info.get("dcfValue"))
+    if dcf_val is not None and spot and dcf_val > 0:
+        margin = (dcf_val - spot) / dcf_val * 100
+        if   margin >= 30: sig, interp = "bullish", f"Trading {margin:.0f}% below DCF value ${dcf_val:.2f} - significant margin of safety."
+        elif margin >= 10: sig, interp = "bullish", f"Trading {margin:.0f}% below DCF value ${dcf_val:.2f} - modest discount to intrinsic value."
+        elif margin >= -10:sig, interp = "neutral",  f"Trading near DCF intrinsic value of ${dcf_val:.2f}."
+        else:              sig, interp = "bearish",  f"Trading {abs(margin):.0f}% above DCF value ${dcf_val:.2f} - priced above model intrinsic value."
+        add("Valuation", "DCF Intrinsic Value", f"DCF ${dcf_val:.2f} vs Price ${spot:.2f}", interp, sig, weight=2)
+
+    # Analyst consensus (grades)
+    rec = info.get("recommendationKey")
+    analyst_total = safe(info.get("analystTotal"))
+    if rec and analyst_total and analyst_total >= 3:
+        buy_c  = info.get("analystBuyCount",  0)
+        hold_c = info.get("analystHoldCount", 0)
+        sell_c = info.get("analystSellCount", 0)
+        label_map = {
+            "strong_buy":  "Strong Buy",
+            "buy":         "Buy",
+            "hold":        "Hold",
+            "underperform":"Underperform",
+            "sell":        "Sell",
+        }
+        label   = label_map.get(rec, rec.replace("_", " ").title())
+        val_str = f"{label} - {buy_c} buy / {hold_c} hold / {sell_c} sell"
+        if rec in ("strong_buy", "buy"):
+            sig, interp = "bullish", f"Analyst consensus is {label} across {int(analyst_total)} ratings."
+        elif rec == "hold":
+            sig, interp = "neutral",  f"Analysts are mixed with a Hold consensus from {int(analyst_total)} ratings."
+        else:
+            sig, interp = "bearish",  f"Analyst consensus is {label} across {int(analyst_total)} ratings."
+        add("Analyst", "Analyst Consensus", val_str, interp, sig, weight=2)
+
+    # Multi-period price performance (from /stable/stock-price-change)
+    ret3m = safe(info.get("ret3M"))
+    if ret3m is not None:
+        if   ret3m >= 15:  sig, interp = "bullish", f"Up {ret3m:.1f}% over 3 months - strong near-term momentum."
+        elif ret3m >= 5:   sig, interp = "bullish", f"Up {ret3m:.1f}% over 3 months - positive trend."
+        elif ret3m >= -5:  sig, interp = "neutral",  f"{ret3m:+.1f}% over 3 months - essentially flat."
+        else:              sig, interp = "bearish",  f"Down {abs(ret3m):.1f}% over 3 months - weak near-term trend."
+        add("Trend", "3-Month Price Performance", f"{ret3m:+.1f}%", interp, sig, weight=1)
+
+    ret1y = safe(info.get("ret1Y"))
+    if ret1y is not None:
+        if   ret1y >= 25:  sig, interp = "bullish", f"Up {ret1y:.1f}% over 1 year - strong annual performance."
+        elif ret1y >= 5:   sig, interp = "bullish", f"Up {ret1y:.1f}% over 1 year - positive annual return."
+        elif ret1y >= -10: sig, interp = "neutral",  f"{ret1y:+.1f}% over 1 year - modest annual performance."
+        else:              sig, interp = "bearish",  f"Down {abs(ret1y):.1f}% over 1 year - underperforming."
+        add("Trend", "1-Year Price Performance", f"{ret1y:+.1f}%", interp, sig, weight=1)
+
+    # Insider net buying signal (from get_insider_data)
+    if insider_transactions:
+        recent_buys  = sum(1 for t in insider_transactions if t["type"] == "buy"  and t.get("recent"))
+        recent_sells = sum(1 for t in insider_transactions if t["type"] == "sell" and t.get("recent"))
+        if recent_buys + recent_sells > 0:
+            if   recent_buys > recent_sells * 2:
+                sig, interp = "bullish", f"{recent_buys} insider purchase(s) vs {recent_sells} sale(s) in the last 6 months - insiders are net buyers."
+            elif recent_sells > recent_buys * 2:
+                sig, interp = "bearish",  f"{recent_sells} insider sale(s) vs {recent_buys} purchase(s) in the last 6 months - insiders are net sellers."
+            else:
+                sig, interp = "neutral",  f"{recent_buys} insider purchase(s) and {recent_sells} sale(s) in the last 6 months - mixed insider activity."
+            add("Insider Activity", "Insider Transactions (6 months)",
+                f"{recent_buys} buys / {recent_sells} sells", interp, sig, weight=1)
+
     # Score & verdict Math
     score = round(bull_w / total_w * 100, 1) if total_w > 0 else 50.0
 
@@ -790,8 +901,8 @@ def stock_data():
             "total":   len(signals),
         },
         "signals":              signals,
-        "insider_transactions": [], # Premium FMP Data
-        "insider_pct_held":     None # Premium FMP Data
+        "insider_transactions": insider_transactions,
+        "insider_pct_held":     insider_pct_held
     })
 
 # ─────────────────────────────────────────────────────────────────────────────
