@@ -538,8 +538,8 @@ def stock_data():
             })
             resp.status_code = 503
             return resp
-        #return jsonify({"error": f"Analysis failed: Try A Different Stock"}), 502
-        return jsonify({"error": f"Analysis failed: {e}"}), 502
+        return jsonify({"error": f"Analysis failed: Try A Different Stock"}), 502
+        #return jsonify({"error": f"Analysis failed: {e}"}), 502
 
     # 1. Base Pricing
     spot = (

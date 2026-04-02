@@ -4,7 +4,7 @@ const API_BASE = window.location.origin;
 const STATE_IDS = ['homePrice','downPaymentPct','downPaymentDollar','mortgageRate','mortgageTerm',
                       'propertyTaxDollar','propertyTaxPct','homeInsurance','hoaFees',
                       'maintenancePct','maintenanceDollar','appreciation','monthlyRent',
-                      'rentIncrease','rentersInsurance','investmentReturn','yearsToAnalyze','monthsToAnalyze'];
+                      'rentIncrease','rentIncreaseDollar','rentersInsurance','investmentReturn','yearsToAnalyze','monthsToAnalyze'];
 
 // ─── Dual-field sync helpers ──────────────────────────────────────────────────
 
@@ -42,6 +42,18 @@ function syncMaintenanceFromDollar() {
     const price  = parseFormattedNumber(document.getElementById('homePrice').value);
     const dollar = parseFormattedNumber(document.getElementById('maintenanceDollar').value);
     if (price > 0) document.getElementById('maintenancePct').value = ((dollar / price) * 100).toFixed(3);
+}
+
+function syncRentIncreaseFromPct() {
+    const rent   = parseFormattedNumber(document.getElementById('monthlyRent').value);
+    const pct    = parseFloat(document.getElementById('rentIncrease').value) || 0;
+    const annual = (rent * 12 * pct) / 100;
+    document.getElementById('rentIncreaseDollar').value = annual > 0 ? Math.round(annual).toLocaleString('en-US') : '';
+}
+function syncRentIncreaseFromDollar() {
+    const rent   = parseFormattedNumber(document.getElementById('monthlyRent').value);
+    const annual = parseFormattedNumber(document.getElementById('rentIncreaseDollar').value);
+    if (rent > 0) document.getElementById('rentIncrease').value = ((annual / (rent * 12)) * 100).toFixed(2);
 }
 
 // ─── Currency formatting ──────────────────────────────────────────────────────
@@ -107,7 +119,6 @@ const REQUIRED_FIELDS = {
     maintenancePct:   'Maintenance',
     propertyTaxDollar:'Property Tax',
     homeInsurance:    'Home Insurance',
-    hoaFees:          'HOA Fees',
     rentIncrease:     'Rent Increase',
     rentersInsurance: 'Renters Insurance'
 };
@@ -182,6 +193,7 @@ function calculateRentVsBuy() {
     const missing = [];
     const winnerAfter = document.getElementById('winner-after');
     const winnerAfterFloat = document.getElementById('winner-after-float'); 
+    const floatEl       = document.getElementById('winnerFloat');
     for (const [id, label] of Object.entries(REQUIRED_FIELDS)) {
         const raw = document.getElementById(id).value.trim().replace(/,/g, '');
         if (raw === '' || isNaN(parseFloat(raw))) missing.push(label);
@@ -191,6 +203,7 @@ function calculateRentVsBuy() {
         const winnerEl = document.getElementById('winner');
         winnerAfter.style.display = 'none';
         winnerAfterFloat.style.display = 'none';
+        floatEl.style.borderLeft = '1.5px solid #E5E7EB';
         
         if (missing.length === Object.keys(REQUIRED_FIELDS).length || missing.length > 3) {
             // If everything is missing OR more than 3 things are missing

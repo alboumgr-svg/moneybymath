@@ -82,7 +82,7 @@
             <div class="hero-content">
                 <div class="hero-badge">Housing Decision</div>
                 <h1 class="hero-title"><span class="gradient-text">Rent Forever or</span> Buy a Place</h1>
-                <p class="hero-subtitle">Compare the true financial costs of renting versus buying over time. Factor in opportunity costs, maintenance, appreciation, and more.</p>
+                <p class="hero-subtitle">Compare the true financial costs of renting versus buying over time. Factor in opportunity costs, maintenance, appreciation, and more. If Renting, user MUST invest down payment and per-month savings for this calculation to make sense!</p>
             </div>
         </div>
     </section>
@@ -103,7 +103,7 @@
                             <input type="text" inputmode="decimal" id="homePrice"
                                    placeholder="e.g. 500,000"
                                    data-input-type="currency"
-                                   oninput="handleInput(this); syncDownPaymentFromPct(); syncPropertyTaxFromPct(); syncMaintenanceFromPct()">
+                                   oninput="syncDownPaymentFromPct(); syncPropertyTaxFromPct(); syncMaintenanceFromPct(); handleInput(this)">
                         </div>
 
                         <!-- Side-by-side % / $ synced inputs -->
@@ -120,7 +120,7 @@
                                 <input type="text" inputmode="decimal" id="downPaymentDollar"
                                        placeholder="e.g. 100,000"
                                        data-input-type="currency"
-                                       oninput="handleInput(this); syncDownPaymentFromDollar()">
+                                       oninput="syncDownPaymentFromDollar(); handleInput(this)">
                             </div>
                         </div>
 
@@ -147,7 +147,7 @@
                                 <input type="text" inputmode="decimal" id="propertyTaxDollar"
                                        placeholder="e.g. 8,000"
                                        data-input-type="currency"
-                                       oninput="handleInput(this); syncPropertyTaxFromDollar()">
+                                       oninput="; syncPropertyTaxFromDollar(); handleInput(this)">
                             </div>
                             <div class="input-group">
                                 <label for="propertyTaxPct">Property Tax (% / year)</label>
@@ -169,7 +169,7 @@
                         <div class="input-group">
                             <label for="hoaFees">Monthly HOA Fees ($)</label>
                             <input type="text" inputmode="decimal" id="hoaFees"
-                                   placeholder="e.g. 200"
+                                   placeholder="e.g. 200 or leave blank"
                                    data-input-type="currency"
                                    oninput="handleInput(this)">
                         </div>
@@ -188,7 +188,7 @@
                                 <input type="text" inputmode="decimal" id="maintenanceDollar"
                                        placeholder="e.g. 5,000"
                                        data-input-type="currency"
-                                       oninput="handleInput(this); syncMaintenanceFromDollar()">
+                                       oninput="syncMaintenanceFromDollar(); handleInput(this)">
                             </div>
                         </div>
 
@@ -213,15 +213,25 @@
                             <input type="text" inputmode="decimal" id="monthlyRent"
                                    placeholder="e.g. 2,500"
                                    data-input-type="currency"
-                                   oninput="handleInput(this)">
+                                   oninput="handleInput(this); syncRentIncreaseFromPct()">
                         </div>
 
-                        <div class="input-group">
-                            <label for="rentIncrease">Annual Rent Increase (%)</label>
-                            <input type="number" id="rentIncrease"
-                                   placeholder="e.g. 3"
-                                   min="0" max="20" step="0.5"
-                                   oninput="handleInput(this)">
+                        <!-- Side-by-side % / $ synced inputs -->
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="rentIncrease">Annual Rent Increase (%)</label>
+                                <input type="number" id="rentIncrease"
+                                       placeholder="e.g. 3"
+                                       min="0" max="20" step="0.5"
+                                       oninput="syncRentIncreaseFromPct(); handleInput(this)">
+                            </div>
+                            <div class="input-group">
+                                <label for="rentIncreaseDollar">Annual Rent Increase ($/year)</label>
+                                <input type="text" inputmode="decimal" id="rentIncreaseDollar"
+                                       placeholder="e.g. 900"
+                                       data-input-type="currency"
+                                       oninput="handleInput(this); syncRentIncreaseFromDollar()">
+                            </div>
                         </div>
 
                         <div class="input-group">
