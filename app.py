@@ -879,8 +879,10 @@ def privacy():
 
 @app.context_processor
 def inject_is_prod():
-    # If debug is False, we are likely in Production
-    return dict(IS_PROD=not app.debug)
+    # Check if we are running on a production server (e.g., Render)
+    # Most hosts set a 'RENDER' or 'ENV' variable automatically
+    is_prod = os.environ.get("RENDER") == "true" 
+    return dict(IS_PROD=is_prod)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  MAIN FUNCITON

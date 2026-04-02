@@ -523,6 +523,8 @@ function updateRentBuyChart(years, buyData, rentData) {
     const ctx = document.getElementById('rentBuyChart').getContext('2d');
     if (rentBuyChart) rentBuyChart.destroy();
 
+    const isMobile = window.innerWidth < 600;
+
     rentBuyChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -549,7 +551,7 @@ function updateRentBuyChart(years, buyData, rentData) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 2,
+            aspectRatio: isMobile ? 0.5 : 2,
             plugins: {
                 legend: {
                     display: true, position: 'top',
