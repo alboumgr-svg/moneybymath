@@ -879,9 +879,8 @@ def privacy():
 
 @app.context_processor
 def inject_is_prod():
-    # Check if we are running on a production server (e.g., Render)
-    # Most hosts set a 'RENDER' or 'ENV' variable automatically
-    is_prod = os.environ.get("RENDER") == "true" 
+    # This will be True if the variable exists at all in Render's "Environment" tab
+    is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
     return dict(IS_PROD=is_prod)
 
 # ─────────────────────────────────────────────────────────────────────────────
