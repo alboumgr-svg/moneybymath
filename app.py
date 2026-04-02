@@ -531,15 +531,15 @@ def stock_data():
             
     except Exception as e:
         err_str = str(e).lower()
-        if any(x in err_str for x in ["timeout", "403", "404", "rate limit"]):
+        if any(x in err_str for x in ["timeout", "403", "404", "rate limit", "429", "too many requests"]):
             resp = jsonify({
                 "error": "FMP connection error or rate limit hit. Please try again.",
                 "retryable": True,
             })
             resp.status_code = 503
             return resp
-        return jsonify({"error": f"Analysis failed: Try A Different Stock"}), 502
-        #return jsonify({"error": f"Analysis failed: {e}"}), 502
+        #return jsonify({"error": f"Analysis failed: Try A Different Stock"}), 502
+        return jsonify({"error": f"Analysis failed: {e}"}), 502
 
     # 1. Base Pricing
     spot = (
