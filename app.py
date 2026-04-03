@@ -381,6 +381,10 @@ def mortgage_calculator():
 def budget():
     return render_template("budget.html")
 
+@app.route("/financial-health-check")
+def healthCheck():
+    return render_template("financial-health-check.html")
+
 @app.route("/newsletter")
 def newsletter():
     return render_template("newsletter.html", article=LATEST_ARTICLE)
@@ -554,8 +558,19 @@ def stock_data():
         # Fetch 2 years (730 days) of history to satisfy the MA200 and HVR calculations
         hist = get_fmp_history(ticker, days=730)
 
-        if not info or hist.empty:
-            raise ValueError("FMP returned no data or empty history.")
+        if hist.empty:
+            hist = get_fmp_history(ticker, days=180)
+            if hist.empty:
+                raise ValueError("No price history")
+
+        spot = (
+            safe(info.get("currentPrice"))
+            or safe(info.get("regularMarketPrice"))
+            or safe(info.get("previousClose"))
+        )
+
+        if not spot:
+            raise ValueError("No usable price data")
             
     except Exception as e:
         err_str = str(e).lower()
@@ -566,7 +581,7 @@ def stock_data():
             })
             resp.status_code = 503
             return resp
-        return jsonify({"error": f"Analysis failed: Try A Different Stock"}), 502
+        return jsonify({"error": f"Analysis failed: Stock Not Supported"}), 502
         #return jsonify({"error": f"Analysis failed: {e}"}), 502
 
     # 1. Base Pricing
@@ -988,11 +1003,11 @@ def privacy():
 #  IS_PROD
 # ─────────────────────────────────────────────────────────────────────────────
 
-#@app.context_processor
-#def inject_is_prod():
-#    # This will be True if the variable exists at all in Render's "Environment" tab
-#    is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
-#    return dict(IS_PROD=is_prod)
+@app.context_processor
+def inject_is_prod():
+    # This will be True if the variable exists at all in Render's "Environment" tab
+    is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
+    return dict(IS_PROD=is_prod)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  MAIN FUNCITON

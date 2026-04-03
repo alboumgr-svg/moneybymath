@@ -1,0 +1,503 @@
+{
+  "meta": {
+    "benchmarkYear": 2026,
+    "currency": "USD",
+    "ratioFormat": "decimal",
+    "notes": [
+      "Replace the placeholder benchmark values below with your own annual research.",
+      "Use decimals for rates and ratios. Example: 0.15 means 15%.",
+      "The age-band targets are planning milestones, while the median and average values are peer comparisons."
+    ]
+  },
+  "scoringWeights": {
+    "income": 6,
+    "cashFlow": 14,
+    "emergencyFund": 12,
+    "retirementReadiness": 18,
+    "investing": 12,
+    "netWorth": 12,
+    "debtManagement": 16,
+    "protectionAndPlanning": 10
+  },
+  "thresholds": {
+    "monthlySurplusRatio": {
+      "minimum": 0.05,
+      "strong": 0.15,
+      "excellent": 0.25
+    },
+    "emergencyFundMonths": {
+      "minimum": 3,
+      "strong": 6,
+      "excellent": 9
+    },
+    "savingsRate": {
+      "minimum": 0.1,
+      "strong": 0.2,
+      "excellent": 0.3
+    },
+    "retirementContributionRate": {
+      "minimum": 0.1,
+      "strong": 0.15,
+      "excellent": 0.2
+    },
+    "investingRate": {
+      "minimum": 0.05,
+      "strong": 0.12,
+      "excellent": 0.2
+    },
+    "housingRatio": {
+      "healthy": 0.28,
+      "stretch": 0.35,
+      "danger": 0.45
+    },
+    "fixedObligationRatio": {
+      "healthy": 0.36,
+      "stretch": 0.43,
+      "danger": 0.5
+    },
+    "consumerDebtToIncome": {
+      "healthy": 0.05,
+      "stretch": 0.1,
+      "danger": 0.2
+    },
+    "creditUtilization": {
+      "healthy": 0.1,
+      "stretch": 0.3,
+      "danger": 0.5
+    },
+    "creditScore": {
+      "minimum": 670,
+      "strong": 740,
+      "excellent": 780
+    }
+  },
+  "ageBands": [
+    {
+      "minAge": 18,
+      "maxAge": 24,
+      "label": "18-24",
+      "benchmarks": {
+        "annualIncome": {
+          "median": 35000,
+          "average": 42000
+        },
+        "takeHomePayAnnual": {
+          "median": 28000,
+          "average": 33000
+        },
+        "retirementSavings": {
+          "median": 3000,
+          "average": 8000
+        },
+        "taxableInvestments": {
+          "median": 1000,
+          "average": 4000
+        },
+        "emergencyFundBalance": {
+          "median": 1500,
+          "average": 4000
+        },
+        "netWorth": {
+          "median": 8000,
+          "average": 35000
+        },
+        "consumerDebtBalance": {
+          "median": 5000,
+          "average": 12000
+        },
+        "totalDebtBalance": {
+          "median": 15000,
+          "average": 35000
+        },
+        "savingsRate": {
+          "median": 0.05,
+          "average": 0.08
+        },
+        "retirementContributionRate": {
+          "median": 0.03,
+          "average": 0.05
+        },
+        "investingRate": {
+          "median": 0.02,
+          "average": 0.04
+        },
+        "homeEquity": {
+          "median": 0,
+          "average": 5000
+        }
+      },
+      "targets": {
+        "retirementMultipleOfIncome": 0.1,
+        "netWorthMultipleOfIncome": 0.2,
+        "investableAssetsMultipleOfIncome": 0.15,
+        "emergencyFundMonths": 3
+      }
+    },
+    {
+      "minAge": 25,
+      "maxAge": 34,
+      "label": "25-34",
+      "benchmarks": {
+        "annualIncome": {
+          "median": 55000,
+          "average": 70000
+        },
+        "takeHomePayAnnual": {
+          "median": 42000,
+          "average": 53000
+        },
+        "retirementSavings": {
+          "median": 15000,
+          "average": 45000
+        },
+        "taxableInvestments": {
+          "median": 3000,
+          "average": 15000
+        },
+        "emergencyFundBalance": {
+          "median": 4000,
+          "average": 10000
+        },
+        "netWorth": {
+          "median": 35000,
+          "average": 120000
+        },
+        "consumerDebtBalance": {
+          "median": 8000,
+          "average": 18000
+        },
+        "totalDebtBalance": {
+          "median": 80000,
+          "average": 150000
+        },
+        "savingsRate": {
+          "median": 0.06,
+          "average": 0.1
+        },
+        "retirementContributionRate": {
+          "median": 0.05,
+          "average": 0.08
+        },
+        "investingRate": {
+          "median": 0.03,
+          "average": 0.06
+        },
+        "homeEquity": {
+          "median": 10000,
+          "average": 45000
+        }
+      },
+      "targets": {
+        "retirementMultipleOfIncome": 0.5,
+        "netWorthMultipleOfIncome": 0.75,
+        "investableAssetsMultipleOfIncome": 0.35,
+        "emergencyFundMonths": 4
+      }
+    },
+    {
+      "minAge": 35,
+      "maxAge": 44,
+      "label": "35-44",
+      "benchmarks": {
+        "annualIncome": {
+          "median": 85000,
+          "average": 110000
+        },
+        "takeHomePayAnnual": {
+          "median": 63000,
+          "average": 80000
+        },
+        "retirementSavings": {
+          "median": 60000,
+          "average": 140000
+        },
+        "taxableInvestments": {
+          "median": 10000,
+          "average": 50000
+        },
+        "emergencyFundBalance": {
+          "median": 8000,
+          "average": 20000
+        },
+        "netWorth": {
+          "median": 135000,
+          "average": 500000
+        },
+        "consumerDebtBalance": {
+          "median": 12000,
+          "average": 22000
+        },
+        "totalDebtBalance": {
+          "median": 150000,
+          "average": 240000
+        },
+        "savingsRate": {
+          "median": 0.07,
+          "average": 0.12
+        },
+        "retirementContributionRate": {
+          "median": 0.06,
+          "average": 0.1
+        },
+        "investingRate": {
+          "median": 0.04,
+          "average": 0.08
+        },
+        "homeEquity": {
+          "median": 60000,
+          "average": 130000
+        }
+      },
+      "targets": {
+        "retirementMultipleOfIncome": 1.5,
+        "netWorthMultipleOfIncome": 2,
+        "investableAssetsMultipleOfIncome": 0.75,
+        "emergencyFundMonths": 5
+      }
+    },
+    {
+      "minAge": 45,
+      "maxAge": 54,
+      "label": "45-54",
+      "benchmarks": {
+        "annualIncome": {
+          "median": 95000,
+          "average": 130000
+        },
+        "takeHomePayAnnual": {
+          "median": 70000,
+          "average": 95000
+        },
+        "retirementSavings": {
+          "median": 115000,
+          "average": 250000
+        },
+        "taxableInvestments": {
+          "median": 25000,
+          "average": 100000
+        },
+        "emergencyFundBalance": {
+          "median": 12000,
+          "average": 30000
+        },
+        "netWorth": {
+          "median": 250000,
+          "average": 950000
+        },
+        "consumerDebtBalance": {
+          "median": 10000,
+          "average": 20000
+        },
+        "totalDebtBalance": {
+          "median": 140000,
+          "average": 220000
+        },
+        "savingsRate": {
+          "median": 0.08,
+          "average": 0.14
+        },
+        "retirementContributionRate": {
+          "median": 0.08,
+          "average": 0.12
+        },
+        "investingRate": {
+          "median": 0.05,
+          "average": 0.1
+        },
+        "homeEquity": {
+          "median": 110000,
+          "average": 220000
+        }
+      },
+      "targets": {
+        "retirementMultipleOfIncome": 3.5,
+        "netWorthMultipleOfIncome": 4,
+        "investableAssetsMultipleOfIncome": 1.5,
+        "emergencyFundMonths": 6
+      }
+    },
+    {
+      "minAge": 55,
+      "maxAge": 64,
+      "label": "55-64",
+      "benchmarks": {
+        "annualIncome": {
+          "median": 80000,
+          "average": 120000
+        },
+        "takeHomePayAnnual": {
+          "median": 60000,
+          "average": 88000
+        },
+        "retirementSavings": {
+          "median": 185000,
+          "average": 400000
+        },
+        "taxableInvestments": {
+          "median": 40000,
+          "average": 200000
+        },
+        "emergencyFundBalance": {
+          "median": 15000,
+          "average": 40000
+        },
+        "netWorth": {
+          "median": 350000,
+          "average": 1500000
+        },
+        "consumerDebtBalance": {
+          "median": 6000,
+          "average": 15000
+        },
+        "totalDebtBalance": {
+          "median": 80000,
+          "average": 150000
+        },
+        "savingsRate": {
+          "median": 0.08,
+          "average": 0.15
+        },
+        "retirementContributionRate": {
+          "median": 0.09,
+          "average": 0.14
+        },
+        "investingRate": {
+          "median": 0.06,
+          "average": 0.12
+        },
+        "homeEquity": {
+          "median": 160000,
+          "average": 320000
+        }
+      },
+      "targets": {
+        "retirementMultipleOfIncome": 6,
+        "netWorthMultipleOfIncome": 6.5,
+        "investableAssetsMultipleOfIncome": 2.5,
+        "emergencyFundMonths": 6
+      }
+    },
+    {
+      "minAge": 65,
+      "maxAge": 74,
+      "label": "65-74",
+      "benchmarks": {
+        "annualIncome": {
+          "median": 55000,
+          "average": 85000
+        },
+        "takeHomePayAnnual": {
+          "median": 45000,
+          "average": 68000
+        },
+        "retirementSavings": {
+          "median": 200000,
+          "average": 450000
+        },
+        "taxableInvestments": {
+          "median": 50000,
+          "average": 250000
+        },
+        "emergencyFundBalance": {
+          "median": 18000,
+          "average": 45000
+        },
+        "netWorth": {
+          "median": 410000,
+          "average": 1800000
+        },
+        "consumerDebtBalance": {
+          "median": 3000,
+          "average": 8000
+        },
+        "totalDebtBalance": {
+          "median": 40000,
+          "average": 90000
+        },
+        "savingsRate": {
+          "median": 0.05,
+          "average": 0.1
+        },
+        "retirementContributionRate": {
+          "median": 0.02,
+          "average": 0.05
+        },
+        "investingRate": {
+          "median": 0.03,
+          "average": 0.08
+        },
+        "homeEquity": {
+          "median": 200000,
+          "average": 380000
+        }
+      },
+      "targets": {
+        "retirementMultipleOfIncome": 8,
+        "netWorthMultipleOfIncome": 7,
+        "investableAssetsMultipleOfIncome": 3,
+        "emergencyFundMonths": 6
+      }
+    },
+    {
+      "minAge": 75,
+      "maxAge": 90,
+      "label": "75-90",
+      "benchmarks": {
+        "annualIncome": {
+          "median": 45000,
+          "average": 70000
+        },
+        "takeHomePayAnnual": {
+          "median": 38000,
+          "average": 58000
+        },
+        "retirementSavings": {
+          "median": 130000,
+          "average": 350000
+        },
+        "taxableInvestments": {
+          "median": 40000,
+          "average": 220000
+        },
+        "emergencyFundBalance": {
+          "median": 15000,
+          "average": 40000
+        },
+        "netWorth": {
+          "median": 350000,
+          "average": 1600000
+        },
+        "consumerDebtBalance": {
+          "median": 1000,
+          "average": 4000
+        },
+        "totalDebtBalance": {
+          "median": 15000,
+          "average": 45000
+        },
+        "savingsRate": {
+          "median": 0.02,
+          "average": 0.06
+        },
+        "retirementContributionRate": {
+          "median": 0.0,
+          "average": 0.02
+        },
+        "investingRate": {
+          "median": 0.01,
+          "average": 0.04
+        },
+        "homeEquity": {
+          "median": 210000,
+          "average": 370000
+        }
+      },
+      "targets": {
+        "retirementMultipleOfIncome": 6,
+        "netWorthMultipleOfIncome": 6,
+        "investableAssetsMultipleOfIncome": 2.5,
+        "emergencyFundMonths": 6
+      }
+    }
+  ]
+}

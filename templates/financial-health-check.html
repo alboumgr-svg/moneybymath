@@ -1,0 +1,1060 @@
+{% extends "base.html" %}
+{% block title %}Financial Health Check - MoneyByMath{% endblock %}
+{% block content %}
+
+<style>
+.input-section-header {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--primary);
+    padding: 0.65rem 0 0.25rem;
+    margin-top: 0.75rem;
+    border-top: 1px dashed var(--border);
+}
+.input-section-header:first-child {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.health-top-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1rem;
+}
+@media (max-width: 1000px) {
+    .health-top-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.health-score-card {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.health-score-ring {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 5px solid var(--green);
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--green);
+    background: var(--green-bg);
+    margin: 0 auto 0.3rem;
+    transition: all 0.4s ease;
+}
+
+.health-score-ring.grade-b {
+    border-color: #34d399;
+    color: #059669;
+    background: #ecfdf5;
+}
+.health-score-ring.grade-c {
+    border-color: var(--yellow);
+    color: #b45309;
+    background: var(--yellow-bg);
+}
+.health-score-ring.grade-d {
+    border-color: #fb923c;
+    color: #c2410c;
+    background: #fff7ed;
+}
+.health-score-ring.grade-f {
+    border-color: var(--red);
+    color: #b91c1c;
+    background: var(--red-bg);
+}
+.health-score-ring .score-num {
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+}
+.health-score-ring .score-grade {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 0.1rem;
+}
+
+.health-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--green-border);
+    color: #047857;
+    background: var(--green-bg);
+}
+.health-status-chip.status-strong {
+    color: #065f46;
+    background: var(--green-bg);
+    border-color: var(--green-border);
+}
+.health-status-chip.status-stable {
+    color: #92400e;
+    background: var(--yellow-bg);
+    border-color: var(--yellow-border);
+}
+.health-status-chip.status-watch {
+    color: #9a3412;
+    background: #fff7ed;
+    border-color: #fdba74;
+}
+.health-status-chip.status-risk {
+    color: #991b1b;
+    background: var(--red-bg);
+    border-color: var(--red-border);
+}
+
+.health-summary-copy {
+    flex: 1;
+    min-width: 220px;
+}
+.health-summary-copy h4 {
+    font-size: 1.2rem;
+    margin-bottom: 0.35rem;
+}
+.health-summary-copy p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.7;
+}
+
+.summary-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+}
+@media (max-width: 560px) {
+    .summary-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.summary-kpi {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 0.9rem;
+}
+.summary-kpi-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+.summary-kpi-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+.summary-kpi-sub {
+    margin-top: 0.2rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.health-indicator {
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    margin-top: 1rem;
+}
+.health-indicator.good {
+    background: var(--green-bg);
+    border-color: var(--green-border);
+    color: #065f46;
+}
+.health-indicator.warn {
+    background: var(--yellow-bg);
+    border-color: var(--yellow-border);
+    color: #92400e;
+}
+.health-indicator.risk {
+    background: var(--red-bg);
+    border-color: var(--red-border);
+    color: #991b1b;
+}
+
+.info-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 0.84rem;
+    color: #1d4ed8;
+    line-height: 1.7;
+}
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1rem;
+}
+.chip {
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+.chip.good {
+    background: var(--green-bg);
+    border-color: var(--green-border);
+    color: #047857;
+}
+.chip.warn {
+    background: var(--yellow-bg);
+    border-color: var(--yellow-border);
+    color: #92400e;
+}
+.chip.risk {
+    background: var(--red-bg);
+    border-color: var(--red-border);
+    color: #b91c1c;
+}
+
+.score-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+.score-row {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.85rem 0.95rem;
+}
+.score-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.45rem;
+    font-size: 0.85rem;
+}
+.score-row-label {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.score-row-meta {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+.score-row-value {
+    font-weight: 800;
+    color: var(--primary);
+}
+.score-bar {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.score-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ef4444 0%, #f59e0b 55%, #10b981 100%);
+}
+.score-row-sub {
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.chart-shell {
+    position: relative;
+    margin-top: 1rem;
+    padding: 0.95rem;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.milestone-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.8rem;
+    margin: 1rem 0;
+}
+@media (max-width: 1200px) {
+    .milestone-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 520px) {
+    .milestone-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.milestone-card {
+    padding: 0.95rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+.milestone-card.good {
+    background: var(--green-bg);
+    border-color: var(--green-border);
+}
+.milestone-card.warn {
+    background: var(--yellow-bg);
+    border-color: var(--yellow-border);
+}
+.milestone-card.risk {
+    background: var(--red-bg);
+    border-color: var(--red-border);
+}
+.milestone-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+}
+.milestone-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+.milestone-sub {
+    margin-top: 0.2rem;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+}
+
+.benchmark-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+}
+.benchmark-table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+.benchmark-table th,
+.benchmark-table td {
+    padding: 0.85rem 0.8rem;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: right;
+}
+.benchmark-table th:first-child,
+.benchmark-table td:first-child {
+    text-align: left;
+    width: 28%;
+}
+.benchmark-table th {
+    background: #f8fafc;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+.benchmark-status {
+    font-weight: 700;
+}
+.benchmark-status.good {
+    color: #047857;
+}
+.benchmark-status.warn {
+    color: #92400e;
+}
+.benchmark-status.risk {
+    color: #b91c1c;
+}
+.benchmark-status.muted {
+    color: var(--text-muted);
+}
+
+.feedback-list,
+.priority-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+.feedback-item,
+.priority-item {
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    display: flex;
+    gap: 0.8rem;
+}
+.feedback-item.good {
+    background: var(--green-bg);
+    border-color: var(--green-border);
+}
+.feedback-item.warn,
+.priority-item.warn {
+    background: var(--yellow-bg);
+    border-color: var(--yellow-border);
+}
+.feedback-item.risk,
+.priority-item.risk {
+    background: var(--red-bg);
+    border-color: var(--red-border);
+}
+.feedback-badge,
+.priority-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #fff;
+    background: var(--primary);
+    margin-top: 0.1rem;
+}
+.priority-item.warn .priority-num,
+.feedback-item.warn .feedback-badge {
+    background: #d97706;
+}
+.priority-item.risk .priority-num,
+.feedback-item.risk .feedback-badge {
+    background: #dc2626;
+}
+.feedback-copy strong,
+.priority-text strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+.feedback-copy p,
+.priority-text p {
+    color: var(--text-secondary);
+    font-size: 0.84rem;
+    line-height: 1.65;
+}
+
+.toggle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.3rem;
+}
+@media (max-width: 560px) {
+    .toggle-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #f8fafc;
+    font-size: 0.84rem;
+}
+.toggle-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+.toggle-copy strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+.toggle-copy span {
+    color: var(--text-secondary);
+    font-size: 0.77rem;
+}
+
+#healthFloat {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    z-index: 999;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.85rem 1.2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+    border: 1.5px solid var(--border);
+    min-width: 210px;
+    max-width: 270px;
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    background: #f8fafc;
+    border-left: 4px solid var(--primary);
+}
+#healthFloat.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+#healthFloat .float-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 5px; text-transform: uppercase; }
+#healthFloat .float-value { font-size: 1.1rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+@media (max-width: 480px) {
+    #healthFloat { bottom: 1rem; right: 1rem; left: 1rem; max-width: none; }
+}
+@media (min-width: 1024px) {
+    #healthFloat { min-width: 280px; max-width: 360px; padding: 1.1rem 1.5rem; border-radius: 16px; }
+    #healthFloat .float-label { font-size: 0.95rem; }
+    #healthFloat .float-value { font-size: 1.65rem; }
+}
+
+/* Add this to your <style> section */
+.calculator-card, 
+.result-card, 
+.summary-kpi-grid {
+    min-width: 0; /* Allows the card to shrink below its content's 'natural' width */
+    overflow: hidden; /* Ensures nothing physical (like a chart) pokes out */
+}
+
+/* Fix the specific grid causing the 970px-1200px break */
+.health-top-grid {
+    display: grid;
+    /* This change ensures columns don't 'push' the container wide */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+    gap: 1rem;
+}
+
+.summary-kpi-grid {
+    display: grid;
+    /* Instead of a hard '1fr 1fr', let them stack if they get too squeezed */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+}
+
+@media (max-width: 1200px) {
+    .calculator-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .benchmark-table { font-size: 0.8rem; }
+    .benchmark-table th,
+    .benchmark-table td { padding: 0.5rem 0.45rem; }
+}
+
+</style>
+
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Full Money Snapshot</div>
+            <h1 class="hero-title">Financial <span class="gradient-text">Health Check</span></h1>
+            <p class="hero-subtitle">Enter your full financial life, compare yourself with your age band, and get a practical rating with strengths, risks, and the next moves that matter most.</p>
+        </div>
+    </div>
+</section>
+
+<section id="financial-health-check" class="calculator-section">
+    <div class="container">
+        <div id="healthForm" class="calculator-grid">
+            <div class="calculator-card">
+                <h3 class="card-title">Personal Snapshot</h3>
+                <div class="calculator-inputs">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="age">Current Age</label>
+                            <input type="number" id="age" min="18" max="90" placeholder="e.g. 33">
+                        </div>
+                        <div class="input-group">
+                            <label for="filingStatus">Filing Status</label>
+                            <select id="filingStatus">
+                                <option value="single">Single</option>
+                                <option value="married">Married / Partnered</option>
+                                <option value="head">Head of Household</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="householdSize">Household Size</label>
+                            <input type="number" id="householdSize" min="1" max="10" placeholder="e.g. 2">
+                        </div>
+                        <div class="input-group">
+                            <label for="dependents">Dependents</label>
+                            <input type="number" id="dependents" min="0" max="10" placeholder="e.g. 1">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="homeStatus">Housing Situation</label>
+                        <select id="homeStatus">
+                            <option value="rent">Renting</option>
+                            <option value="own">Own a Home</option>
+                            <option value="family">Living with Family / Shared Support</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="input-section-header">Income</div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="annualGrossIncome">Gross Base Income ($/yr)</label>
+                            <input type="text" id="annualGrossIncome" class="money-input" placeholder="e.g. 95,000">
+                        </div>
+                        <div class="input-group">
+                            <label for="annualBonus">Bonus / Variable Income ($/yr)</label>
+                            <input type="text" id="annualBonus" class="money-input" placeholder="e.g. 5,000">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="monthlyTakeHome">Net Take-Home Pay ($/mo)</label>
+                        <input type="text" id="monthlyTakeHome" class="money-input" placeholder="e.g. 5,800">
+                        <small class="input-note">If left blank, take-home is estimated from gross income for cash-flow scoring.</small>
+                    </div>
+
+                    <div class="input-section-header">Cash Flow Snapshot</div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="monthlyHousing">Housing Cost ($/mo)</label>
+                            <input type="text" id="monthlyHousing" class="money-input" placeholder="e.g. 1,850">
+                            <small class="input-note">Rent or full mortgage payment, including escrow if you use it.</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="monthlyCoreSpending">Core Non-Housing Costs ($/mo)</label>
+                            <input type="text" id="monthlyCoreSpending" class="money-input" placeholder="e.g. 1,850">
+                            <small class="input-note">Use one high-level number for essentials like food, insurance, transportation, healthcare, and similar recurring needs.</small>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="monthlyFlexibleSpending">Flexible / Lifestyle Spending ($/mo)</label>
+                        <input type="text" id="monthlyFlexibleSpending" class="money-input" placeholder="e.g. 600">
+                        <small class="input-note">Dining out, entertainment, travel, shopping, subscriptions, and the spending that moves more easily month to month.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Assets &amp; Savings Engine</h3>
+                <div class="calculator-inputs">
+                    <div class="input-section-header">Current Assets</div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="checkingSavings">Checking + Savings ($)</label>
+                            <input type="text" id="checkingSavings" class="money-input" placeholder="e.g. 8,500">
+                        </div>
+                        <div class="input-group">
+                            <label for="emergencyFund">Dedicated Emergency Fund ($)</label>
+                            <input type="text" id="emergencyFund" class="money-input" placeholder="e.g. 12,000">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="retirementAccounts">Retirement Accounts ($)</label>
+                            <input type="text" id="retirementAccounts" class="money-input" placeholder="e.g. 65,000">
+                        </div>
+                        <div class="input-group">
+                            <label for="taxableInvestments">Taxable Investments ($)</label>
+                            <input type="text" id="taxableInvestments" class="money-input" placeholder="e.g. 20,000">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="hsaBalance">HSA Balance ($)</label>
+                            <input type="text" id="hsaBalance" class="money-input" placeholder="e.g. 4,000">
+                        </div>
+                        <div class="input-group">
+                            <label for="collegeSavings">529 / Kids Savings ($)</label>
+                            <input type="text" id="collegeSavings" class="money-input" placeholder="e.g. 0">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="homeValue">Home Value ($)</label>
+                            <input type="text" id="homeValue" class="money-input" placeholder="e.g. 420,000">
+                        </div>
+                        <div class="input-group">
+                            <label for="mortgageBalance">Mortgage Balance ($)</label>
+                            <input type="text" id="mortgageBalance" class="money-input" placeholder="e.g. 280,000">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="otherAssets">Other Assets ($)</label>
+                        <input type="text" id="otherAssets" class="money-input" placeholder="e.g. 5,000">
+                        <small class="input-note">Business equity, cash value, collectibles, or anything else you want included.</small>
+                    </div>
+
+                    <div class="input-section-header">Monthly Building Blocks</div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="monthlyRetirementContrib">Retirement Contributions ($/mo)</label>
+                            <input type="text" id="monthlyRetirementContrib" class="money-input" placeholder="e.g. 700">
+                        </div>
+                        <div class="input-group">
+                            <label for="monthlyEmployerMatch">Employer Match ($/mo)</label>
+                            <input type="text" id="monthlyEmployerMatch" class="money-input" placeholder="e.g. 200">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="capturesEmployerMatch">Employer Match Status</label>
+                        <select id="capturesEmployerMatch">
+                            <option value="yes">Capturing Full Match</option>
+                            <option value="partial">Capturing Some Match</option>
+                            <option value="no">Not Capturing Match</option>
+                            <option value="none">No Employer Match Offered</option>
+                        </select>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="monthlyTaxableInvesting">Taxable Investing ($/mo)</label>
+                            <input type="text" id="monthlyTaxableInvesting" class="money-input" placeholder="e.g. 300">
+                        </div>
+                        <div class="input-group">
+                            <label for="monthlyEmergencySaving">Cash / Emergency Saving ($/mo)</label>
+                            <input type="text" id="monthlyEmergencySaving" class="money-input" placeholder="e.g. 250">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Debt &amp; Liabilities</h3>
+                <div class="calculator-inputs">
+                    <div class="input-section-header">High-Interest Debt</div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="creditCardBalance">Credit Card Balance ($)</label>
+                            <input type="text" id="creditCardBalance" class="money-input" placeholder="e.g. 4,500">
+                        </div>
+                        <div class="input-group">
+                            <label for="creditCardPayment">Credit Card Payment ($/mo)</label>
+                            <input type="text" id="creditCardPayment" class="money-input" placeholder="e.g. 175">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="creditCardLimit">Total Credit Limit ($)</label>
+                            <input type="text" id="creditCardLimit" class="money-input" placeholder="e.g. 15,000">
+                        </div>
+                        <div class="input-group">
+                            <label for="creditCardAPR">Average Credit Card APR (%)</label>
+                            <input type="number" id="creditCardAPR" min="0" max="60" step="0.1" placeholder="e.g. 24.9">
+                        </div>
+                    </div>
+
+                    <div class="input-section-header">Installment Debt</div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="studentLoanBalance">Student Loan Balance ($)</label>
+                            <input type="text" id="studentLoanBalance" class="money-input" placeholder="e.g. 18,000">
+                        </div>
+                        <div class="input-group">
+                            <label for="studentLoanPayment">Student Loan Payment ($/mo)</label>
+                            <input type="text" id="studentLoanPayment" class="money-input" placeholder="e.g. 250">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="autoLoanBalance">Auto Loan Balance ($)</label>
+                            <input type="text" id="autoLoanBalance" class="money-input" placeholder="e.g. 12,500">
+                        </div>
+                        <div class="input-group">
+                            <label for="autoLoanPayment">Auto Loan Payment ($/mo)</label>
+                            <input type="text" id="autoLoanPayment" class="money-input" placeholder="e.g. 390">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="personalLoanBalance">Personal Loan Balance ($)</label>
+                            <input type="text" id="personalLoanBalance" class="money-input" placeholder="e.g. 0">
+                        </div>
+                        <div class="input-group">
+                            <label for="personalLoanPayment">Personal Loan Payment ($/mo)</label>
+                            <input type="text" id="personalLoanPayment" class="money-input" placeholder="e.g. 0">
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="otherDebtBalance">Other Debt Balance ($)</label>
+                            <input type="text" id="otherDebtBalance" class="money-input" placeholder="e.g. 0">
+                        </div>
+                        <div class="input-group">
+                            <label for="otherDebtPayment">Other Debt Payment ($/mo)</label>
+                            <input type="text" id="otherDebtPayment" class="money-input" placeholder="e.g. 0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-card">
+                <h3 class="card-title">Protection &amp; Planning</h3>
+                <div class="calculator-inputs">
+                    <div class="input-group">
+                        <label for="creditScore">Credit Score</label>
+                        <input type="number" id="creditScore" min="300" max="850" placeholder="e.g. 742">
+                    </div>
+
+                    <div class="toggle-grid">
+                        <label class="toggle-item">
+                            <input type="checkbox" id="hasHealthInsurance">
+                            <span class="toggle-copy">
+                                <strong>Health Insurance</strong>
+                                <span>Medical coverage is in place.</span>
+                            </span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="hasDisabilityInsurance">
+                            <span class="toggle-copy">
+                                <strong>Disability Insurance</strong>
+                                <span>Income protection if you cannot work.</span>
+                            </span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="hasLifeInsurance">
+                            <span class="toggle-copy">
+                                <strong>Life Insurance</strong>
+                                <span>Especially important if others depend on your income.</span>
+                            </span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="hasWill">
+                            <span class="toggle-copy">
+                                <strong>Will / Estate Docs</strong>
+                                <span>Basic estate planning is handled.</span>
+                            </span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="hasBeneficiaries">
+                            <span class="toggle-copy">
+                                <strong>Beneficiaries Updated</strong>
+                                <span>Retirement, brokerage, and insurance accounts are current.</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <button class="btnprimary" onclick="resetAll()">Reset</button>
+                </div>
+            </div>
+
+            <div class="calculator-card" id="resultsCard">
+                <h3 class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    Financial Health Rating
+                    <div class="share-actions">
+                        <button class="share-btn" onclick="copyShareLink()" id="shareLinkBtn">📎︎ Share Results</button>
+                        <button class="share-btn primary" onclick="downloadPDF()" id="downloadPdfBtn">📄 Save PDF</button>
+                    </div>
+                </h3>
+
+                <div id="resultsPlaceholder" style="text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.92rem;">
+                    Enter your age plus income, assets, debts, and a high-level cash flow snapshot to generate a financial health check.
+                </div>
+
+                <div id="resultsSection" style="display:none;">
+                    <div class="health-top-grid">
+                        <div class="result-card result-highlight">
+                            <div class="health-score-card">
+                                <div id="healthScoreRing" class="health-score-ring">
+                                    <div class="score-num" id="healthScoreValue">0</div>
+                                    <div class="score-grade" id="healthScoreGrade">Grade</div>
+                                </div>
+                                <div class="health-summary-copy">
+                                    <span id="healthStatusChip" class="health-status-chip status-strong">Stable</span>
+                                    <h4 id="healthSummaryTitle" style="margin-top:0.7rem;">Your financial system is still loading.</h4>
+                                    <p id="healthSummaryText">Fill in enough of your profile and this page will tell you what is strong, what is behind for your age, and what to fix first.</p>
+                                </div>
+                            </div>
+                            <div id="healthIndicator" class="health-indicator good"></div>
+                            <div id="comparisonStrip" class="chip-row"></div>
+                        </div>
+
+                        <div class="summary-kpi-grid">
+                            <div class="summary-kpi">
+                                <div class="summary-kpi-label">Net Worth</div>
+                                <div class="summary-kpi-value" id="kpiNetWorth">$0</div>
+                                <div class="summary-kpi-sub" id="kpiNetWorthSub">0.0x income</div>
+                            </div>
+                            <div class="summary-kpi">
+                                <div class="summary-kpi-label">Emergency Fund</div>
+                                <div class="summary-kpi-value" id="kpiEmergencyMonths">0.0 mo</div>
+                                <div class="summary-kpi-sub" id="kpiEmergencySub">Liquid cash runway</div>
+                            </div>
+                            <div class="summary-kpi">
+                                <div class="summary-kpi-label">Savings Rate</div>
+                                <div class="summary-kpi-value" id="kpiSavingsRate">0%</div>
+                                <div class="summary-kpi-sub" id="kpiSavingsSub">Monthly investing + cash saving</div>
+                            </div>
+                            <div class="summary-kpi">
+                                <div class="summary-kpi-label">Fixed Obligations</div>
+                                <div class="summary-kpi-value" id="kpiFixedRatio">0%</div>
+                                <div class="summary-kpi-sub" id="kpiFixedSub">Housing + minimum debt / gross</div>
+                            </div>
+                            <div class="summary-kpi">
+                                <div class="summary-kpi-label">Monthly Surplus</div>
+                                <div class="summary-kpi-value" id="kpiSurplus">$0</div>
+                                <div class="summary-kpi-sub" id="kpiSurplusSub">After core outflows and planned saving</div>
+                            </div>
+                            <div class="summary-kpi">
+                                <div class="summary-kpi-label">Profile Completeness</div>
+                                <div class="summary-kpi-value" id="kpiCompleteness">0%</div>
+                                <div class="summary-kpi-sub" id="kpiCompletenessSub">More inputs = sharper feedback</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="benchmarkNotice" class="info-box" style="margin-top:1rem;"></div>
+                </div>
+            </div>
+
+            <div class="calculator-card" id="breakdownCard" style="display:none;">
+                <h3 class="card-title">Score Breakdown</h3>
+                <div id="scoreCategoryList" class="score-list"></div>
+            </div>
+
+            <div class="calculator-card chart-card" id="comparisonCard" style="display:none;">
+                <h3 class="card-title">Age-Band Benchmarks</h3>
+                <p id="comparisonSummary" class="formula-note" style="margin-bottom:0.8rem;"></p>
+
+                <div id="milestoneGrid" class="milestone-grid"></div>
+
+                <div class="chart-shell" id="benchmarkChartWrap">
+                    <div style="position: relative; width: 100%;">
+                        <canvas id="benchmarkChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="benchmark-table-wrapper" style="margin-top:1rem;">
+                    <table class="benchmark-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>You</th>
+                                <th>Median</th>
+                                <th>Average</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmarkTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="calculator-card" id="priorityCard" style="display:none;">
+                <h3 class="card-title">Priority Action Plan</h3>
+                <div id="priorityList" class="priority-list"></div>
+            </div>
+
+            <div class="calculator-card" id="strengthsCard" style="display:none;">
+                <h3 class="card-title">What Is Working</h3>
+                <div id="strengthList" class="feedback-list"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="learn-section">
+    <div class="container">
+        <div class="calculator-card chart-card" style="margin-top:0;">
+            <h3 class="card-title">How This Health Check Thinks</h3>
+            <div class="strategy-breakdown">
+                <div class="breakdown-step">
+                    <div class="step-icon">1</div>
+                    <div class="step-details">
+                        <div class="step-title">Cash Flow Comes First</div>
+                        <div class="step-desc">A strong income can still hide weak finances if every dollar is already spoken for. The score checks whether your monthly system leaves room for saving, investing, and absorbing surprises.</div>
+                    </div>
+                </div>
+                <div class="breakdown-step">
+                    <div class="step-icon">2</div>
+                    <div class="step-details">
+                        <div class="step-title">Age Benchmarks Live in JSON</div>
+                        <div class="step-desc">Median income, net worth, retirement savings, debt, and investment benchmarks are all read from the benchmark JSON file so you can refresh the age comparisons every year without rewriting the page.</div>
+                    </div>
+                </div>
+                <div class="breakdown-step">
+                    <div class="step-icon">3</div>
+                    <div class="step-details">
+                        <div class="step-title">Targets Matter Too</div>
+                        <div class="step-desc">Some goals are about peers, and some are about planning milestones. This page checks both, using emergency fund months and savings multiples alongside age-band median and average values.</div>
+                    </div>
+                </div>
+                <div class="breakdown-step">
+                    <div class="step-icon">4</div>
+                    <div class="step-details">
+                        <div class="step-title">High-Interest Debt Gets Heavy Weight</div>
+                        <div class="step-desc">Consumer debt, tight fixed obligations, and weak cash buffers drag the score harder than small differences in income because they directly affect resilience and decision-making power.</div>
+                    </div>
+                </div>
+                <div class="breakdown-step">
+                    <div class="step-icon">5</div>
+                    <div class="step-details">
+                        <div class="step-title">Protection Is Part of Wealth</div>
+                        <div class="step-desc">Insurance, beneficiary updates, employer match capture, and basic estate planning do not always show up in net worth today, but they matter enormously for overall financial health.</div>
+                    </div>
+                </div>
+                <div class="breakdown-step">
+                    <div class="step-icon">6</div>
+                    <div class="step-details">
+                        <div class="step-title">Useful Feedback Beats Pretty Numbers</div>
+                        <div class="step-desc">The goal is not just a grade. The page also surfaces the strengths worth protecting, the biggest leaks, and the next few actions that would improve the score fastest.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="healthFloat">
+    <div class="float-label">Financial Health</div>
+    <div class="float-value" id="healthFloatValue">Fill in your profile</div>
+    <div class="float-sub" id="healthFloatSub"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='financial-health-check-script.js') }}"></script>
+{% endblock %}

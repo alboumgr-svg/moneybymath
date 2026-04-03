@@ -127,15 +127,16 @@
                     <div class="input-group">
                         <label for="newPrice">Out-the-Door Price ($)</label>
                         <input type="text" inputmode="decimal" id="newPrice"
-                               placeholder="e.g. 35,000"
-                               data-input-type="currency" data-min="1000" data-max="500000"
-                               oninput="handleInput(this); syncCarDownPayment('new', 'dollar');">
+                            placeholder="e.g. 35,000"
+                            data-input-type="currency" data-min="1000" data-max="500000"
+                            oninput="handleInput(this); syncCarDownPayment('new', 'percent');">
                     </div>
                     <div class="input-row">
                         <div class="input-group">
-                            <label>Down Payment ($)</label>
+                            <label>Down Payment or Trade In ($)</label>
                             <div class="input-wrapper">
-                                <input type="text" id="newDownPayment" placeholder="e.g. 5,000"
+                                <input type="text" id="newDownPayment" placeholder="e.g. 5,000" 
+                                    data-input-type="currency" 
                                     oninput="handleInput(this); syncCarDownPayment('new', 'dollar');">
                             </div>
                         </div>
@@ -169,15 +170,16 @@
                     <div class="input-group">
                         <label for="usedPrice">Out-the-Door Price ($)</label>
                         <input type="text" inputmode="decimal" id="usedPrice"
-                               placeholder="e.g. 18,000"
-                               data-input-type="currency" data-min="1000" data-max="500000"
-                               oninput="handleInput(this); syncCarDownPayment('used', 'dollar');">
+                            placeholder="e.g. 18,000"
+                            data-input-type="currency" data-min="1000" data-max="500000"
+                            oninput="handleInput(this); syncCarDownPayment('used', 'percent');">
                     </div>
                     <div class="input-row">
                         <div class="input-group">
-                            <label>Down Payment ($)</label>
+                            <label>Down Payment or Trade In ($)</label>
                             <div class="input-wrapper">
-                                <input type="text" id="usedDownPayment" placeholder="e.g. 3,000"
+                                <input type="text" id="usedDownPayment" placeholder="e.g. 3,000" 
+                                    data-input-type="currency" 
                                     oninput="handleInput(this); syncCarDownPayment('used', 'dollar');">
                             </div>
                         </div>
