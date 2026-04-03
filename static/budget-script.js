@@ -1018,8 +1018,8 @@ async function downloadPDF() {
             {
                 heading: 'Income & Paycheck (Monthly)',
                 items: [
-                    { label: 'Gross Annual Salary',   value: '$' + get('grossSalary') },
-                    { label: 'Actual Paycheck',        value: get('actualPaycheck') ? '$' + get('actualPaycheck') : '' },
+                    { label: 'Gross Annual Salary',   value: get('grossSalary') ? '$' + get('grossSalary') : '--' },
+                    { label: 'Actual Paycheck',       value: get('actualPaycheck') ? '$' + get('actualPaycheck') : '' },
                     { label: 'Side Income',           value: get('sideIncome') ? '$' + get('sideIncome') : '' },
                     { label: '401(k) Pre-Tax',        value: get('contrib401kAmt') ? '$' + get('contrib401kAmt') : '' },
                     { label: 'Roth 401(k)',           value: get('roth401kAmt') ? '$' + get('roth401kAmt') : '' },

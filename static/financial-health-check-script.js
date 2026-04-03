@@ -2,6 +2,8 @@ let benchmarkData = null;
 let scoreBreakdownChart = null;
 let benchmarkChart = null;
 let lastEvaluation = null;
+let taxData2026 = null;
+const AVG_STATE_TAX_RATE = 0.045;
 
 const API_BASE = window.location.origin || '';
 const STORAGE_KEY = 'financialHealthCheckData';
@@ -230,6 +232,56 @@ async function initBenchmarks() {
     }
 }
 
+async function initTaxData() {
+    try {
+        const response = await fetch(`${API_BASE}/static/taxData.json`);
+        const data = await response.json();
+        taxData2026 = {
+            single: {
+                stdDeduction: data.STANDARD_DEDUCTIONS.single,
+                brackets: data.BRACKETS.single.map(b => ({ rate: b[2], limit: b[1] === null ? Infinity : b[1] }))
+            },
+            mfj: {
+                stdDeduction: data.STANDARD_DEDUCTIONS.mfj,
+                brackets: data.BRACKETS.mfj.map(b => ({ rate: b[2], limit: b[1] === null ? Infinity : b[1] }))
+            },
+            hoh: {
+                stdDeduction: data.STANDARD_DEDUCTIONS.hoh,
+                brackets: data.BRACKETS.hoh.map(b => ({ rate: b[2], limit: b[1] === null ? Infinity : b[1] }))
+            }
+        };
+    } catch (err) {
+        console.error('Error loading tax data:', err);
+    }
+}
+
+function estimateTax(grossAnnual, preTaxDeductionsAnnual, status) {
+    const info = taxData2026
+        ? (taxData2026[status] || taxData2026.single)
+        : { stdDeduction: 14600, brackets: [
+            { rate: 0.10, limit: 11600 }, { rate: 0.12, limit: 47150 },
+            { rate: 0.22, limit: 100525 }, { rate: 0.24, limit: 191950 },
+            { rate: 0.32, limit: 243725 }, { rate: 0.35, limit: 609350 },
+            { rate: 0.37, limit: Infinity }
+          ]};
+
+    const taxableIncome = Math.max(0, grossAnnual - preTaxDeductionsAnnual - info.stdDeduction);
+    let fedTax = 0;
+    let prev = 0;
+    for (const b of info.brackets) {
+        if (taxableIncome <= prev) break;
+        fedTax += Math.min(taxableIncome - prev, b.limit - prev) * b.rate;
+        prev = b.limit;
+    }
+
+    const ficaWageBase = 168600;
+    const fica = Math.min(grossAnnual, ficaWageBase) * 0.062;
+    const medicare = grossAnnual * 0.0145 + Math.max(0, grossAnnual - 200000) * 0.009;
+    const stateTax = (grossAnnual - preTaxDeductionsAnnual) * AVG_STATE_TAX_RATE;
+
+    return { fedTax, fica, medicare, stateTax, total: fedTax + fica + medicare + stateTax };
+}
+
 function getThresholds() {
     return benchmarkData?.thresholds || DEFAULT_THRESHOLDS;
 }
@@ -353,8 +405,39 @@ function collectProfile() {
     const age = parseInt(getEl('age')?.value, 10) || 0;
     const grossIncomeInput = num('annualGrossIncome') + num('annualBonus');
     const takeHomeInput = num('monthlyTakeHome');
-    const grossIncome = grossIncomeInput > 0 ? grossIncomeInput : (takeHomeInput > 0 ? takeHomeInput * 12 / 0.75 : 0);
-    const takeHomeMonthly = takeHomeInput > 0 ? takeHomeInput : (grossIncome > 0 ? grossIncome * 0.75 / 12 : 0);
+    
+    // Fetch retirement contribution early so we can add it back to the gross estimate
+    const monthlyRetirement = num('monthlyRetirementContrib'); 
+
+    // Estimate Gross: Gross up the take-home for taxes, then add back the retirement contributions
+    const grossIncome = grossIncomeInput > 0 
+        ? grossIncomeInput 
+        : (takeHomeInput > 0 ? ((takeHomeInput / 0.75) + monthlyRetirement) * 12 : 0);
+
+    let takeHomeMonthly;
+    if (takeHomeInput > 0) {
+        takeHomeMonthly = takeHomeInput;
+    } else if (grossIncome > 0) {
+        const preTaxAnnual = monthlyRetirement * 12;
+        
+        // 1. Get Federal Tax Estimate
+        const fedTaxes = estimateTax(grossIncome, preTaxAnnual, getEl('filingStatus')?.value || 'single');
+        
+        // 2. Estimate FICA (7.65% up to the SS cap, roughly)
+        const ficaTax = grossIncome * 0.0765;
+        
+        // 3. Estimate State Tax using your existing AVG_STATE_TAX_RATE (4.5%)
+        // Usually applied to Gross minus Pre-tax deductions
+        const stateTax = (grossIncome - preTaxAnnual) * AVG_STATE_TAX_RATE;
+
+        // 4. Calculate Final Take-home
+        // (Gross - Fed - FICA - State - Retirement) / 12
+        const totalAnnualDeductions = fedTaxes.total + ficaTax + stateTax + preTaxAnnual;
+        takeHomeMonthly = Math.max(0, (grossIncome - totalAnnualDeductions) / 12);
+        
+    } else {
+        takeHomeMonthly = 0;
+    }
     const takeHomeEstimated = takeHomeInput <= 0 && grossIncome > 0;
 
     const profile = {
@@ -1318,6 +1401,7 @@ function syncFloat() {
 }
 
 function buildPdfSections(evaluation) {
+    const m = (v) => v > 0 ? money(v) : '--';
     return [
         {
             heading: 'Profile Snapshot',
@@ -1335,10 +1419,10 @@ function buildPdfSections(evaluation) {
             items: [
                 { label: 'Gross Income', value: money(evaluation.profile.grossIncome) },
                 { label: 'Net Take-Home', value: money(evaluation.profile.takeHomeMonthly) + ' / month' },
-                { label: 'Housing Cost', value: money(evaluation.profile.monthlyHousing) + ' / month' },
-                { label: 'Core Non-Housing Costs', value: money(evaluation.profile.monthlyCoreSpending) + ' / month' },
+                { label: 'Housing Cost', value: evaluation.profile.monthlyHousing > 0 ? money(evaluation.profile.monthlyHousing) + ' / month' : '--' },
+                { label: 'Core Non-Housing Costs', value: evaluation.profile.monthlyCoreSpending > 0 ? money(evaluation.profile.monthlyCoreSpending) + ' / month' : '--' },
                 { label: 'Minimum Debt Payments', value: money(evaluation.profile.minimumDebtPayments) + ' / month' },
-                { label: 'Flexible Spending', value: money(evaluation.profile.monthlyFlexibleSpending) + ' / month' },
+                { label: 'Flexible Spending', value: evaluation.profile.monthlyFlexibleSpending > 0 ? money(evaluation.profile.monthlyFlexibleSpending) + ' / month' : '--' },
                 { label: 'Planned Monthly Saving', value: money(evaluation.profile.plannedSavingMonthly) + ' / month' },
                 { label: 'Monthly Surplus', value: money(evaluation.profile.monthlySurplus) }
             ]
@@ -1348,11 +1432,11 @@ function buildPdfSections(evaluation) {
             items: [
                 { label: 'Net Worth', value: money(evaluation.profile.netWorth) },
                 { label: 'Liquid Cash', value: money(evaluation.profile.liquidCash) },
-                { label: 'Retirement Assets', value: money(evaluation.profile.retirementAccounts) },
-                { label: 'Taxable Investments', value: money(evaluation.profile.taxableInvestments) },
-                { label: 'HSA Balance', value: money(evaluation.profile.hsaBalance) },
-                { label: 'Home Equity', value: money(evaluation.profile.homeEquity) },
-                { label: 'Other Assets', value: money(evaluation.profile.otherAssets) }
+                { label: 'Retirement Assets', value: m(evaluation.profile.retirementAccounts) },
+                { label: 'Taxable Investments', value: m(evaluation.profile.taxableInvestments) },
+                { label: 'HSA Balance', value: m(evaluation.profile.hsaBalance) },
+                { label: 'Home Equity', value: m(evaluation.profile.homeEquity) },
+                { label: 'Other Assets', value: m(evaluation.profile.otherAssets) }
             ]
         },
         {
@@ -1507,7 +1591,7 @@ async function downloadPDF() {
                 const lines = doc.splitTextToSize(`${index + 1}. ${item}`, CW - 8);
                 const rowHeight = lines.length * 11 + 8;
                 if (y + rowHeight > PH - 50) newPage();
-                if (index % 2 === 0) {
+                if (index % 2 === 1) {
                     sc(STRIPE, 'fill');
                     doc.rect(ML, y, CW, rowHeight, 'F');
                 }
@@ -1570,6 +1654,16 @@ async function downloadPDF() {
         renderNarrativeList('Priority Action Plan', REPORT.actionPlan);
         renderNarrativeList('Strengths to Protect', REPORT.strengths);
 
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let p = 1; p <= totalPages; p++) {
+            doc.setPage(p);
+            sc(RULE, 'draw'); doc.setLineWidth(0.5);
+            doc.line(ML, PH - 32, PW - MR, PH - 32);
+            sc(MUTED, 'text'); doc.setFontSize(7); doc.setFont(undefined, 'normal');
+            t('MoneyByMath  ·  For informational purposes only.', ML, PH - 20);
+            t('Page ' + p + ' of ' + totalPages, PW - MR, PH - 20, { align: 'right' });
+        }
+
         doc.save(REPORT.filename);
     } catch (err) {
         console.error('Failed to generate PDF', err);
@@ -1623,6 +1717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     formatAllMoneyInputs();
     bindFormEvents();
     await initBenchmarks();
+    await initTaxData();
     calculateHealthCheck();
 
     if (loadedFromUrl) scrollSharedLinkIntoView();

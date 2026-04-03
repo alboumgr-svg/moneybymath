@@ -478,8 +478,8 @@ function calculateRentVsBuy() {
 
     // Renting Net Worth
     document.getElementById('rentNetWorthBreakdown').innerHTML = wrap(
-        bRow('Down Payment Initial Investment',  downPayment) +
-        bRow('Down Payment Investment Growth',    downPaymentGrown) +
+        bRow('Down Payment Initial Invested',  downPayment) +
+        bRow('Investment Growth',    downPaymentGrown) +
         bRow('Monthly Savings Invested', totalSavingsContributed) +
         bRow('Monthly Savings Growth',  Math.max(0, savingsGrowth)) +
         bRow('Total Portfolio',        investmentPortfolio, true)
