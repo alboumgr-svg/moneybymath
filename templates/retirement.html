@@ -237,19 +237,19 @@ details.runway-details summary::-webkit-details-marker { display: none; }
                                 <div class="calculator-inputs">
                                     <div class="input-group">
                                         <label for="mix_tradBalance">Current Balance ($)</label>
-                                        <input type="text" id="mix_tradBalance" value="20,000" placeholder="e.g. 20,000" oninput="formatNumber(this); calculateAll()">
+                                        <input type="text" id="mix_tradBalance" placeholder="e.g. 20,000" oninput="formatNumber(this); calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_tradContrib">Your Contribution (% of salary)</label>
-                                        <input type="number" id="mix_tradContrib" value="10" min="0" max="100" step="0.5" placeholder="e.g. 10" oninput="calculateAll()">
+                                        <input type="number" id="mix_tradContrib" min="0" max="100" step="0.5" placeholder="e.g. 10" oninput="calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_employerMatch">Employer Match (%)</label>
-                                        <input type="number" id="mix_employerMatch" value="5" min="0" max="100" step="0.5" placeholder="e.g. 5" oninput="calculateAll()">
+                                        <input type="number" id="mix_employerMatch" min="0" max="100" step="0.5" placeholder="e.g. 5" oninput="calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_matchLimit">Match Limit (% of salary)</label>
-                                        <input type="number" id="mix_matchLimit" value="6" min="0" max="100" step="0.5" placeholder="e.g. 6" oninput="calculateAll()">
+                                        <input type="number" id="mix_matchLimit" min="0" max="100" step="0.5" placeholder="e.g. 6" oninput="calculateAll()">
                                     </div>
                                 </div>
                             </div>
@@ -265,19 +265,19 @@ details.runway-details summary::-webkit-details-marker { display: none; }
                                 <div class="calculator-inputs">
                                     <div class="input-group">
                                         <label for="mix_rothBalance">Current Balance ($)</label>
-                                        <input type="text" id="mix_rothBalance" value="10,000" placeholder="e.g. 10,000" oninput="formatNumber(this); calculateAll()">
+                                        <input type="text" id="mix_rothBalance" placeholder="e.g. 10,000" oninput="formatNumber(this); calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_rothContrib">Your Contribution (% of salary)</label>
-                                        <input type="number" id="mix_rothContrib" value="10" min="0" max="100" step="0.5" placeholder="e.g. 10" oninput="calculateAll()">
+                                        <input type="number" id="mix_rothContrib" min="0" max="100" step="0.5" placeholder="e.g. 10" oninput="calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_rothEmployerMatch">Employer Match (%) <small>– deposited pre-tax</small></label>
-                                        <input type="number" id="mix_rothEmployerMatch" value="5" min="0" max="100" step="0.5" placeholder="e.g. 5" oninput="calculateAll()">
+                                        <input type="number" id="mix_rothEmployerMatch" min="0" max="100" step="0.5" placeholder="e.g. 5" oninput="calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_rothMatchLimit">Match Limit (% of salary)</label>
-                                        <input type="number" id="mix_rothMatchLimit" value="6" min="0" max="100" step="0.5" placeholder="e.g. 6" oninput="calculateAll()">
+                                        <input type="number" id="mix_rothMatchLimit" min="0" max="100" step="0.5" placeholder="e.g. 6" oninput="calculateAll()">
                                     </div>
                                 </div>
                             </div>
@@ -293,11 +293,11 @@ details.runway-details summary::-webkit-details-marker { display: none; }
                                 <div class="calculator-inputs">
                                     <div class="input-group">
                                         <label for="mix_tradIraBalance">Current Balance ($)</label>
-                                        <input type="text" id="mix_tradIraBalance" value="0" placeholder="e.g. 5,000" oninput="formatNumber(this); calculateAll()">
+                                        <input type="text" id="mix_tradIraBalance" placeholder="e.g. 5,000" oninput="formatNumber(this); calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_tradIraContrib">Annual Contribution ($)</label>
-                                        <input type="text" id="mix_tradIraContrib" value="0" placeholder="e.g. 7,000" oninput="formatNumber(this); calculateAll()">
+                                        <input type="text" id="mix_tradIraContrib" placeholder="e.g. 7,000" oninput="formatNumber(this); calculateAll()">
                                     </div>
                                     <p class="formula-note">2026 limit: $7,000/yr ($8,000 if age 50+). Income limits apply for deductibility.</p>
                                 </div>
@@ -314,11 +314,11 @@ details.runway-details summary::-webkit-details-marker { display: none; }
                                 <div class="calculator-inputs">
                                     <div class="input-group">
                                         <label for="mix_iraBalance">Current Balance ($)</label>
-                                        <input type="text" id="mix_iraBalance" value="5,000" placeholder="e.g. 5,000" oninput="formatNumber(this); calculateAll()">
+                                        <input type="text" id="mix_iraBalance" placeholder="e.g. 5,000" oninput="formatNumber(this); calculateAll()">
                                     </div>
                                     <div class="input-group">
                                         <label for="mix_iraContrib">Annual Contribution ($)</label>
-                                        <input type="text" id="mix_iraContrib" value="7,000" placeholder="e.g. 7,000" oninput="formatNumber(this); calculateAll()">
+                                        <input type="text" id="mix_iraContrib" placeholder="e.g. 7,000" oninput="formatNumber(this); calculateAll()">
                                     </div>
                                     <p class="formula-note">2026 limit: $7,000/yr ($8,000 if age 50+). Income limits apply.</p>
                                 </div>
@@ -332,27 +332,27 @@ details.runway-details summary::-webkit-details-marker { display: none; }
                     <div class="calculator-inputs">
                         <div class="input-group">
                             <label for="salary">Annual Salary ($)</label>
-                            <input type="text" id="salary" value="75,000" placeholder="e.g. 75,000" oninput="formatNumber(this); calculateAll()">
+                            <input type="text" id="salary" placeholder="e.g. 75,000" oninput="formatNumber(this); calculateAll()">
                         </div>
                         <div class="input-row">
                             <div class="input-group">
                                 <label for="currentAge">Current Age</label>
-                                <input type="number" id="currentAge" value="30" min="18" max="80" placeholder="e.g. 30" oninput="calculateAll()">
+                                <input type="number" id="currentAge" min="18" max="80" placeholder="e.g. 30" oninput="calculateAll()">
                             </div>
                             <div class="input-group">
                                 <label for="retirementAge">Retirement Age</label>
-                                <input type="number" id="retirementAge" value="65" min="30" max="100" placeholder="e.g. 65" oninput="calculateAll()">
+                                <input type="number" id="retirementAge" min="30" max="100" placeholder="e.g. 65" oninput="calculateAll()">
                             </div>
                         </div>
                         <div class="input-row">
                             <div class="input-group">
                                 <label for="returnRate">Annual Return (%)</label>
-                                <input type="number" id="returnRate" value="7" min="0" max="15" step="0.5" placeholder="e.g. 7" oninput="calculateAll()">
+                                <input type="number" id="returnRate" min="0" max="15" step="0.5" placeholder="e.g. 7" oninput="calculateAll()">
                                 <small class="input-note">Historical S&amp;P 500 average is ~10%; 7–8% is a conservative estimate.</small>
                             </div>
                             <div class="input-group">
                                 <label for="salaryIncrease">Salary Increase (%)</label>
-                                <input type="number" id="salaryIncrease" value="3" min="0" max="10" step="0.5" placeholder="e.g. 3" oninput="calculateAll()">
+                                <input type="number" id="salaryIncrease" min="0" max="10" step="0.5" placeholder="e.g. 3" oninput="calculateAll()">
                             </div>
                         </div>
                     </div>
@@ -365,21 +365,21 @@ details.runway-details summary::-webkit-details-marker { display: none; }
                         <div class="calculator-inputs">
                             <div class="input-group">
                                 <label for="targetIncome">Target Annual Income ($)</label>
-                                <input type="text" id="targetIncome" value="80,000" placeholder="e.g. 80,000" oninput="formatNumber(this); calculateAll()">
+                                <input type="text" id="targetIncome" placeholder="e.g. 80,000" oninput="formatNumber(this); calculateAll()">
                             </div>
                             <div class="input-row">
                                 <div class="input-group">
                                     <label for="postReturnRate">Post-Retirement Return (%)</label>
-                                    <input type="number" id="postReturnRate" value="5" min="0" max="15" step="0.1" placeholder="e.g. 5" oninput="calculateAll()">
+                                    <input type="number" id="postReturnRate" min="0" max="15" step="0.1" placeholder="e.g. 5" oninput="calculateAll()">
                                 </div>
                                 <div class="input-group">
                                     <label for="lifeExpectancy">Life Expectancy (Age)</label>
-                                    <input type="number" id="lifeExpectancy" value="90" min="55" max="110" placeholder="e.g. 90" oninput="calculateAll()">
+                                    <input type="number" id="lifeExpectancy" min="55" max="110" placeholder="e.g. 90" oninput="calculateAll()">
                                 </div>
                             </div>
                             <div class="input-group">
                                 <label for="withdrawalInflation">Withdrawal Growth / Inflation (%)</label>
-                                <input type="number" id="withdrawalInflation" value="2.5" min="0" max="8" step="0.5" placeholder="e.g. 2.5" oninput="calculateAll()">
+                                <input type="number" id="withdrawalInflation" min="0" max="8" step="0.5" placeholder="e.g. 2.5" oninput="calculateAll()">
                             </div>
 
                             <div class="toggle-container">
@@ -389,7 +389,7 @@ details.runway-details summary::-webkit-details-marker { display: none; }
                             <div id="ss-inputs" style="margin-bottom: 0rem">
                                 <div class="input-group">
                                     <label for="ssMonthly">Est. Monthly SS Benefit ($)</label>
-                                    <input type="text" id="ssMonthly" value="2,500" placeholder="e.g. 2,500" oninput="formatNumber(this); calculateAll()">
+                                    <input type="text" id="ssMonthly" placeholder="e.g. 2,500" oninput="formatNumber(this); calculateAll()">
                                 </div>
                             </div>
 
