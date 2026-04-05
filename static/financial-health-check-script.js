@@ -294,7 +294,8 @@ function estimateTax(grossAnnual, preTaxDeductionsAnnual, status) {
     
     const limit = taxData2026 ? taxData2026.ficaWageBase : 176100;
     const fica = Math.min(grossAnnual, limit) * 0.062;
-    const medicare = grossAnnual * 0.0145 + Math.max(0, grossAnnual - 200000) * 0.009;
+    const medicareSurtaxThreshold = status === 'mfj' ? 250000 : 200000;
+    const medicare = grossAnnual * 0.0145 + Math.max(0, grossAnnual - medicareSurtaxThreshold) * 0.009;
     const stateTax = (grossAnnual - preTaxDeductionsAnnual) * AVG_STATE_TAX_RATE;
 
     return { fedTax, fica, medicare, stateTax, total: fedTax + fica + medicare + stateTax };
@@ -578,13 +579,67 @@ function collectProfile() {
     profile.investableMultiple = safeDivide(profile.investmentAssets, profile.grossIncome);
     profile.netWorthMultiple = safeDivide(profile.netWorth, profile.grossIncome);
 
-    const filledCount = STATE_IDS.filter(id => {
+    // ── Profile Completeness ───────────────────────────────────────────────────
+    // Measures how much of the financial picture the tool actually has.
+    // Three design rules:
+    //   1. Context-filter: home fields excluded for renters; college savings
+    //      excluded when dependents = 0. Irrelevant blanks don't count against.
+    //   2. Slot collapsing: income (gross OR take-home) counts as 1 slot, not 2.
+    //      Debt collapses to 1 slot so a debt-free user loses at most ~5%,
+    //      not ~26% from 12 blank fields.
+    //   3. Checkboxes excluded entirely from the denominator. Unchecked means
+    //      "no" — a valid answer — not a missing answer. The scoring engine
+    //      reads them directly and handles the "no" case correctly already.
+    //
+    // Optional/zero-valid fields (bonus, HSA, Roth, other assets, contribution
+    // companions) are also excluded: blank and $0 are indistinguishable, so
+    // they should never penalize a user who legitimately has none.
+
+    // Core fields where a blank IS meaningfully different from zero
+    const CORE_FIELDS = [
+        'age', 'filingStatus', 'homeStatus', 'householdSize', 'dependents',
+        'monthlyHousing', 'monthlyCoreSpending', 'monthlyFlexibleSpending',
+        'checkingSavings', 'emergencyFund',
+        'retirementAccounts', 'taxableInvestments',
+        'monthlyRetirementContrib',
+        'creditScore', 'capturesEmployerMatch'
+    ];
+
+    // Contextual fields — only added to the denominator when they apply
+    const contextFields = [];
+    if (profile.homeStatus === 'own') {
+        contextFields.push('homeValue', 'mortgageBalance');
+    }
+    if (profile.dependents > 0) {
+        contextFields.push('collegeSavings');
+    }
+
+    const measuredFields = [...CORE_FIELDS, ...contextFields];
+
+    const fieldsFilled = measuredFields.filter(id => {
         const el = getEl(id);
         if (!el) return false;
-        if (el.type === 'checkbox') return el.checked;
         return String(el.value || '').trim() !== '';
     }).length;
-    profile.completeness = safeDivide(filledCount, STATE_IDS.length);
+
+    // Income slot — either gross salary or monthly take-home satisfies it
+    const incomeFilled = (
+        (getEl('annualGrossIncome')?.value || '').trim() !== '' ||
+        (getEl('monthlyTakeHome')?.value || '').trim() !== ''
+    ) ? 1 : 0;
+
+    // Debt slot — any balance field entered means the debt section is answered.
+    // Leaving all blank is treated as "no debt entered" (~5% dock), not 12 docks.
+    const debtFilled = ['creditCardBalance', 'studentLoanBalance',
+        'autoLoanBalance', 'personalLoanBalance', 'otherDebtBalance'
+    ].some(id => (getEl(id)?.value || '').trim() !== '') ? 1 : 0;
+
+    // Total possible slots: measured individual fields + income slot + debt slot
+    const totalSlots = measuredFields.length + 2;
+    profile.completeness = safeDivide(
+        fieldsFilled + incomeFilled + debtFilled,
+        totalSlots
+    );
 
     return profile;
 }
@@ -859,6 +914,24 @@ function buildActionPlan(profile, ageBand, thresholds) {
             'risk',
             'Protect against catastrophic medical risk',
             'One uninsured medical event can erase years of progress. Health coverage should come before most optimization moves.'
+        );
+    }
+
+    if (profile.dependents > 0 && !profile.collegeSavings) {
+        addAction(
+            'college savings',
+            'risk',
+            'Add college savings for dependents',
+            'College is expensive. Saving for your dependents now will help you later.'
+        );
+    }
+
+    if (profile.dependents > 0 && profile.collegeSavings <= 25000) {
+        addAction(
+            'college savings',
+            'warn',
+            'Add more college savings for dependents',
+            'College is expensive. Saving for your dependents now will help you later.'
         );
     }
 

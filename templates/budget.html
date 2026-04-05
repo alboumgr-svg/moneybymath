@@ -369,6 +369,7 @@
                             </select>
                         </div>
                     </div>
+                    <small class="input-note">A 4.5% blended state tax rate is applied. States with no income tax (TX, FL, WA, etc.) will see a lower real take-home - enter your actual paycheck above for precision.</small>
 
                     <div class="input-section-header">Pre-Tax Deductions (from each paycheck)</div>
 
@@ -411,6 +412,7 @@
                     <div class="input-group">
                         <label for="sideIncome">Side Income / Freelance ($/mo)</label>
                         <input type="text" id="sideIncome" placeholder="e.g. 0" oninput="fmt(this); calculate(); saveToStorage()">
+                        <small class="input-note">Freelance or 1099 income. ~30% withheld for estimated taxes (SE tax + federal/state). Enter gross; we'll net it for you.</small>
                     </div>
 
                 </div>

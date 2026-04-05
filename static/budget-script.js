@@ -135,14 +135,29 @@ async function initTaxData() {
 }
 
 function estimateTax(grossAnnual, preTaxDeductionsAnnual, status) {
-    const info = taxData2026 
-        ? (taxData2026[status] || taxData2026.single) 
-        : { stdDeduction: 14600, brackets: [
-            {rate: 0.10, limit: 11600}, {rate: 0.12, limit: 47150},
-            {rate: 0.22, limit: 100525}, {rate: 0.24, limit: 191950},
-            {rate: 0.32, limit: 243725}, {rate: 0.35, limit: 609350},
-            {rate: 0.37, limit: Infinity}
-          ]};
+    const FALLBACK_2026 = {
+        single: { stdDeduction: 16100, brackets: [
+            { rate: 0.10, limit: 12400 }, { rate: 0.12, limit: 50400 },
+            { rate: 0.22, limit: 105700 }, { rate: 0.24, limit: 201775 },
+            { rate: 0.32, limit: 256225 }, { rate: 0.35, limit: 640600 },
+            { rate: 0.37, limit: Infinity }
+        ]},
+        mfj: { stdDeduction: 32200, brackets: [
+            { rate: 0.10, limit: 24800 }, { rate: 0.12, limit: 100800 },
+            { rate: 0.22, limit: 211400 }, { rate: 0.24, limit: 403550 },
+            { rate: 0.32, limit: 512450 }, { rate: 0.35, limit: 768700 },
+            { rate: 0.37, limit: Infinity }
+        ]},
+        hoh: { stdDeduction: 24150, brackets: [
+            { rate: 0.10, limit: 17700 }, { rate: 0.12, limit: 67450 },
+            { rate: 0.22, limit: 105700 }, { rate: 0.24, limit: 201775 },
+            { rate: 0.32, limit: 256200 }, { rate: 0.35, limit: 640600 },
+            { rate: 0.37, limit: Infinity }
+        ]}
+    };
+    const info = taxData2026
+        ? (taxData2026[status] || taxData2026.single)
+        : (FALLBACK_2026[status] || FALLBACK_2026.single);
     
     const taxableIncome = Math.max(0, grossAnnual - preTaxDeductionsAnnual - info.stdDeduction);
     
@@ -157,7 +172,8 @@ function estimateTax(grossAnnual, preTaxDeductionsAnnual, status) {
     const limit = taxData2026 ? taxData2026.ficaWageBase : 176100;
     const fica = Math.min(grossAnnual, limit) * 0.062;
     // Medicare: 1.45% + 0.9% additional over $200k (single)
-    const medicare = grossAnnual * 0.0145 + Math.max(0, grossAnnual - 200000) * 0.009;
+    const medicareSurtaxThreshold = status === 'mfj' ? 250000 : 200000;
+    const medicare = grossAnnual * 0.0145 + Math.max(0, grossAnnual - medicareSurtaxThreshold) * 0.009;
     const stateTax = (grossAnnual - preTaxDeductionsAnnual) * AVG_STATE_TAX_RATE;
     
     return { fedTax, fica, medicare, stateTax, total: fedTax + fica + medicare + stateTax };
@@ -340,7 +356,10 @@ function calculate() {
     // Effective annual gross for all ratio calculations (may be estimated in Mode B)
     const effectiveGrossAnnual  = grossMonthly * 12;
     const totalTaxMonthly       = fedTaxMonthly + otherTaxesMonthly;
-    const availableCashMonthly  = bankDepositMonthly + sideIncome;
+    // Side/freelance income carries ~15.3% SE tax + income tax. A 70% net factor
+    // is a conservative but realistic estimate for most self-employment situations.
+    const sideIncomeNet = sideIncome * 0.70;
+    const availableCashMonthly = bankDepositMonthly + sideIncomeNet;
     const employerMatchMonthly  = grossMonthly * Math.min(empMatchPct, 100) / 100;
 
     /* ── 3. CATEGORY TOTALS ── */
