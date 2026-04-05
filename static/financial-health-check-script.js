@@ -49,7 +49,7 @@ const STATE_IDS = [
     'monthlyHousing', 'monthlyCoreSpending', 'monthlyFlexibleSpending',
     'checkingSavings', 'emergencyFund', 'retirementAccounts', 'taxableInvestments',
     'hsaBalance', 'collegeSavings', 'homeValue', 'mortgageBalance', 'otherAssets',
-    'monthlyRetirementContrib', 'monthlyEmployerMatch', 'monthlyTaxableInvesting',
+    'monthlyRetirementContrib', 'monthlyRothContrib', 'monthlyEmployerMatch', 'monthlyTaxableInvesting',
     'monthlyEmergencySaving',
     'creditCardBalance', 'creditCardPayment', 'creditCardLimit', 'creditCardAPR',
     'studentLoanBalance', 'studentLoanPayment',
@@ -256,14 +256,31 @@ async function initTaxData() {
 }
 
 function estimateTax(grossAnnual, preTaxDeductionsAnnual, status) {
+    // Fallback brackets (2026 single-filer estimates) are used only when the
+    // taxData.json fetch fails. The live JSON always takes precedence.
+    const FALLBACK_2026 = {
+        single: { stdDeduction: 15350, brackets: [
+            { rate: 0.10, limit: 12150 }, { rate: 0.12, limit: 49350 },
+            { rate: 0.22, limit: 105225 }, { rate: 0.24, limit: 200850 },
+            { rate: 0.32, limit: 255150 }, { rate: 0.35, limit: 638350 },
+            { rate: 0.37, limit: Infinity }
+        ]},
+        mfj: { stdDeduction: 30700, brackets: [
+            { rate: 0.10, limit: 24300 }, { rate: 0.12, limit: 98700 },
+            { rate: 0.22, limit: 210450 }, { rate: 0.24, limit: 401700 },
+            { rate: 0.32, limit: 510300 }, { rate: 0.35, limit: 765000 },
+            { rate: 0.37, limit: Infinity }
+        ]},
+        hoh: { stdDeduction: 22900, brackets: [
+            { rate: 0.10, limit: 17350 }, { rate: 0.12, limit: 65900 },
+            { rate: 0.22, limit: 105225 }, { rate: 0.24, limit: 200850 },
+            { rate: 0.32, limit: 255150 }, { rate: 0.35, limit: 638350 },
+            { rate: 0.37, limit: Infinity }
+        ]}
+    };
     const info = taxData2026
         ? (taxData2026[status] || taxData2026.single)
-        : { stdDeduction: 14600, brackets: [
-            { rate: 0.10, limit: 11600 }, { rate: 0.12, limit: 47150 },
-            { rate: 0.22, limit: 100525 }, { rate: 0.24, limit: 191950 },
-            { rate: 0.32, limit: 243725 }, { rate: 0.35, limit: 609350 },
-            { rate: 0.37, limit: Infinity }
-          ]};
+        : (FALLBACK_2026[status] || FALLBACK_2026.single);
 
     const taxableIncome = Math.max(0, grossAnnual - preTaxDeductionsAnnual - info.stdDeduction);
     let fedTax = 0;
@@ -406,39 +423,40 @@ function collectProfile() {
     const grossIncomeInput = num('annualGrossIncome') + num('annualBonus');
     const takeHomeInput = num('monthlyTakeHome');
     
-    // Fetch retirement contribution early so we can add it back to the gross estimate
-    const monthlyRetirement = num('monthlyRetirementContrib'); 
+    // Pre-tax contributions (e.g. traditional 401k) reduce taxable income.
+    // Roth contributions do NOT reduce taxable income — they come out after tax.
+    const monthlyPreTax = num('monthlyRetirementContrib');
+    const monthlyRoth   = num('monthlyRothContrib');
 
-    // Estimate Gross: Gross up the take-home for taxes, then add back the retirement contributions
-    const grossIncome = grossIncomeInput > 0 
-        ? grossIncomeInput 
-        : (takeHomeInput > 0 ? ((takeHomeInput / 0.75) + monthlyRetirement) * 12 : 0);
+    // Estimate Gross (mirrors budget script Mode B):
+    //   Take-home already has both pre-tax and Roth removed.
+    //   Add Roth back in before grossing up the taxable portion, then
+    //   add pre-tax deductions back on top.
+    const grossIncome = grossIncomeInput > 0
+        ? grossIncomeInput
+        : (takeHomeInput > 0
+            ? (((takeHomeInput + monthlyRoth) / (1 - 0.28)) + monthlyPreTax) * 12
+            : 0);
 
     let takeHomeMonthly;
     if (takeHomeInput > 0) {
         takeHomeMonthly = takeHomeInput;
     } else if (grossIncome > 0) {
-        const preTaxAnnual = monthlyRetirement * 12;
-        
-        // 1. Get Federal Tax Estimate
-        const fedTaxes = estimateTax(grossIncome, preTaxAnnual, getEl('filingStatus')?.value || 'single');
-        
-        // 2. Estimate FICA (7.65% up to the SS cap, roughly)
-        const ficaTax = grossIncome * 0.0765;
-        
-        // 3. Estimate State Tax using your existing AVG_STATE_TAX_RATE (4.5%)
-        // Usually applied to Gross minus Pre-tax deductions
-        const stateTax = (grossIncome - preTaxAnnual) * AVG_STATE_TAX_RATE;
+        // Only pre-tax deductions reduce taxable income; Roth is an after-tax outflow.
+        const preTaxAnnual = monthlyPreTax * 12;
+        const rothAnnual   = monthlyRoth   * 12;
 
-        // 4. Calculate Final Take-home
-        // (Gross - Fed - FICA - State - Retirement) / 12
-        const totalAnnualDeductions = fedTaxes.total + ficaTax + stateTax + preTaxAnnual;
-        takeHomeMonthly = Math.max(0, (grossIncome - totalAnnualDeductions) / 12);
-        
+        // estimateTax returns { fedTax, fica, medicare, stateTax, total }
+        // .total already bundles all four — do not add fica/state a second time.
+        const taxes = estimateTax(grossIncome, preTaxAnnual, getEl('filingStatus')?.value || 'single');
+
+        // Take-home = Gross − taxes − pre-tax deductions − Roth (after-tax outflow)
+        takeHomeMonthly = Math.max(0, (grossIncome - taxes.total - preTaxAnnual - rothAnnual) / 12);
     } else {
         takeHomeMonthly = 0;
     }
     const takeHomeEstimated = takeHomeInput <= 0 && grossIncome > 0;
+    const grossEstimated    = grossIncomeInput <= 0 && takeHomeInput > 0;
 
     const profile = {
         age,
@@ -450,6 +468,7 @@ function collectProfile() {
         takeHomeMonthly,
         takeHomeAnnual: takeHomeMonthly * 12,
         takeHomeEstimated,
+        grossEstimated,
 
         monthlyHousing: num('monthlyHousing'),
         monthlyCoreSpending: num('monthlyCoreSpending'),
@@ -465,7 +484,8 @@ function collectProfile() {
         mortgageBalance: num('mortgageBalance'),
         otherAssets: num('otherAssets'),
 
-        monthlyRetirementContrib: num('monthlyRetirementContrib'),
+        monthlyRetirementContrib: monthlyPreTax,
+        monthlyRothContrib: monthlyRoth,
         monthlyEmployerMatch: num('monthlyEmployerMatch'),
         monthlyTaxableInvesting: num('monthlyTaxableInvesting'),
         monthlyEmergencySaving: num('monthlyEmergencySaving'),
@@ -510,6 +530,7 @@ function collectProfile() {
 
     profile.plannedSavingMonthly =
         profile.monthlyRetirementContrib +
+        profile.monthlyRothContrib +
         profile.monthlyEmployerMatch +
         profile.monthlyTaxableInvesting +
         profile.monthlyEmergencySaving;
@@ -519,6 +540,7 @@ function collectProfile() {
     // savings rate and retirement contribution rate (it IS building wealth).
     const employeeSavingMonthly =
         profile.monthlyRetirementContrib +
+        profile.monthlyRothContrib +
         profile.monthlyTaxableInvesting +
         profile.monthlyEmergencySaving;
 
@@ -548,8 +570,8 @@ function collectProfile() {
     profile.creditUtilization = profile.creditCardLimit > 0 ? profile.creditCardBalance / profile.creditCardLimit : null;
     profile.emergencyFundMonths = safeDivide(profile.liquidCash, profile.coreMonthlyExpenses);
     profile.savingsRate = safeDivide(profile.plannedSavingMonthly * 12, profile.grossIncome);
-    profile.retirementContributionRate = safeDivide((profile.monthlyRetirementContrib + profile.monthlyEmployerMatch) * 12, profile.grossIncome);
-    profile.investingRate = safeDivide((profile.monthlyRetirementContrib + profile.monthlyEmployerMatch + profile.monthlyTaxableInvesting) * 12, profile.grossIncome);
+    profile.retirementContributionRate = safeDivide((profile.monthlyRetirementContrib + profile.monthlyRothContrib + profile.monthlyEmployerMatch) * 12, profile.grossIncome);
+    profile.investingRate = safeDivide((profile.monthlyRetirementContrib + profile.monthlyRothContrib + profile.monthlyEmployerMatch + profile.monthlyTaxableInvesting) * 12, profile.grossIncome);
     profile.retirementMultiple = safeDivide(profile.retirementAccounts, profile.grossIncome);
     profile.investableMultiple = safeDivide(profile.investmentAssets, profile.grossIncome);
     profile.netWorthMultiple = safeDivide(profile.netWorth, profile.grossIncome);
@@ -820,7 +842,7 @@ function buildActionPlan(profile, ageBand, thresholds) {
     }
 
     if (profile.retirementContributionRate < thresholds.retirementContributionRate.strong) {
-        const targetMonthly = Math.max(0, ((profile.grossIncome * thresholds.retirementContributionRate.strong) / 12) - (profile.monthlyRetirementContrib + profile.monthlyEmployerMatch));
+        const targetMonthly = Math.max(0, ((profile.grossIncome * thresholds.retirementContributionRate.strong) / 12) - (profile.monthlyRetirementContrib + profile.monthlyRothContrib + profile.monthlyEmployerMatch));
         addAction(
             'retirement-rate',
             'warn',
@@ -1030,7 +1052,9 @@ function evaluateProfile(profile) {
         benchmarkNotice,
         configuredBenchmarks,
         summaryTitle,
-        summaryText: profile.takeHomeEstimated ? `${summaryText} Net take-home was estimated from gross income.` : summaryText,
+        summaryText: profile.takeHomeEstimated ? `${summaryText} Net take-home was estimated from gross income.`
+                   : profile.grossEstimated    ? `${summaryText} Gross income was estimated from take-home pay.`
+                   : summaryText,
         indicatorText,
         indicatorClass
     };
@@ -1312,9 +1336,27 @@ function renderResults(evaluation) {
     getEl('kpiFixedRatio').textContent = percent(evaluation.profile.fixedObligationRatio);
     getEl('kpiFixedSub').textContent = `${money(evaluation.profile.monthlyHousing + evaluation.profile.minimumDebtPayments)}/mo fixed costs`;
     getEl('kpiSurplus').textContent = money(evaluation.profile.monthlySurplus);
-    getEl('kpiSurplusSub').textContent = evaluation.profile.monthlySurplus >= 0 ? 'Still left after the plan runs' : 'Short after core outflows and saving';
+
+    // Show an inline badge whenever a key income figure was derived, not entered directly.
+    // This alerts the user that the surplus (and all downstream ratios) rest on an estimate.
+    const surplusBaseNote = evaluation.profile.monthlySurplus >= 0
+        ? 'Still left after the plan runs'
+        : 'Short after core outflows and saving';
+    if (evaluation.profile.takeHomeEstimated) {
+        getEl('kpiSurplusSub').innerHTML =
+            `${surplusBaseNote} <span style="font-size:0.7em;font-weight:600;background:var(--warn,#f59e0b);color:#fff;border-radius:3px;padding:1px 5px;vertical-align:middle;margin-left:4px;">take-home est.</span>`;
+    } else if (evaluation.profile.grossEstimated) {
+        getEl('kpiSurplusSub').innerHTML =
+            `${surplusBaseNote} <span style="font-size:0.7em;font-weight:600;background:var(--info,#3b82f6);color:#fff;border-radius:3px;padding:1px 5px;vertical-align:middle;margin-left:4px;">gross est.</span>`;
+    } else {
+        getEl('kpiSurplusSub').textContent = surplusBaseNote;
+    }
+
     getEl('kpiCompleteness').textContent = percent(evaluation.profile.completeness, 0);
-    getEl('kpiCompletenessSub').textContent = evaluation.profile.takeHomeEstimated ? 'Net pay was estimated from gross' : 'More inputs = sharper feedback';
+    getEl('kpiCompletenessSub').textContent =
+        evaluation.profile.takeHomeEstimated ? 'Take-home estimated from gross — enter actual paycheck for precision' :
+        evaluation.profile.grossEstimated    ? 'Gross income estimated from take-home — enter annual salary for precision' :
+        'More inputs = sharper feedback';
 
     getEl('scoreCategoryList').innerHTML = renderScoreRows(evaluation.categories);
     getEl('comparisonSummary').textContent = `Using the ${evaluation.ageBand?.label || 'closest'} age band. On the chart, 100 means exactly at the age-band median.`;

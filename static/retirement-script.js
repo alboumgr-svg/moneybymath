@@ -55,7 +55,7 @@ async function initTaxData() {
 // ── Tab explanations ─────────────────────────────────────────────────
 
 const explanations = {
-    mixed:    "<strong>Portfolio:</strong> All four accounts combined. Having both pre-tax and Roth buckets lets you control your taxable income in retirement - filling lower brackets with traditional withdrawals and using Roth funds to avoid higher ones. Configure each account in the drop-down menus to the left.",
+    mixed:    "<strong>Portfolio:</strong> All four accounts combined. Having both pre-tax and Roth buckets lets you control your taxable income in retirement - filling lower brackets with traditional withdrawals and using Roth funds to avoid higher ones. Configure each account in the drop-down menus.",
     payouts:  "<strong>Taxes &amp; Payouts:</strong> Fine-tune your retirement income target, Social Security, filing status, and withdrawal strategy.<br><br>The runway and tax analysis below use your <strong>Portfolio</strong> account inputs combined with these settings."
 };
 

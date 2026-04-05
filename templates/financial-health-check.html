@@ -585,7 +585,7 @@
                     <div class="input-row">
                         <div class="input-group">
                             <label for="age">Current Age</label>
-                            <input type="number" id="age" min="18" max="90" placeholder="e.g. 33">
+                            <input type="number" id="age" min="15" max="90" placeholder="e.g. 33">
                         </div>
                         <div class="input-group">
                             <label for="filingStatus">Filing Status</label>
@@ -719,23 +719,31 @@
 
                     <div class="input-row">
                         <div class="input-group">
-                            <label for="monthlyRetirementContrib">Retirement Contributions ($/mo)</label>
-                            <input type="text" id="monthlyRetirementContrib" class="money-input" placeholder="e.g. 700">
+                            <label for="monthlyRetirementContrib">Pre-Tax Contributions ($/mo)</label>
+                            <input type="text" id="monthlyRetirementContrib" class="money-input" placeholder="e.g. 500">
+                            <small class="input-note">Traditional 401(k), 403(b), etc. Reduces taxable income.</small>
                         </div>
+                        <div class="input-group">
+                            <label for="monthlyRothContrib">Roth Contributions ($/mo)</label>
+                            <input type="text" id="monthlyRothContrib" class="money-input" placeholder="e.g. 200">
+                            <small class="input-note">Roth 401(k) or Roth IRA. Does not reduce taxable income.</small>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
                         <div class="input-group">
                             <label for="monthlyEmployerMatch">Employer Match ($/mo)</label>
                             <input type="text" id="monthlyEmployerMatch" class="money-input" placeholder="e.g. 200">
                         </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="capturesEmployerMatch">Employer Match Status</label>
-                        <select id="capturesEmployerMatch">
-                            <option value="yes">Capturing Full Match</option>
-                            <option value="partial">Capturing Some Match</option>
-                            <option value="no">Not Capturing Match</option>
-                            <option value="none">No Employer Match Offered</option>
-                        </select>
+                        <div class="input-group">
+                            <label for="capturesEmployerMatch">Employer Match Status</label>
+                            <select id="capturesEmployerMatch">
+                                <option value="yes">Capturing Full Match</option>
+                                <option value="partial">Capturing Some Match</option>
+                                <option value="no">Not Capturing Match</option>
+                                <option value="none">No Employer Match Offered</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="input-row">
