@@ -49,7 +49,7 @@ const STATE_IDS = [
     'monthlyHousing', 'monthlyCoreSpending', 'monthlyFlexibleSpending',
     'checkingSavings', 'emergencyFund', 'retirementAccounts', 'taxableInvestments',
     'hsaBalance', 'collegeSavings', 'homeValue', 'mortgageBalance', 'otherAssets',
-    'monthlyRetirementContrib', 'monthlyRothContrib', 'monthlyEmployerMatch', 'monthlyTaxableInvesting',
+    'monthlyRetirementContrib', 'monthlyOtherPreTax', 'monthlyRothContrib', 'monthlyEmployerMatch', 'monthlyTaxableInvesting',
     'monthlyEmergencySaving',
     'creditCardBalance', 'creditCardPayment', 'creditCardLimit', 'creditCardAPR',
     'studentLoanBalance', 'studentLoanPayment',
@@ -237,6 +237,7 @@ async function initTaxData() {
         const response = await fetch(`${API_BASE}/static/taxData.json`);
         const data = await response.json();
         taxData2026 = {
+            ficaWageBase: data.FICA_WAGE_BASE || 176100,
             single: {
                 stdDeduction: data.STANDARD_DEDUCTIONS.single,
                 brackets: data.BRACKETS.single.map(b => ({ rate: b[2], limit: b[1] === null ? Infinity : b[1] }))
@@ -290,9 +291,9 @@ function estimateTax(grossAnnual, preTaxDeductionsAnnual, status) {
         fedTax += Math.min(taxableIncome - prev, b.limit - prev) * b.rate;
         prev = b.limit;
     }
-
-    const ficaWageBase = 168600;
-    const fica = Math.min(grossAnnual, ficaWageBase) * 0.062;
+    
+    const limit = taxData2026 ? taxData2026.ficaWageBase : 176100;
+    const fica = Math.min(grossAnnual, limit) * 0.062;
     const medicare = grossAnnual * 0.0145 + Math.max(0, grossAnnual - 200000) * 0.009;
     const stateTax = (grossAnnual - preTaxDeductionsAnnual) * AVG_STATE_TAX_RATE;
 
@@ -425,8 +426,9 @@ function collectProfile() {
     
     // Pre-tax contributions (e.g. traditional 401k) reduce taxable income.
     // Roth contributions do NOT reduce taxable income — they come out after tax.
-    const monthlyPreTax = num('monthlyRetirementContrib');
     const monthlyRoth   = num('monthlyRothContrib');
+    const monthlyPreTax = num('monthlyRetirementContrib') + num('monthlyOtherPreTax');
+
 
     // Estimate Gross (mirrors budget script Mode B):
     //   Take-home already has both pre-tax and Roth removed.

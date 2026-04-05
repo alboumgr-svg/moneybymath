@@ -106,6 +106,7 @@ async function initTaxData() {
         const data = await response.json();
         
         taxData2026 = {
+            ficaWageBase: data.FICA_WAGE_BASE || 176100,
             single: {
                 stdDeduction: data.STANDARD_DEDUCTIONS.single,
                 brackets: data.BRACKETS.single.map(b => ({
@@ -153,9 +154,8 @@ function estimateTax(grossAnnual, preTaxDeductionsAnnual, status) {
         prev = b.limit;
     }
     
-    // Social Security: 6.2% up to $168,600 wage base (2024)
-    const ficaWageBase = 168600;
-    const fica = Math.min(grossAnnual, ficaWageBase) * 0.062;
+    const limit = taxData2026 ? taxData2026.ficaWageBase : 176100;
+    const fica = Math.min(grossAnnual, limit) * 0.062;
     // Medicare: 1.45% + 0.9% additional over $200k (single)
     const medicare = grossAnnual * 0.0145 + Math.max(0, grossAnnual - 200000) * 0.009;
     const stateTax = (grossAnnual - preTaxDeductionsAnnual) * AVG_STATE_TAX_RATE;
