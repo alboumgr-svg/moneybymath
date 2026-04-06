@@ -318,11 +318,9 @@ function clearAll() {
 }
 
 // ── Sharing & Export ─────────────────────────────────────────────────────────
-
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
     
-    // Grab all current values and put them in the URL parameters
     STATE_IDS.forEach(id => {
         const el = document.getElementById(id);
         if (el && el.value) {
@@ -330,25 +328,38 @@ function copyShareLink() {
         }
     });
 
-    // Build the final URL
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-
-    // Copy to clipboard
     const btn = document.getElementById('shareLinkBtn');
     btn.disabled = true;
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Link Copied!';
-
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }, 2000);
-    }).catch(err => {
+    // Use native share sheet on mobile (iOS, Android), fallback to clipboard on desktop
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Kids Financial Future Calculator',
+                text: 'Check out my kids financial future analysis!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            // User dismissed the share sheet — not an error worth logging
+            if (err.name !== 'AbortError') console.error(err);
+        }
         btn.disabled = false;
-        console.error(err);
-    });
+    } else {
+        // Desktop fallback: copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        } catch (err) {
+            btn.disabled = false;
+            console.error(err);
+        }
+    }
 }
 
 function loadFromUrl() {

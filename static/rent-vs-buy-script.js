@@ -493,10 +493,20 @@ function calculateRentVsBuy() {
     );
 
     // Break Even
+    // Solve: homeValue * (1 - 0.06) - snapshotLoanBalance = rentNetWorth
+    // → homeValue needed = (rentNetWorth + snapshotLoanBalance) / 0.94
+    const homeValueNeededToBreakEven = (rentNetWorth + snapshotLoanBalance) / (1 - 0.06);
+    const appreciationNeededDollar   = homeValueNeededToBreakEven - homePrice;
+    const appreciationNeededPctTotal = ((appreciationNeededDollar / homePrice) * 100).toFixed(1);
+    const years1                      = totalMonths / 12;
+    const appreciationNeededAnnual   = (Math.pow(homeValueNeededToBreakEven / homePrice, 1 / years1) - 1) * 100;
+
+    const initialMonthlyCostDiff = totalMonthlyBuy - (monthlyRent + rentersInsurance / 12);
+
     document.getElementById('breakEvenBreakdown').innerHTML = wrap(
-        bRowText('Upfront Buying Cost',   fmt(downPayment)) +
-        bRowText('Initial Rent Advantage', 'Ongoing') +
-        bRowText('Appreciation Needed',   fmt(downPayment * (mortgageRate + 0.02)))
+        bRowText('Upfront Buying Cost',           fmt(downPayment)) +
+        bRowText('Initial Monthly Cost Diff',     (initialMonthlyCostDiff >= 0 ? '+' : '-') + fmt(Math.abs(initialMonthlyCostDiff)) + '/mo') +
+        bRowText('Home Appreciation to Break Even',      `${appreciationNeededAnnual.toFixed(2)}% /yr`)
     );
 
     // Total Cost of Buying
@@ -685,11 +695,9 @@ function loadFromStorage() {
 }
 
 // ── Sharing & Export ─────────────────────────────────────────────────────────
-
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
     
-    // Grab all current values and put them in the URL parameters
     STATE_IDS.forEach(id => {
         const el = document.getElementById(id);
         if (el && el.value) {
@@ -697,25 +705,38 @@ function copyShareLink() {
         }
     });
 
-    // Build the final URL
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-
-    // Copy to clipboard
     const btn = document.getElementById('shareLinkBtn');
     btn.disabled = true;
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Link Copied!';
-
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }, 2000);
-    }).catch(err => {
+    // Use native share sheet on mobile (iOS, Android), fallback to clipboard on desktop
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Rent vs. Buy a House Calculator',
+                text: 'Check out my rent vs. buy a house analysis!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            // User dismissed the share sheet — not an error worth logging
+            if (err.name !== 'AbortError') console.error(err);
+        }
         btn.disabled = false;
-        console.error(err);
-    });
+    } else {
+        // Desktop fallback: copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        } catch (err) {
+            btn.disabled = false;
+            console.error(err);
+        }
+    }
 }
 
 function loadFromUrl() {

@@ -925,8 +925,7 @@ function loadFromStorage() {
 }
 
 // ── Sharing & Export ─────────────────────────────────────────────────────────
-
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
     
     STATE_IDS.forEach(id => {
@@ -937,22 +936,37 @@ function copyShareLink() {
     });
 
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-
     const btn = document.getElementById('shareLinkBtn');
     btn.disabled = true;
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Link Copied!';
-
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }, 2000);
-    }).catch(err => {
+    // Use native share sheet on mobile (iOS, Android), fallback to clipboard on desktop
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Budget Analysis',
+                text: 'Check out my budget analysis!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            // User dismissed the share sheet — not an error worth logging
+            if (err.name !== 'AbortError') console.error(err);
+        }
         btn.disabled = false;
-        console.error(err);
-    });
+    } else {
+        // Desktop fallback: copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        } catch (err) {
+            btn.disabled = false;
+            console.error(err);
+        }
+    }
 }
 
 function loadFromUrl() {

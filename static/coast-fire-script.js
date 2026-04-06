@@ -1026,8 +1026,7 @@ function loadFromStorage() {
 }
 
 // ── Sharing & Export ─────────────────────────────────────────────────────────
-
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
     
     // 1. Grab all current input values
@@ -1043,7 +1042,7 @@ function copyShareLink() {
         if (originalSpending !== null) params.set('originalSpending', originalSpending);
     }
 
-    // 2. NEW: Grab the active tab state
+    // 2. Grab the active tab state
     const activeTabBtn = document.querySelector('.mode-btn.active');
     if (activeTabBtn && activeTabBtn.dataset.tab) {
         params.set('tab', activeTabBtn.dataset.tab);
@@ -1052,22 +1051,34 @@ function copyShareLink() {
     // Build the final URL
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
-    // Copy to clipboard
     const btn = document.getElementById('shareLinkBtn');
     btn.disabled = true;
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Link Copied!';
-
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }, 2000);
-    }).catch(err => {
+    // Native share sheet on mobile, clipboard fallback on desktop
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Coast FIRE Calculator',
+                text: 'Check out my Coast FIRE results!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error(err);
+        }
         btn.disabled = false;
-        console.error(err);
-    });
+    } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }).catch(err => {
+            btn.disabled = false;
+            console.error(err);
+        });
+    }
 }
 
 function loadFromUrl() {

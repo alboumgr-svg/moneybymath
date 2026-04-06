@@ -1456,7 +1456,7 @@ function calculateHealthCheck() {
     renderResults(evaluation);
 }
 
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
     STATE_IDS.forEach(id => {
         const el = getEl(id);
@@ -1472,17 +1472,30 @@ function copyShareLink() {
     const btn = getEl('shareLinkBtn');
     btn.disabled = true;
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Link Copied';
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }, 2000);
-    }).catch(err => {
-        console.error(err);
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Financial Health Analysis',
+                text: 'Check out my financial health results!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error(err);
+        }
         btn.disabled = false;
-    });
+    } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }).catch(err => {
+            console.error(err);
+            btn.disabled = false;
+        });
+    }
 }
 
 function resetAll() {

@@ -269,14 +269,11 @@ function loadFromStorage() {
 }
 
 // ── Sharing & Export ─────────────────────────────────────────────────────────
-
-// Define the IDs for standard input fields
 const STATE_IDS = ['grossIncome'];
 
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
     
-    // Grab standard text inputs
     STATE_IDS.forEach(id => {
         const el = document.getElementById(id);
         if (el && el.value) {
@@ -284,30 +281,39 @@ function copyShareLink() {
         }
     });
 
-    // Manually add the filing status state
     params.set('filingStatus', filingStatus);
 
-    // Build the final URL
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
-    // Copy to clipboard
     const btn = document.getElementById('shareLinkBtn');
-    if (!btn) return; // Failsafe if button doesn't exist
-    
+    if (!btn) return;
+
     btn.disabled = true;
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Link Copied!';
-
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }, 2000);
-    }).catch(err => {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'My Tax Breakdown',
+                text: 'Check out my Federal tax breakdown!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error(err);
+        }
         btn.disabled = false;
-        console.error(err);
-    });
+    } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }).catch(err => {
+            btn.disabled = false;
+            console.error(err);
+        });
+    }
 }
 
 function loadFromUrl() {

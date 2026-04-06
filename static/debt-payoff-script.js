@@ -412,8 +412,7 @@ function initDebtFloat() {
 }
 
 // ── Sharing & Export ─────────────────────────────────────────────────────────
-
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
 
     params.set('monthlyPayment',   document.getElementById('monthlyPayment').value);
@@ -434,11 +433,24 @@ function copyShareLink() {
     const btn = document.getElementById('shareLinkBtn');
     btn.disabled = true;
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '✓ Link Copied!';
-        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
-    }).catch(err => { btn.disabled = false; console.error(err); });
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'My Debt Payoff Plan',
+                text: 'Check out my debt payoff results!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error(err);
+        }
+        btn.disabled = false;
+    } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '✓ Link Copied!';
+            setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
+        }).catch(err => { btn.disabled = false; console.error(err); });
+    }
 }
 
 function loadFromUrl() {

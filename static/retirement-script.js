@@ -358,8 +358,7 @@ function renderFirstYearTax(totalPreTax, totalRoth, overrideStrategy) {
 
 
 // ── Sharing & Export ─────────────────────────────────────────────────
-
-function copyShareLink() {
+async function copyShareLink() {
     const params = new URLSearchParams();
     document.querySelectorAll('input, select').forEach(el => {
         if (el.id) params.set(el.id, el.type === 'checkbox' ? el.checked : el.value);
@@ -367,11 +366,25 @@ function copyShareLink() {
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     const btn = getEl('shareLinkBtn');
     btn.disabled = true;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        const orig = btn.innerHTML;
-        btn.innerHTML = '✓ Link Copied!';
-        setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
-    }).catch(err => { btn.disabled = false; console.error(err); });
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Retirement Analysis',
+                text: 'Check out my retirement results!',
+                url: shareUrl,
+            });
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error(err);
+        }
+        btn.disabled = false;
+    } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '✓ Link Copied!';
+            setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+        }).catch(err => { btn.disabled = false; console.error(err); });
+    }
 }
 
 function loadFromUrl() {
