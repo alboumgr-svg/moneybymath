@@ -809,6 +809,12 @@ async function copyShareLink() {
                 text: 'Check out my mortgage analysis!',
                 url: shareUrl,
             });
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
         } catch (err) {
             // User dismissed the share sheet — not an error worth logging
             if (err.name !== 'AbortError') console.error(err);

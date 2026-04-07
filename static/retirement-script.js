@@ -374,6 +374,12 @@ async function copyShareLink() {
                 text: 'Check out my retirement results!',
                 url: shareUrl,
             });
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Link Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
         } catch (err) {
             if (err.name !== 'AbortError') console.error(err);
         }
