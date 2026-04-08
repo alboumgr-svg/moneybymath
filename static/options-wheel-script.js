@@ -163,7 +163,7 @@ function calculateWheel() {
         setError('Number of cycles must be at least 1.'); clearOutputs(); return;
     }
 
-    // All validation passed — clear any previous error
+    // All validation passed - clear any previous error
     setError('');
 
     let totalPremium, capitalRequired, returnOnCapital, annualizedReturn;
@@ -691,7 +691,7 @@ function loadFromStorage() {
     if (data.cycles) document.getElementById('cycles').value = data.cycles;
 }
 
-// Initialize calculator — load saved values, then calculate only if storage had data
+// Initialize calculator - load saved values, then calculate only if storage had data
 document.addEventListener('DOMContentLoaded', function() {
     loadFromStorage();
     calculateWheel(); // will clear outputs silently if fields are blank

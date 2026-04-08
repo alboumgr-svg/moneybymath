@@ -512,13 +512,13 @@ async function downloadPDF() {
             { label: 'Extra Payment Savings', value: result('debtExtraSavings') + ' · ' + result('debtTimeSaved'),         accent: true  },
         ],
 
-        // Action plan — plain text extracted from the element
+        // Action plan - plain text extracted from the element
         actionPlan: (() => {
             const el = document.getElementById('actionPlan');
             return (el?.innerText || el?.textContent || '').replace(/\s+/g, ' ').trim();
         })(),
 
-        // Debt table rows — pulled dynamically from the DOM
+        // Debt table rows - pulled dynamically from the DOM
         // Each: { name, balance, apr, minPayment }
         debts: (() => {
             const rows = [];
@@ -548,7 +548,7 @@ async function downloadPDF() {
 
     // ── Constants ───────────────────────────────────────────────────────────
     const PW = 612, PH = 792, ML = 48, MR = 48, CW = PW - ML - MR;
-    const ACCENT  = [37, 99, 235];   // blue — key numbers only
+    const ACCENT  = [37, 99, 235];   // blue - key numbers only
     const INK     = [22, 22, 22];    // near-black body text
     const MUTED   = [110, 110, 110]; // labels / secondary text
     const RULE    = [220, 220, 220]; // divider lines
@@ -590,7 +590,7 @@ async function downloadPDF() {
     sc([255,255,255], 'fill');
     doc.rect(0, 0, PW, HDR_H, 'F');
 
-    // Logo — right-aligned, vertically centred
+    // Logo - right-aligned, vertically centred
     if (logoImg) {
         const lh = 34;
         const lw = (logoImg.width * lh) / logoImg.height;
@@ -707,7 +707,7 @@ async function downloadPDF() {
             t(d.apr.toFixed(2) + '%', C_APR, y + 10);
 
             sc(INK, 'text');
-            t(d.minPayment > 0 ? fmtMoney(d.minPayment) : '—', C_MIN, y + 10);
+            t(d.minPayment > 0 ? fmtMoney(d.minPayment) : '-', C_MIN, y + 10);
 
             sc(ACCENT, 'text'); doc.setFont(undefined, 'bold');
             t(fmtMoney(estInt), C_INT, y + 10, { align: 'right' });
@@ -721,7 +721,7 @@ async function downloadPDF() {
         t('* Estimated total interest if only minimum payments made on each debt independently.', ML, y);
         y += 16;
 
-        // Payments summary inline — right-aligned small text
+        // Payments summary inline - right-aligned small text
         doc.setFontSize(8); doc.setFont(undefined, 'normal'); sc(MUTED, 'text');
         REPORT.payments.forEach(p => {
             t(p.label + ':', ML + CW - 150, y);

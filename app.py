@@ -396,7 +396,7 @@ def ads():
 # ── Edit this every week ──────────────────────────────────────────────────────
 LATEST_ARTICLE = {
     "title": "5 Mistakes to Avoid When Starting the Wheel Strategy",
-    "date": "Feb 10, 2026",
+    "date": "Apr 8, 2026",
     "read_time": "5 min read",
     "intro": "When I first started running the wheel strategy, I made several costly mistakes that ate into my returns. After two years of consistent execution, I've identified the five most common pitfalls that beginners face - and how to avoid them.",
     "sections": [

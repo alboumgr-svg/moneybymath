@@ -140,7 +140,7 @@ body {
 }
 
 /* ============================================================
-   Nav overrides — add this AFTER styles.css in base.html
+   Nav overrides - add this AFTER styles.css in base.html
    ============================================================ */
 
 /* Desktop (>1150px): all links visible, normal spacing */
@@ -2853,7 +2853,7 @@ section {
 
 /*
  * ================================================================
- *  RETIREMENT PLANNER — Additional Styles
+ *  RETIREMENT PLANNER - Additional Styles
  *  Move everything in this block to your main stylesheet.
  * ================================================================
  */
@@ -3311,7 +3311,7 @@ details.runway-details summary::-webkit-details-marker { display: none; }
 
 
 /* ══════════════════════════════════════════════════════════════
-   1 — GLOBAL RESETS & iOS FIXES
+   1 - GLOBAL RESETS & iOS FIXES
    ══════════════════════════════════════════════════════════════ */
  
 html { -webkit-overflow-scrolling: touch; }
@@ -3338,7 +3338,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   2 — CONTAINER & SECTION SPACING
+   2 - CONTAINER & SECTION SPACING
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 768px) { .container { padding: 0 0.875rem; } }
@@ -3354,7 +3354,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   3 — NAVBAR & LOGO
+   3 - NAVBAR & LOGO
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 380px) {
@@ -3364,7 +3364,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   4 — HERO SECTIONS
+   4 - HERO SECTIONS
    ══════════════════════════════════════════════════════════════ */
  
 /* Standard hero (all calculator pages) */
@@ -3412,7 +3412,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   5 — CALCULATOR GRID & CARDS
+   5 - CALCULATOR GRID & CARDS
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 968px) { .calculator-grid { gap: 1rem !important; } }
@@ -3426,7 +3426,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   6 — INPUT GROUPS, ROWS & HELPER TEXT
+   6 - INPUT GROUPS, ROWS & HELPER TEXT
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 768px) {
@@ -3447,7 +3447,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   7 — RESULT CARDS & VALUES
+   7 - RESULT CARDS & VALUES
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 768px) {
@@ -3469,7 +3469,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   8 — MODE TOGGLE & STRATEGY BUTTONS
+   8 - MODE TOGGLE & STRATEGY BUTTONS
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 768px) {
@@ -3482,7 +3482,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   9 — FEDERAL TAX: FILING TOGGLE & BRACKET WATERFALL
+   9 - FEDERAL TAX: FILING TOGGLE & BRACKET WATERFALL
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 600px) {
@@ -3506,7 +3506,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   10 — DEBT PAYOFF: DEBT ITEMS & FLOATING PILLS
+   10 - DEBT PAYOFF: DEBT ITEMS & FLOATING PILLS
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3516,7 +3516,7 @@ html { -webkit-overflow-scrolling: touch; }
     .add-debt-btn          { padding: 0.75rem !important; font-size: 0.875rem !important; }
 }
  
-/* Floating pills — full-width strip, stacked to avoid overlap */
+/* Floating pills - full-width strip, stacked to avoid overlap */
 @media (max-width: 768px) {
     #debtActionFloat, #debtMethodFloat,
     #winnerFloat, #balanceFloat, 
@@ -3592,7 +3592,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   11 — CHARTS & CANVASES
+   11 - CHARTS & CANVASES
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 768px) {
@@ -3614,7 +3614,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   12 — TAB BUTTONS (scrollable single row)
+   12 - TAB BUTTONS (scrollable single row)
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 600px) {
@@ -3634,7 +3634,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   13 — STOCK CHECKER & BUY ANALYZER
+   13 - STOCK CHECKER & BUY ANALYZER
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 600px) {
@@ -3668,7 +3668,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   14 — RETIREMENT PLANNER
+   14 - RETIREMENT PLANNER
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3698,7 +3698,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   15 — OPTIONS WHEEL specific
+   15 - OPTIONS WHEEL specific
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3710,7 +3710,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   16 — STRATEGY BREAKDOWN STEPS
+   16 - STRATEGY BREAKDOWN STEPS
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3722,7 +3722,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   17 — FORMULA BOXES
+   17 - FORMULA BOXES
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3732,7 +3732,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   18 — LEARN GRID, STRATEGY GRID, SECTION HEADERS
+   18 - LEARN GRID, STRATEGY GRID, SECTION HEADERS
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3763,7 +3763,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   19 — HOME PAGE: STATS BANNER, CALCULATORS GRID, WHY SECTION
+   19 - HOME PAGE: STATS BANNER, CALCULATORS GRID, WHY SECTION
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3793,7 +3793,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   20 — NEWSLETTER / ARTICLE PAGE
+   20 - NEWSLETTER / ARTICLE PAGE
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 768px) {
@@ -3813,7 +3813,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   21 — AFFILIATE SECTIONS
+   21 - AFFILIATE SECTIONS
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3825,7 +3825,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   22 — YEAR BREAKDOWN (compound interest)
+   22 - YEAR BREAKDOWN (compound interest)
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3837,7 +3837,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   23 — FOOTER
+   23 - FOOTER
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 768px) {
@@ -3856,7 +3856,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   24 — MISC UTILITY BUTTONS
+   24 - MISC UTILITY BUTTONS
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -3866,7 +3866,7 @@ html { -webkit-overflow-scrolling: touch; }
  
  
 /* ══════════════════════════════════════════════════════════════
-   25 — SPLIT RESULTS (afford-house sub-grids)
+   25 - SPLIT RESULTS (afford-house sub-grids)
    ══════════════════════════════════════════════════════════════ */
  
 @media (max-width: 480px) {
@@ -4052,7 +4052,7 @@ html { -webkit-overflow-scrolling: touch; }
     }
 }
 /* ══════════════════════════════════════════════════════════════
-   1 — GLOBAL RESETS & iOS FIXES
+   1 - GLOBAL RESETS & iOS FIXES
    ══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
@@ -4139,7 +4139,7 @@ html { -webkit-overflow-scrolling: touch; }
     min-width: 0;
 }
 
-/* 2. Contain the two injectable table containers — the scrollable wrapper inside handles actual scrolling */
+/* 2. Contain the two injectable table containers - the scrollable wrapper inside handles actual scrolling */
 #paycheckBreakdown,
 #amortTableContainer {
     width: 100%;

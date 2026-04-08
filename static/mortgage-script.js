@@ -283,7 +283,7 @@ function calculateMortgage() {
     const pmt       = loanAmount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 
     if (!isFinite(pmt) || pmt <= 0) {
-        setResultsEmpty('Payment calculation error — check your inputs.');
+        setResultsEmpty('Payment calculation error - check your inputs.');
         return;
     }
 
@@ -463,7 +463,7 @@ function calculateMortgage() {
     } else {
         document.getElementById('pmiMonthly').textContent = '$0';
         document.getElementById('pmiDropDate').textContent = ltv <= 0.80
-            ? 'LTV ≤ 80% — no PMI' : '';
+            ? 'LTV ≤ 80% - no PMI' : '';
     }
 
     // Points break-even
@@ -602,7 +602,7 @@ function renderAnnualTable(container) {
                         <td>Year ${y.year}</td>
                         <td>${fmt(y.totalPrincipal)}</td>
                         <td>${fmt(y.totalInterest)}</td>
-                        <td>${y.totalPmi > 0 ? fmt(y.totalPmi) : '—'}</td>
+                        <td>${y.totalPmi > 0 ? fmt(y.totalPmi) : '-'}</td>
                         <td>${fmt(y.endBalance)}</td>
                     </tr>`).join('')}
                 </tbody>
@@ -635,7 +635,7 @@ function renderMonthlyTable(container) {
                         <td>${fmt(r.payment, 2)}</td>
                         <td>${fmt(r.principal, 2)}</td>
                         <td>${fmt(r.interest, 2)}</td>
-                        <td>${r.pmi > 0 ? fmt(r.pmi, 2) : '—'}</td>
+                        <td>${r.pmi > 0 ? fmt(r.pmi, 2) : '-'}</td>
                         <td>${fmt(r.balance)}</td>
                     </tr>`).join('')}
                 </tbody>
@@ -816,7 +816,7 @@ async function copyShareLink() {
                 btn.disabled = false;
             }, 2000);
         } catch (err) {
-            // User dismissed the share sheet — not an error worth logging
+            // User dismissed the share sheet - not an error worth logging
             if (err.name !== 'AbortError') console.error(err);
         }
         btn.disabled = false;
@@ -871,7 +871,7 @@ async function downloadPDF() {
         filename: 'Mortgage-Report.pdf',
         logoPath: `${API_BASE}/static/logo.png`,
 
-        // Generic key-value sections — each renders as a labelled group of rows
+        // Generic key-value sections - each renders as a labelled group of rows
         // { heading, items: [{ label, value }] }
         // Items whose label starts with "Total" are automatically bolded by the engine
         sections: [
@@ -934,7 +934,7 @@ async function downloadPDF() {
                     ...( get('extraPayment') ? [{ label: 'Extra Monthly Payment', value: '$' + get('extraPayment') }] : [] ),
                 ]
             },
-            // Closing costs — only included when at least one field is filled
+            // Closing costs - only included when at least one field is filled
             ...(() => {
                 const items = [];
                 if (get('originationFee'))   items.push({ label: 'Origination Fee',    value: '$' + get('originationFee') });
@@ -949,7 +949,7 @@ async function downloadPDF() {
             })(),
         ],
 
-        // paymentsPosition — the engine injects the Monthly Payment Breakdown
+        // paymentsPosition - the engine injects the Monthly Payment Breakdown
         // section immediately after this section index.
         // Closing Costs is conditional, so we compute the correct index dynamically:
         //   Loan Details(0) -> Monthly Costs(1) -> Closing Costs(2, if present) -> [PAYMENTS] -> Results
@@ -960,7 +960,7 @@ async function downloadPDF() {
             return hasCC ? 2 : 1;
         })(),
 
-        // Payments — left-justified rows pulled live from the rendered breakdown cards
+        // Payments - left-justified rows pulled live from the rendered breakdown cards
         payments: (() => {
             const out = [];
             const container = document.getElementById('paymentBreakdownContainer');
@@ -973,10 +973,10 @@ async function downloadPDF() {
             return out;
         })(),
 
-        // totalMonthlyPayment — shown as a bold total row at the bottom of the payments section
+        // totalMonthlyPayment - shown as a bold total row at the bottom of the payments section
         totalMonthlyPayment: (document.getElementById('totalMonthlyValue')?.textContent || '').trim() || '--',
 
-        // Amortization table — annual buckets built from amortData
+        // Amortization table - annual buckets built from amortData
         // Set to null to omit; swap in different data for other calculators
         amortTable: (() => {
             if (!amortData || amortData.length === 0) return null;
@@ -999,13 +999,13 @@ async function downloadPDF() {
     };
 
     // ════════════════════════════════════════════════════════════════════════
-    // ENGINE  ←  Generic renderer — identical to debt-payoff, plus
+    // ENGINE  ←  Generic renderer - identical to debt-payoff, plus
     //            sections[] and amortTable renderers for portability
     // ════════════════════════════════════════════════════════════════════════
 
     // ── Constants ────────────────────────────────────────────────────────────
     const PW = 612, PH = 792, ML = 48, MR = 48, CW = PW - ML - MR;
-    const ACCENT = [37,  99, 235];   // blue — key numbers only
+    const ACCENT = [37,  99, 235];   // blue - key numbers only
     const INK    = [22,  22,  22];   // near-black body text
     const MUTED  = [110, 110, 110];  // labels / secondary text
     const RULE   = [220, 220, 220];  // divider lines
@@ -1100,7 +1100,7 @@ async function downloadPDF() {
             y += ROW_H;
         });
 
-        // Total monthly payment — bold total row
+        // Total monthly payment - bold total row
         if (REPORT.totalMonthlyPayment && REPORT.totalMonthlyPayment !== '--') {
             if (y + ROW_H > PH - 50) { doc.addPage(); y = 50; }
             sc(STRIPE, 'fill'); doc.rect(ML, y, CW, ROW_H + 2, 'F');
@@ -1180,7 +1180,7 @@ async function downloadPDF() {
                                 t(fmtMoney(yr.principal),  C_PRIN, y + 10);
             sc(ACCENT, 'text'); t(fmtMoney(yr.interest),   C_INT,  y + 10);
             sc(yr.pmi > 0 ? MUTED : RULE, 'text');
-                                t(yr.pmi > 0 ? fmtMoney(yr.pmi) : '—', C_PMI, y + 10);
+                                t(yr.pmi > 0 ? fmtMoney(yr.pmi) : '-', C_PMI, y + 10);
             sc(INK,    'text'); t(fmtMoney(yr.endBalance), C_BAL,  y + 10, { align: 'right' });
             y += ROW_H;
         });

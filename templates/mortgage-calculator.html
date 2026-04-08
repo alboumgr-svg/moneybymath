@@ -227,7 +227,7 @@
             <div class="hero-content">
                 <div class="hero-badge">Home Ownership</div>
                 <h1 class="hero-title">Master Your <span class="gradient-text">Mortgage</span></h1>
-                <p class="hero-subtitle">Get a complete picture of your home loan — monthly payment breakdown, total costs, closing fees, and a personalized payoff plan.</p>
+                <p class="hero-subtitle">Get a complete picture of your home loan - monthly payment breakdown, total costs, closing fees, and a personalized payoff plan.</p>
             </div>
         </div>
     </section>
@@ -235,6 +235,43 @@
     <section id="calculator" class="calculator-section">
         <div class="container">
             <div class="calculator-grid">
+                
+                <!-- ── ARTICLE ──────────────────────────────────────── -->
+                <div class="calculator-card chart-card">
+                    <h3 class="card-title">Mortgages, eh?</h3>
+                    <div class="calculator-inputs">
+                        <p>Signing a mortgage is essentially making a 30-year financial blood pact with a bank. It is simultaneously the most exciting and terrifying decision of your life. You’re trading a massive chunk of your future income for a deed, a roof, and the undeniable privilege of paying to fix your own plumbing.</p>
+
+                        <p>But before you get the keys, you have to navigate an industry that speaks a language specifically designed to make your eyes glaze over. Terms like <em>amortization</em>, <em>escrow</em>, <em>points</em>, and <em>origination</em> get thrown around rapidly, usually while someone points at a line for you to sign. Worse, most basic online calculators lie to you by omission. They highlight the "Principal and Interest" (the absolute bare minimum) and let you believe that's your monthly payment. Then you get to the closing table, and suddenly your payment is $600 higher because the calculator "forgot" to mention taxes, insurance, and the dreaded PMI.</p>
+
+                        <p>The math dictates that you need a complete, unvarnished picture before you sign anything. That’s exactly what this calculator is built to do. Let's break down how mortgages actually work, and how this tool keeps you from getting blindsided.</p>
+
+                        <h4 style="color: #1e293b;">The Anatomy of a Mortgage: Why Basic Math Fails You</h4>
+                        <p>If you take a $400,000 loan at 6.5% for 30 years, the base math seems easy enough: you owe about $2,528 a month. But you don't live in a math problem; you live in a physical house in a municipality that wants its cut. A real mortgage payment is made up of PITI (Principal, Interest, Taxes, and Insurance). Here is what you actually need to account for (and what the tool below calculates for you):</p>
+
+                        <ul style="padding-left: 1.5rem; color: #334155;">
+                            <li style="margin-bottom: 0.5rem;"><strong>The Principal:</strong> The actual money you borrowed to buy the house. In the beginning, almost none of your monthly payment goes toward this. </li>
+                            <li style="margin-bottom: 0.5rem;"><strong>The Interest (The Bank's Yacht Fund):</strong> The fee the bank charges for letting you use their money. Because of how <em>amortization</em> works, your early payments are heavily front-loaded with interest. Over 30 years, you will often pay back nearly double what you originally borrowed.</li>
+                            <li style="margin-bottom: 0.5rem;"><strong>The "Hidden" Escrow Vampires:</strong> Property taxes and homeowner's insurance don't pause just because you paid the bank. Lenders usually roll these into your monthly payment and hold them in an "escrow" account to pay on your behalf. If you don't factor these in, your budget is fiction. We include them so your estimated payment is rooted in reality.</li>
+                            <li style="margin-bottom: 0.5rem;"><strong>PMI (Private Mortgage Insurance):</strong> If you put down less than 20%, the bank considers you "risky." To compensate, they make <em>you</em> pay a monthly premium for an insurance policy that protects <em>them</em> if you default. It's a remarkably raw deal. Our calculator automatically estimates your PMI, adds it to your monthly breakdown, and more importantly calculates the exact date it drops off once your loan-to-value (LTV) ratio finally hits 80%.</li>
+                            <li style="margin-bottom: 0.5rem;"><strong>HOA Fees:</strong> If you live in a community with a Homeowners Association, you get to pay a monthly premium to ensure your neighbors keep their grass exactly 2.5 inches long. We factor this into your total monthly burden.</li>
+                        </ul>
+
+                        <h4 style="color: #1e293b;">Fixed vs. Adjustable-Rate Mortgages (ARMs)</h4>
+                        <p>When picking a loan, you have to choose between stability and a gamble. A <strong>Fixed-Rate Mortgage</strong> means your interest rate never changes for 30 years. It’s safe, predictable, and lets you sleep at night.</p>
+                        <p>An <strong>Adjustable-Rate Mortgage (ARM)</strong>, like a 5/1 or 7/1, offers a lower introductory "teaser" rate for the first 5 or 7 years. After that, the rate adjusts annually based on the market. It’s a great strategy if you plan to sell or refinance before the honeymoon ends-but if you don't, it can be a nightmare. We built a specific ARM engine into this tool. Select an ARM, plug in your "Expected Rate After Adjustment," and the calculator will show you exactly what your new monthly payment will look like when reality sets in.</p>
+
+                        <h4 style="color: #1e293b;">The Real Cheat Code: Extra Payments</h4>
+                        <p>Because mortgage interest is front-loaded, any extra money you send the bank goes straight toward your <strong>Principal</strong> balance. This is the financial equivalent of a cheat code.</p>
+                        <p>This calculator includes a dedicated amortization engine to model <strong>Extra Monthly</strong> and <strong>Extra Yearly Payments</strong>. Want to see what happens if you throw your annual tax refund at the principal once a year, or simply round your payment up an extra $150 a month? Enter the numbers. The interactive chart and results will update instantly to show you exactly how many years you just shaved off your loan, and the tens of thousands of dollars in interest you saved your future self.</p>
+
+                        <h4 style="color: #1e293b;">Closing Costs & Discount Points: The Final Boss</h4>
+                        <p>Just when you think you have enough cash for a down payment, the closing table shakedown begins. You are hit with closing costs-a bizarre sprinkle of origination fees, appraisal fees, recording fees, and title insurance that typically run between 2% and 5% of the loan amount. We built an entire section to sum up your true "Upfront Money Needed" so you aren't scrambling for a cashier's check on moving day.</p>
+                        <p>Furthermore, lenders will often offer you "Discount Points." This is a system where you pay a lump sum upfront (usually 1% of the loan amount per point) to permanently lower your interest rate. Is it actually worth it? Don't guess based on a broker's pitch. Plug your points and the rate reduction into the tool below. Our script runs the math to calculate your exact <strong>Break-Even Point</strong>-the exact number of months it will take to recoup that upfront cost through your monthly savings. If you plan to sell the house before that break-even date, buying points is just throwing money away.</p>
+
+                        <p><strong>Ready to face the numbers?</strong> The calculator below pulls the current national average rate directly from the FRED® API to give you a realistic starting point. Enter your home price, tweak your terms, play with the extra payments, and click the PDF button to save your personalized, math-backed amortization schedule.</p>
+                        </div>
+                </div>
 
                 <!-- ── LOAN DETAILS ──────────────────────────────────────── -->
                 <div class="calculator-card">

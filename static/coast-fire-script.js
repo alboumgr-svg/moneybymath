@@ -121,7 +121,7 @@ function updateTaxBuffer() {
     const checkboxWrapper = document.getElementById('taxCheckboxWrapper');
     if (!noteEl) return;
 
-    // If checkbox is checked, the field already holds the gross value — don't overwrite the note
+    // If checkbox is checked, the field already holds the gross value - don't overwrite the note
     const cb = document.getElementById('taxAccountCheckbox');
     if (cb && cb.checked) return;
 
@@ -175,7 +175,7 @@ function handleTaxCheckbox() {
     if (cb.checked) {
         const netSpending = parseFormattedNumber(spendingInput.value);
         if (isNaN(netSpending) || netSpending <= 0 || !taxData) {
-            return; // taxData not ready yet — fetchTaxData() will re-run this once loaded
+            return; // taxData not ready yet - fetchTaxData() will re-run this once loaded
         }
         originalSpending = netSpending;
         const grossNeeded = getGrossForNet(netSpending, 'single');
@@ -1009,7 +1009,7 @@ function loadFromStorage() {
             originalSpending = data.originalSpending;  
             const cb = document.getElementById('taxAccountCheckbox');
             if (cb) cb.checked = true;
-            // Don't call handleTaxCheckbox() — the field already has the gross value saved.
+            // Don't call handleTaxCheckbox() - the field already has the gross value saved.
             // Just restore the visual state.
             restoreTaxCheckboxUI();
         }
@@ -1106,7 +1106,7 @@ function loadFromUrl() {
         originalSpending = params.has('originalSpending') ? parseFloat(params.get('originalSpending')) : null;
         const cb = document.getElementById('taxAccountCheckbox');
         if (cb) cb.checked = true;
-        // Don't call handleTaxCheckbox() — the field already has the gross value saved.
+        // Don't call handleTaxCheckbox() - the field already has the gross value saved.
         // Just restore the visual state.
         restoreTaxCheckboxUI();
     }

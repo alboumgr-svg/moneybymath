@@ -449,7 +449,7 @@ async function downloadPDF() {
         // Key-value sections
         sections: [
             {
-                heading: 'Accumulation — Inputs',
+                heading: 'Accumulation - Inputs',
                 items: [
                     { label: 'Current Salary',           value: '$' + g('salary') },
                     { label: 'Current Age',              value: g('currentAge') },
@@ -504,7 +504,7 @@ async function downloadPDF() {
             },
         ],
 
-        // Action plan box — a concise summary sentence
+        // Action plan box - a concise summary sentence
         actionPlan: (() => {
             const total     = rs('finalBalance');
             const longevity = rs('longevityDisplay');

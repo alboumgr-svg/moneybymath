@@ -426,7 +426,7 @@ function collectProfile() {
     const takeHomeInput = num('monthlyTakeHome');
     
     // Pre-tax contributions (e.g. traditional 401k) reduce taxable income.
-    // Roth contributions do NOT reduce taxable income — they come out after tax.
+    // Roth contributions do NOT reduce taxable income - they come out after tax.
     const monthlyRoth   = num('monthlyRothContrib');
     const monthlyPreTax = num('monthlyRetirementContrib') + num('monthlyOtherPreTax');
 
@@ -450,7 +450,7 @@ function collectProfile() {
         const rothAnnual   = monthlyRoth   * 12;
 
         // estimateTax returns { fedTax, fica, medicare, stateTax, total }
-        // .total already bundles all four — do not add fica/state a second time.
+        // .total already bundles all four - do not add fica/state a second time.
         const taxes = estimateTax(grossIncome, preTaxAnnual, getEl('filingStatus')?.value || 'single');
 
         // Take-home = Gross − taxes − pre-tax deductions − Roth (after-tax outflow)
@@ -588,7 +588,7 @@ function collectProfile() {
     //      Debt collapses to 1 slot so a debt-free user loses at most ~5%,
     //      not ~26% from 12 blank fields.
     //   3. Checkboxes excluded entirely from the denominator. Unchecked means
-    //      "no" — a valid answer — not a missing answer. The scoring engine
+    //      "no" - a valid answer - not a missing answer. The scoring engine
     //      reads them directly and handles the "no" case correctly already.
     //
     // Optional/zero-valid fields (bonus, HSA, Roth, other assets, contribution
@@ -605,7 +605,7 @@ function collectProfile() {
         'creditScore', 'capturesEmployerMatch'
     ];
 
-    // Contextual fields — only added to the denominator when they apply
+    // Contextual fields - only added to the denominator when they apply
     const contextFields = [];
     if (profile.homeStatus === 'own') {
         contextFields.push('homeValue', 'mortgageBalance');
@@ -622,13 +622,13 @@ function collectProfile() {
         return String(el.value || '').trim() !== '';
     }).length;
 
-    // Income slot — either gross salary or monthly take-home satisfies it
+    // Income slot - either gross salary or monthly take-home satisfies it
     const incomeFilled = (
         (getEl('annualGrossIncome')?.value || '').trim() !== '' ||
         (getEl('monthlyTakeHome')?.value || '').trim() !== ''
     ) ? 1 : 0;
 
-    // Debt slot — any balance field entered means the debt section is answered.
+    // Debt slot - any balance field entered means the debt section is answered.
     // Leaving all blank is treated as "no debt entered" (~5% dock), not 12 docks.
     const debtFilled = ['creditCardBalance', 'studentLoanBalance',
         'autoLoanBalance', 'personalLoanBalance', 'otherDebtBalance'
@@ -1429,8 +1429,8 @@ function renderResults(evaluation) {
 
     getEl('kpiCompleteness').textContent = percent(evaluation.profile.completeness, 0);
     getEl('kpiCompletenessSub').textContent =
-        evaluation.profile.takeHomeEstimated ? 'Take-home estimated from gross — enter actual paycheck for precision' :
-        evaluation.profile.grossEstimated    ? 'Gross income estimated from take-home — enter annual salary for precision' :
+        evaluation.profile.takeHomeEstimated ? 'Take-home estimated from gross - enter actual paycheck for precision' :
+        evaluation.profile.grossEstimated    ? 'Gross income estimated from take-home - enter annual salary for precision' :
         'More inputs = sharper feedback';
 
     getEl('scoreCategoryList').innerHTML = renderScoreRows(evaluation.categories);
