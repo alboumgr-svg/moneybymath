@@ -1,178 +1,389 @@
 {% extends "base.html" %}
-{% block title %}Stock Buy Analysis - MoneyByMath{% endblock %}
+{% block title %}Stock Market Simulator - MoneyByMath{% endblock %}
 {% block content %}
-    <!-- Hero -->
+
+    <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <div class="hero-badge">Technical Stock Analysis</div>
-                <h1 class="hero-title">Is This Stock a <span class="gradient-text">Good Buy?</span></h1>
-                <p class="hero-subtitle">Enter any ticker and get an objective verdict based on 27 technical and fundamental indicators - trend, momentum, volume, volatility, and financials - explained in plain English.</p>
+                <div class="hero-badge">Interactive Stock Market Simulator</div>
+                <h1 class="hero-title">Learn the Market by <span class="gradient-text">Trading It Live</span></h1>
+                <p class="hero-subtitle">Four simulated stocks, a live order book, real-time news events, and a portfolio that persists between visits - all with zero real money. Learn bids, asks, limit orders, and more by doing, not reading.</p>
                 <div class="hero-cta">
-                    <a href="#analyzer" class="btn btn-primary">Analyze a Stock</a>
-                    <a href="#learn" class="btn btn-secondary">How It Works</a>
+                    <a href="#simulator" class="btn btn-primary">Open Simulator</a>
+                    <a href="#learn" class="btn btn-secondary">Learn the Concepts</a>
                 </div>
                 <div class="hero-stats">
-                    <div class="stat">
-                        <div class="stat-number">15</div>
-                        <div class="stat-label">Indicators Checked</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">5</div>
-                        <div class="stat-label">Categories</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">Live</div>
-                        <div class="stat-label">FMP Data</div>
-                    </div>
+                    <div class="stat"><div class="stat-number">4</div><div class="stat-label">Live Stocks</div></div>
+                    <div class="stat"><div class="stat-number">3</div><div class="stat-label">Order Types</div></div>
+                    <div class="stat"><div class="stat-number">$0</div><div class="stat-label">Real Money</div></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Analyzer Section -->
-    <section id="analyzer" class="calculator-section">
+    <!-- ── Scrolling Ticker Bar ───────────────────────────────────────────────── -->
+    <div class="sim-ticker-bar">
+        <div class="sim-ticker-track" id="simTickerTrack">
+            <span class="sim-ticker-loading">Initialising market data&hellip;</span>
+        </div>
+    </div>
+
+    <!-- ── Main Simulator ────────────────────────────────────────────────────── -->
+    <section id="simulator" class="calculator-section">
         <div class="container">
-            <div class="section-header">
-                <h2>Stock Buy Analyzer</h2>
-                <p>Enter any US stock ticker to see a full breakdown of every signal</p>
+
+            <!-- Market status bar -->
+            <div class="sim-market-status-bar">
+                <div class="sim-market-open-dot"></div>
+                <span class="sim-market-open-label">MARKET OPEN - Simulated</span>
+                <span class="sim-market-time" id="simMarketTime"></span>
+                <div class="sim-market-right">
+                    <span id="simTickCount" class="sim-tick-label">Tick 0</span>
+                    <button class="sim-reset-btn" id="simResetBtn">↺ Reset Portfolio</button>
+                </div>
             </div>
 
-            <div class="ba-search">
-                <input
-                    type="text"
-                    id="baTicker"
-                    class="ba-ticker-input"
-                    placeholder="e.g. AAPL"
-                    maxlength="10"
-                    autocomplete="off"
-                    spellcheck="false"
-                >
-                <button class="btn btn-primary">Coming Soon...</button>
-                <!--<input
-                    type="text"
-                    id="baTicker"
-                    class="ba-ticker-input"
-                    placeholder="e.g. AAPL"
-                    maxlength="10"
-                    onkeydown="if(event.key==='Enter') runBuyAnalysis()"
-                    autocomplete="off"
-                    spellcheck="false"
-                >
-                <button class="btn btn-primary" onclick="runBuyAnalysis()">Analyze</button>-->
+            <!-- Stock selector tabs -->
+            <div class="sim-stock-tabs" id="simStockTabs">
+                <button class="sim-stock-tab active" data-sym="MMBX">
+                    <span class="sim-tab-sym">MMBX</span>
+                    <span class="sim-tab-name">MoneyByMath Corp</span>
+                    <span class="sim-tab-price" id="tabPrice_MMBX">-</span>
+                    <span class="sim-tab-chg"   id="tabChg_MMBX">-</span>
+                </button>
+                <button class="sim-stock-tab" data-sym="GOLDY">
+                    <span class="sim-tab-sym">GOLDY</span>
+                    <span class="sim-tab-name">Goldfield Mining</span>
+                    <span class="sim-tab-price" id="tabPrice_GOLDY">-</span>
+                    <span class="sim-tab-chg"   id="tabChg_GOLDY">-</span>
+                </button>
+                <button class="sim-stock-tab" data-sym="BNKR">
+                    <span class="sim-tab-sym">BNKR</span>
+                    <span class="sim-tab-name">Banker Financial</span>
+                    <span class="sim-tab-price" id="tabPrice_BNKR">-</span>
+                    <span class="sim-tab-chg"   id="tabChg_BNKR">-</span>
+                </button>
+                <button class="sim-stock-tab" data-sym="VLTX">
+                    <span class="sim-tab-sym">VLTX</span>
+                    <span class="sim-tab-name">Voltage Energy</span>
+                    <span class="sim-tab-price" id="tabPrice_VLTX">-</span>
+                    <span class="sim-tab-chg"   id="tabChg_VLTX">-</span>
+                </button>
             </div>
 
-            <div id="baError"   class="ba-error"        style="display:none;"></div>
-            <div id="baLoading" class="ba-loading-wrap"  style="display:none;">
-                <div class="ba-spinner"></div>
-                <span>Fetching live data for <strong id="baLoadingTicker"></strong>&hellip;</span>
-            </div>
-            <div id="baResults" style="display:none;"></div>
+            <!-- ── Row 1: Price Chart + Order Book ──────────────────────────── -->
+            <div class="sim-main-grid">
 
-            <p class="ba-disclaimer">
-                Data sourced from <a href="site.financialmodelingprep.com" class="inlineLinks">www.financialmodelingprep.com</a>. For educational purposes only - not financial advice. Always do your own research before investing.
-            </p>
+                <!-- Price chart card -->
+                <div class="calculator-card sim-chart-card">
+                    <div class="sim-chart-header">
+                        <div>
+                            <div class="sim-chart-title">
+                                <span id="simChartTicker" class="sim-ticker-badge">MMBX</span>
+                                <span id="simChartName" class="sim-company-name">MoneyByMath Corp</span>
+                                <span id="simExchange" class="sim-exchange">NASDAQ · Simulated</span>
+                            </div>
+                            <div class="sim-price-row">
+                                <span class="sim-price" id="simPrice">-</span>
+                                <span class="sim-change" id="simChange">-</span>
+                            </div>
+                        </div>
+                        <div class="sim-chart-legend">
+                            <span class="sim-legend-item vwap" data-tip="Volume-Weighted Average Price - the average price weighted by volume. Institutions use this as a benchmark. Price above VWAP is bullish; below is bearish.">― VWAP</span>
+                            <span class="sim-legend-item price">― Price</span>
+                        </div>
+                    </div>
+                    <canvas id="simPriceChart" data-h="180" style="width:100%;display:block;"></canvas>
+
+                    <!-- Stats grid with tooltips -->
+                    <div class="sim-stats-grid">
+                        <div class="sim-stat-box" data-tip="The highest price any buyer is currently willing to pay. Market sell orders execute at the bid.">
+                            <div class="sim-stat-label">Bid <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val green" id="simBid">-</div>
+                        </div>
+                        <div class="sim-stat-box" data-tip="The lowest price any seller is currently willing to accept. Market buy orders execute at the ask.">
+                            <div class="sim-stat-label">Ask <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val red" id="simAsk">-</div>
+                        </div>
+                        <div class="sim-stat-box" data-tip="Ask minus Bid. This is an invisible transaction cost on every trade - even with a commission-free broker. Tight spreads indicate high liquidity.">
+                            <div class="sim-stat-label">Spread <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val" id="simSpread">-</div>
+                        </div>
+                        <div class="sim-stat-box" data-tip="Total shares traded today. High volume confirms price moves. A price spike on low volume is often a fake-out.">
+                            <div class="sim-stat-label">Volume <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val" id="simVolume">-</div>
+                        </div>
+                        <div class="sim-stat-box" data-tip="Highest price reached today. Often acts as resistance - sellers may re-emerge near today's high.">
+                            <div class="sim-stat-label">Day High <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val" id="simDayHigh">-</div>
+                        </div>
+                        <div class="sim-stat-box" data-tip="Lowest price reached today. Often acts as support - buyers may step in near today's low.">
+                            <div class="sim-stat-label">Day Low <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val" id="simDayLow">-</div>
+                        </div>
+                        <div class="sim-stat-box" data-tip="Volume-Weighted Average Price - the 'fair value' benchmark for the day. Algo traders and institutions target VWAP for their executions.">
+                            <div class="sim-stat-label">VWAP <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val" id="simVwap">-</div>
+                        </div>
+                        <div class="sim-stat-box" data-tip="Relative Strength Index (14-period). Above 70 = potentially overbought. Below 30 = potentially oversold. Between 30–70 = neutral momentum.">
+                            <div class="sim-stat-label">RSI(14) <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-stat-val" id="simRsi">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Book card -->
+                <div class="calculator-card sim-book-card">
+                    <h3 class="card-title" data-tip="A real-time list of all pending buy and sell orders. Bids stack below the current price; asks stack above it. The depth bars show relative order size at each level.">
+                        Order Book <span class="sim-book-live-dot"></span>
+                        <span class="sim-book-live-label">LIVE</span>
+                        <span class="sim-tip-dot" style="font-size:0.7rem;">?</span>
+                    </h3>
+                    <div class="sim-book-header-row">
+                        <span data-tip="Price level of this pending order">Price</span>
+                        <span data-tip="Number of shares at this price level">Size</span>
+                        <span data-tip="Cumulative shares from best price to this level - shows total market depth">Cumul.</span>
+                    </div>
+                    <div id="simAsks" class="sim-book-side sim-asks"></div>
+                    <div class="sim-book-spread-row" id="simSpreadRow">Spread: -</div>
+                    <div id="simBids" class="sim-book-side sim-bids"></div>
+                </div>
+            </div>
+
+            <!-- ── Row 2: Order Form + Portfolio Summary ─────────────────────── -->
+            <div class="sim-order-portfolio-grid">
+
+                <!-- Order form -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Place an Order</h3>
+                    <p class="sim-order-sub">Paper balance: <strong id="simCash">$10,000.00</strong></p>
+
+                    <div class="sim-order-tabs" id="simOrderTabs">
+                        <button class="sim-tab active" data-side="buy">Buy</button>
+                        <button class="sim-tab" data-side="sell">Sell</button>
+                    </div>
+
+                    <div class="sim-field-group">
+                        <label class="sim-label">Order Type</label>
+                        <div class="sim-type-tabs" id="simTypeTabs">
+                            <button class="sim-type-tab active" data-type="market"
+                                data-tip="Executes immediately at the best available price. Guaranteed fill, but not a guaranteed price - in fast markets you may pay more than expected (slippage).">Market</button>
+                            <button class="sim-type-tab" data-type="limit"
+                                data-tip="Only executes at your specified price or better. You control price but not time - the order may never fill if price doesn't reach your level.">Limit</button>
+                            <button class="sim-type-tab" data-type="stop"
+                                data-tip="Becomes a market order when price hits your stop level. Used as a stop-loss (sell if price drops to X) or a buy-stop (buy if price breaks above X).">Stop</button>
+                        </div>
+                    </div>
+
+                    <div class="sim-field-group" id="simLimitPriceGroup" style="display:none;">
+                        <label class="sim-label" for="simLimitPrice">Limit Price ($)
+                            <span class="sim-tip-dot" data-tip="Your order will only fill at this price or better. Set below current price for a buy-limit; above for a sell-limit.">?</span>
+                        </label>
+                        <input type="number" id="simLimitPrice" class="sim-input" placeholder="0.00" step="0.01" min="0.01">
+                    </div>
+
+                    <div class="sim-field-group" id="simStopPriceGroup" style="display:none;">
+                        <label class="sim-label" for="simStopPrice">Stop Price ($)
+                            <span class="sim-tip-dot" data-tip="When the market price touches this level, your stop becomes a market order and executes at the next available price.">?</span>
+                        </label>
+                        <input type="number" id="simStopPrice" class="sim-input" placeholder="0.00" step="0.01" min="0.01">
+                    </div>
+
+                    <div class="sim-field-group">
+                        <label class="sim-label" for="simShares">Number of Shares</label>
+                        <input type="number" id="simShares" class="sim-input" placeholder="10" step="1" min="1" max="50000" value="10">
+                    </div>
+
+                    <div class="sim-order-estimate">
+                        <span class="sim-est-label" data-tip="Approximate cost or proceeds based on current market price. Actual fill price may differ slightly for market orders.">Est. Value <span class="sim-tip-dot">?</span></span>
+                        <span class="sim-est-val" id="simEstVal">-</span>
+                    </div>
+
+                    <button class="btn btn-primary sim-place-btn" id="simPlaceBtn" onclick="placeOrder()">Buy Shares</button>
+                    <div class="sim-order-msg" id="simOrderMsg" style="display:none;"></div>
+                    <div class="sim-pending-label" id="simPendingLabel" style="display:none;">
+                        ⏳ You have pending orders - watching for your price&hellip;
+                    </div>
+                </div>
+
+                <!-- Portfolio summary -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Portfolio Summary</h3>
+                    <div class="sim-port-summary-grid">
+                        <div class="sim-port-box">
+                            <div class="sim-stat-label">Cash Available</div>
+                            <div class="sim-pnl-val" id="simCash2">-</div>
+                        </div>
+                        <div class="sim-port-box">
+                            <div class="sim-stat-label" data-tip="Total portfolio value: cash + market value of all open positions.">Total Value <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-pnl-val" id="simTotalVal">-</div>
+                        </div>
+                        <div class="sim-port-box" style="grid-column:1/-1;">
+                            <div class="sim-stat-label" data-tip="Unrealized P&L: the gain or loss on your current open positions if you sold everything right now.">Total P&amp;L <span class="sim-tip-dot">?</span></div>
+                            <div class="sim-pnl-val" id="simTotalPnl">-</div>
+                        </div>
+                    </div>
+
+                    <div class="sim-holdings-header" style="margin-top:1.25rem;">
+                        <span class="sim-section-label">Open Positions</span>
+                    </div>
+                    <div class="sim-table-wrap">
+                        <table class="sim-table">
+                            <thead>
+                                <tr>
+                                    <th data-tip="Stock ticker symbol">Sym</th>
+                                    <th data-tip="Number of shares you currently hold">Shares</th>
+                                    <th data-tip="Your average purchase price across all buys, weighted by quantity">Avg Cost <span class="sim-tip-dot">?</span></th>
+                                    <th data-tip="Current market price">Price</th>
+                                    <th data-tip="Current market value of your position (shares × current price)">Mkt Val</th>
+                                    <th data-tip="Unrealized profit or loss. Positive = winning, negative = losing. Only becomes real when you sell.">P&amp;L <span class="sim-tip-dot">?</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="simHoldingsBody">
+                                <tr><td colspan="6" class="sim-table-empty">No open positions yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Equity Chart ──────────────────────────────────────────────── -->
+            <div class="calculator-card" style="margin-top:1.5rem;">
+                <div class="sim-equity-header">
+                    <h3 class="card-title" style="margin:0;" data-tip="Your total portfolio value over time (cash + open positions). Saved between visits so you can track long-term performance.">
+                        Portfolio Equity Curve <span class="sim-tip-dot">?</span>
+                        <span class="sim-saved-badge" id="simSavedBadge" style="display:none;">💾 Saved</span>
+                    </h3>
+                    <span class="sim-equity-sub">Persists on refresh · Starting value: $10,000</span>
+                </div>
+                <canvas id="simEquityChart" data-h="160" style="width:100%;display:block;margin-top:0.75rem;"></canvas>
+            </div>
+
+            <!-- ── Row 3: Trade History + Pending + News ─────────────────────── -->
+            <div class="sim-trade-news-grid" style="margin-top:1.5rem;">
+
+                <!-- Trade History -->
+                <div class="calculator-card">
+                    <h3 class="card-title">Trade History</h3>
+                    <div class="sim-trade-scroll" id="simTradeHistory">
+                        <div class="sim-tape-empty">No trades yet - place your first order above</div>
+                    </div>
+                </div>
+
+                <!-- Pending orders + News -->
+                <div style="display:flex;flex-direction:column;gap:1.5rem;">
+                    <div class="calculator-card">
+                        <h3 class="card-title" data-tip="Orders waiting to be filled. Limit orders sit here until the market price reaches your level. Click ✕ to cancel.">
+                            Pending Orders <span class="sim-tip-dot">?</span>
+                            <span id="simPendingCount" class="sim-pending-count" style="display:none;"></span>
+                        </h3>
+                        <div id="simPendingOrders">
+                            <div class="sim-tape-empty">No pending orders</div>
+                        </div>
+                    </div>
+
+                    <div class="calculator-card">
+                        <h3 class="card-title">📰 Market News Feed</h3>
+                        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Random events that move individual stocks, sectors, or the whole market.</p>
+                        <div id="simNewsFeed">
+                            <div class="sim-tape-empty">Awaiting market events&hellip;</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Achievements ───────────────────────────────────────────────── -->
+            <div class="calculator-card" style="margin-top:1.5rem;">
+                <h3 class="card-title">Achievements</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Unlock badges as you learn and trade. Hover for details.</p>
+                <div id="simAchievementGrid" class="sim-ach-grid"></div>
+            </div>
+
+            <!-- ── Time & Sales Tape ──────────────────────────────────────────── -->
+            <div class="calculator-card" style="margin-top:1.5rem;">
+                <h3 class="card-title" data-tip="Every executed trade across all four stocks, in real time. Green = buyer initiated (paid the ask). Red = seller initiated (hit the bid). Your own trades are highlighted with ★.">
+                    Time &amp; Sales Tape <span class="sim-tip-dot">?</span>
+                    <span class="sim-book-live-dot" style="margin-left:8px;"></span>
+                    <span class="sim-book-live-label">LIVE</span>
+                </h3>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">
+                    <span class="sim-tape-legend buyer">■</span> Buyer initiated &nbsp;
+                    <span class="sim-tape-legend seller">■</span> Seller initiated &nbsp;
+                    <span class="sim-tape-legend mine">★</span> Your trade
+                </p>
+                <div class="sim-tape-header-row">
+                    <span>Time</span><span>Symbol</span><span>Price</span><span>Size</span><span>Side</span>
+                </div>
+                <div id="simTape" class="sim-tape">
+                    <div class="sim-tape-empty">Tape is empty - trades will appear here in real time</div>
+                </div>
+            </div>
+
+            <div class="calculator-card chart-card" id="affiliateShow">
+                <h3 class="card-title">Ready to Trade for Real?</h3>
+                <div class="affiliate-container">
+                    <p class="affiliate-text">Now that you understand bids, asks, and order books, open an account with Robinhood to start trading stocks for real.</p>
+                    <a href="https://join.robinhood.com/gregora187" target="_blank" rel="noopener noreferrer" class="affiliate-btn">Start Trading on Robinhood</a>
+                    <div class="disclosure-box"><strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra. Win-win.</div>
+                </div>
+            </div>
+
         </div>
     </section>
 
-    <!-- How It Works / Explainer Section -->
+    <!-- ── Learn Section ─────────────────────────────────────────────────────── -->
     <section id="learn" class="stocks-section">
-        <div class="container" style="background-color: var(--bg-main); padding: 2rem 2rem; border-radius: 12px;">
+        <div class="container" style="background-color:var(--bg-main);padding:2rem;border-radius:12px;">
             <div class="section-header">
-                <h2>What We Check &amp; Why It Matters</h2>
-                <p>Seven categories of analysis, explained simply for new investors.</p>
+                <h2>What You're Seeing &amp; Why It Matters</h2>
+                <p>Six core concepts every investor must understand before placing a real trade.</p>
             </div>
 
             <div class="ba-explainer-grid">
                 <div class="ba-explainer-card">
-                <span class="ba-explainer-icon"></span>
-                <h3>Momentum Oscillators</h3>
-                <p>This category utilizes RSI (Relative Strength Index), Stochastic Oscillators (%K/%D), Williams %R, and the Commodity Channel Index (CCI) to determine if a stock is technically overbought or oversold. By also calculating the 20-day Rate of Change (ROC), we can identify if the speed of a price move is sustainable or if a reversal is likely, helping you avoid "chasing" a stock at its peak.</p>
-            </div>
-
-            <div class="ba-explainer-card">
-                <span class="ba-explainer-icon"></span>
-                <h3>Volume Analysis</h3>
-                <p>We compare recent 10-day trading volume against the 50-day average to detect institutional interest. The script tracks On-Balance Volume (OBV) to see if capital is flowing in or out of the stock, and calculates the Up-Day vs Down-Day Volume Ratio. True price breakouts require "volume conviction"; if price rises while volume drops, the move is often a trap.</p>
-            </div>
-
-            <div class="ba-explainer-card">
-                <span class="ba-explainer-icon"></span>
-                <h3>Volatility Measures</h3>
-                <p>Using Bollinger Bands, we measure price standard deviation to identify "Squeezes" (periods of low volatility often followed by explosive moves) and overextensions. We also calculate ATR% (Average True Range as a percentage) and 21-day Historical Volatility. These metrics quantify the daily "swing" of the stock, allowing you to understand the risk-to-reward profile of the current price action.</p>
-            </div>
-
-            <div class="ba-explainer-card">
-                <span class="ba-explainer-icon"></span>
-                <h3>Price Structure</h3>
-                <p>A healthy stock should exhibit a "staircase" pattern of higher highs and higher lows over a 20-day window. The script specifically scans for these structural patterns and measures the exact percentage distance from both the 52-week high and 52-week low. This helps distinguish between a stock that is "on sale" at a support level versus one that is in a structural breakdown.</p>
-            </div>
-
-            <div class="ba-explainer-card">
-                <span class="ba-explainer-icon"></span>
-                <h3>Fundamental Health</h3>
-                <p>This is a deep dive into corporate efficiency and valuation. We check the P/E, P/B, P/S, and PEG ratios to see if you are overpaying for growth. We analyze Free Cash Flow yield, YoY Revenue Growth, Net Profit Margins, and Return on Equity (ROE) to ensure the company is profitable. Additionally, we check the Current Ratio for liquidity, Debt-to-Cash levels for solvency, and compare the current price to the average Analyst Consensus target.</p>
-            </div>
-
-            <div class="ba-explainer-card">
-                <span class="ba-explainer-icon"></span>
-                <h3>Risk & Sentiment</h3>
-                <p>The script flags upcoming Earnings dates, which can cause extreme overnight price gaps, and calculates Beta to measure sensitivity to market crashes. We also analyze Short Interest to gauge market pessimism and track Insider Activity - monitoring whether company executives are buying or selling their own shares. High insider ownership and low short interest typically signal strong internal confidence in the company's future.</p>
-            </div>
+                    <h3>Bid &amp; Ask</h3>
+                    <p>The <span class="inline-tip" data-tip="The highest price any buyer in the market is currently willing to pay."><strong>bid</strong></span> is what buyers will pay. The <span class="inline-tip" data-tip="The lowest price any seller is currently willing to accept."><strong>ask</strong></span> is what sellers will accept. When you click "Buy Market," you pay the ask. When you click "Sell Market," you receive the bid. These prices update continuously as traders enter and cancel orders.</p>
+                </div>
+                <div class="ba-explainer-card">
+                    <h3>The Spread</h3>
+                    <p>The <span class="inline-tip" data-tip="Ask minus Bid - the invisible per-share transaction cost you pay on every trade, even with zero commissions."><strong>spread</strong></span> is Ask − Bid. It's an invisible cost on every trade. A $0.01 spread on a $100 stock is trivial (0.01%). A $0.50 spread on a $5 stock is huge (10%). High-volume, large-cap stocks have very tight spreads. Thinly traded stocks can have wide spreads that hurt you on both the buy and the sell.</p>
+                </div>
+                <div class="ba-explainer-card">
+                    <h3>The Order Book</h3>
+                    <p>The <span class="inline-tip" data-tip="A live list of all pending buy (bid) and sell (ask) orders with their price levels and sizes."><strong>order book</strong></span> is a live record of every pending buy and sell order. Bids stack below the price; asks above. The depth bars show relative size at each level. Large walls of orders can act as temporary support or resistance - until they're cancelled or absorbed.</p>
+                </div>
+                <div class="ba-explainer-card">
+                    <h3>Market vs. Limit Orders</h3>
+                    <p>A <span class="inline-tip" data-tip="Executes immediately at the best available price. Guaranteed fill, not guaranteed price."><strong>market order</strong></span> fills instantly at whatever the market offers - fast but unpredictable in price. A <span class="inline-tip" data-tip="Only executes at your specified price or better. Guaranteed price, not guaranteed fill."><strong>limit order</strong></span> sets your price but may wait forever. A <span class="inline-tip" data-tip="Converts to a market order when the market touches your stop price - used to cap losses automatically."><strong>stop order</strong></span> triggers automatically at a threshold, converting to a market order for fast exits.</p>
+                </div>
+                <div class="ba-explainer-card">
+                    <h3>VWAP &amp; RSI</h3>
+                    <p><span class="inline-tip" data-tip="Volume-Weighted Average Price - the average price weighted by volume. Institutions use this as a benchmark for their executions."><strong>VWAP</strong></span> is the volume-weighted average price - the institutional benchmark. Trading above VWAP is considered bullish; below is bearish. <span class="inline-tip" data-tip="Relative Strength Index - measures momentum. Above 70 may be overbought; below 30 may be oversold."><strong>RSI</strong></span> measures momentum on a 0–100 scale: above 70 signals potential exhaustion (overbought), below 30 signals potential reversal (oversold).</p>
+                </div>
+                <div class="ba-explainer-card">
+                    <h3>P&amp;L &amp; Position Sizing</h3>
+                    <p><span class="inline-tip" data-tip="Profit & Loss - the gain or loss on a trade or portfolio position."><strong>P&amp;L</strong></span> (Profit &amp; Loss) is unrealized while a position is open, and realized once you close it. Unrealized P&amp;L changes every tick. <span class="inline-tip" data-tip="How many shares or dollars you risk on a single position - one of the most important risk management decisions a trader makes."><strong>Position sizing</strong></span> - how much you risk per trade - is arguably the most important skill in trading. Even a strategy with a 40% win rate can be profitable with proper sizing.</p>
+                </div>
             </div>
 
             <div class="learn-strategy" style="margin-top:3rem;">
-                <h3>How the Score Works</h3>
+                <h3>How a Trade Actually Executes - Step by Step</h3>
                 <div class="strategy-grid">
-                    <div class="strategy-item">
-                        <h4>85–100 &rarr; Strong Buy</h4>
-                        <p>The majority of indicators are positive across trend, momentum, and fundamentals. Broad-based strength with few red flags. A reasonable entry point for a long-term investor.</p>
-                    </div>
-                    <div class="strategy-item">
-                        <h4>70–84 &rarr; Buy</h4>
-                        <p>More indicators are positive than negative. Some yellow flags exist but the overall picture is constructive. Consider position sizing down if risks are notable.</p>
-                    </div>
-                    <div class="strategy-item">
-                        <h4>50–69 &rarr; Hold/Neutral</h4>
-                        <p>Mixed signals. The stock isn't clearly bullish or bearish. It may be a decent long-term hold if already owned, but probably not the best new entry right now.</p>
-                    </div>
-                    <div class="strategy-item">
-                        <h4>35–49 &rarr; Caution</h4>
-                        <p>More indicators are negative. Not an ideal time to buy - wait for conditions to improve or for the stock to show more convincing signals before entering.</p>
-                    </div>
-                    <div class="strategy-item">
-                        <h4>0–34 &rarr; Avoid</h4>
-                        <p>The majority of indicators are bearish. This is not a recommended new position. Patience is a strategy - wait for a better setup.</p>
-                    </div>
-                    <div class="strategy-item">
-                        <h4>Important: This Is a Tool, Not a Crystal Ball</h4>
-                        <p>No indicator or score predicts the future. These signals help you make a more informed decision, not an infallible one. Always invest only what you can afford to lose and diversify across multiple positions.</p>
-                    </div>
+                    <div class="strategy-item"><h4>Step 1 - You Place an Order</h4><p>You tell the simulator "buy 50 shares of MMBX at market." In real life, your broker routes this to an exchange or market maker.</p></div>
+                    <div class="strategy-item"><h4>Step 2 - Matching Engine Checks the Book</h4><p>The exchange's matching engine finds the current lowest ask. If someone is selling at $142.51, your market buy executes at exactly $142.51.</p></div>
+                    <div class="strategy-item"><h4>Step 3 - Execution &amp; Confirmation</h4><p>The trade executes in milliseconds. Your account is debited the purchase price. The seller is credited. The trade appears on the public Time &amp; Sales tape.</p></div>
+                    <div class="strategy-item"><h4>Step 4 - Settlement (T+1)</h4><p>Trades <em>execute</em> instantly but legally <em>settle</em> one business day later (T+1 in the US since 2024). Your broker handles this automatically.</p></div>
+                    <div class="strategy-item"><h4>What Moves the Price?</h4><p>Every market buy lifts the ask - price ticks up. Every market sell hits the bid - price ticks down. Volume and order imbalance drive the trend you see in the chart.</p></div>
+                    <div class="strategy-item"><h4>Limit Orders Wait in the Book</h4><p>A buy limit at $138 when price is $142 sits in the book visible to other traders as a bid. If price falls to $138, you get filled - otherwise it waits indefinitely until cancelled.</p></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Affilliate Link -->
-    <section id="learn" class="stocks-section">
-        <div class="container" id="affiliateShow" style="background-color: var(--bg-main); padding: 2rem 2rem; border-radius: 12px;">
-            <h3 class="card-title">Now That You're a Pro...</h3>
-            <div class="affiliate-container">
-                <p class="affiliate-text">
-                    Ready to put your stock knowledge into practice? Open an account with AFFILLIATENAME to start trading stocks today.
-                </p>
-                
-                <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
-                    Start Trading on AFFILLIATENAME
-                </a>
+    <!-- ── Tooltip overlay (injected by JS) ──────────────────────────────────── -->
 
-                <div class="disclosure-box">
-                    <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
-                </div>
-            </div>
-        </div>
-    </section>
-    {% endblock %}
+{% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='stock-analysis-script.js') }}"></script>

@@ -1,323 +1,372 @@
 {% extends "base.html" %}
-{% block title %}Options Wheel Calculator - MoneyByMath{% endblock %}
+{% block title %}Options Wheel Strategy Simulator - MoneyByMath{% endblock %}
 {% block content %}
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-background"></div>
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-badge">Options Trading Education</div>
-                <h1 class="hero-title">Master the <span class="gradient-text">Options Wheel</span> Strategy</h1>
-                <p class="hero-subtitle">Generate consistent income through covered calls and cash-secured puts. Learn the strategy that professional traders use to outperform the market.</p>
-                <div class="hero-cta">
-                    <a href="#calculator" class="btn btn-primary">Try Calculator</a>
-                    <a href="#learn" class="btn btn-secondary">Learn Strategy</a>
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Interactive Options Simulator</div>
+            <h1 class="hero-title">Master the <span class="gradient-text">Options Wheel</span> by Living It</h1>
+            <p class="hero-subtitle">Watch a live simulation trade the wheel strategy in real time - selling puts, getting assigned, selling calls, and collecting premium cycle after cycle. Then build your own scenarios with the calculator below.</p>
+            <div class="hero-cta">
+                <a href="#simulator" class="btn btn-primary">&#9654; Launch Simulator</a>
+                <a href="#calculator" class="btn btn-secondary">Open Calculator</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat"><div class="stat-number">3</div><div class="stat-label">Preset Stocks</div></div>
+                <div class="stat"><div class="stat-number">Live</div><div class="stat-label">Premium Pricing</div></div>
+                <div class="stat"><div class="stat-number">$0</div><div class="stat-label">Real Money</div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── CALCULATOR ─────────────────────────────────────────────────────────── -->
+<section id="calculator" class="calculator-section" style="padding: top 1.5rem;;">
+<div class="container">
+    <div class="section-header">
+        <h2>Options Wheel Calculator</h2>
+        <p>Enter your own numbers and see the exact P&amp;L at expiration for each strategy phase. We encourage using this before trying the simulator!</p>
+    </div>
+
+    <div class="whl-calc-strategy-row">
+        <button class="strategy-btn" onclick="setStrategy('csp')">
+            <span class="strategy-icon">&#128197;</span>
+            <span class="strategy-name">Cash-Secured Put</span>
+            <span class="strategy-desc">Phase 1 of the wheel</span>
+        </button>
+        <button class="strategy-btn" onclick="setStrategy('cc')">
+            <span class="strategy-icon">&#128200;</span>
+            <span class="strategy-name">Covered Call</span>
+            <span class="strategy-desc">Phase 3 of the wheel</span>
+        </button>
+        <button class="strategy-btn active" onclick="setStrategy('wheel')">
+            <span class="strategy-icon">&#127905;</span>
+            <span class="strategy-name">Full Wheel</span>
+            <span class="strategy-desc">Complete cycle strategy</span>
+        </button>
+    </div>
+
+    <div class="calculator-grid">
+        <div class="calculator-card">
+            <h3 class="card-title">Strategy Inputs</h3>
+            <div id="calcError" style="display:none;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:8px;padding:0.65rem 1rem;font-size:0.9rem;font-weight:500;margin-bottom:1rem;"></div>
+            <div class="calculator-inputs">
+                <div class="input-group"><label for="stockPrice">Stock Price ($)</label><input type="text" id="stockPrice" placeholder="e.g. 100" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
+                <div class="input-group put-inputs"><label for="putStrike">Put Strike ($)</label><input type="text" id="putStrike" placeholder="e.g. 95" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
+                <div class="input-group put-inputs"><label for="putPremium">Put Premium ($)</label><input type="number" id="putPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel();saveToStorage()"></div>
+                <div class="input-group call-inputs"><label for="callStrike">Call Strike ($)</label><input type="text" id="callStrike" placeholder="e.g. 105" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
+                <div class="input-group call-inputs"><label for="callPremium">Call Premium ($)</label><input type="number" id="callPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel();saveToStorage()"></div>
+                <div class="input-group"><label for="contracts">Contracts</label><input type="number" id="contracts" placeholder="e.g. 1" min="1" step="1" oninput="calculateWheel();saveToStorage()"></div>
+                <div class="input-group cycles-input"><label for="cycles">Cycles</label><input type="number" id="cycles" placeholder="e.g. 4" min="1" step="1" oninput="calculateWheel();saveToStorage()"></div>
+            </div>
+        </div>
+
+        <div class="calculator-card">
+            <h3 class="card-title">Expected Returns</h3>
+            <div class="calculator-results">
+                <div class="result-card highlight"><div class="result-label">Total Premium</div><div class="result-value" id="totalPremium">--</div></div>
+                <div class="result-card"><div class="result-label" data-tip="Cash needed: for CSP = putStrike×100×contracts; for CC = stockPrice×100×contracts.">Capital Required <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="capitalRequired">--</div></div>
+                <div class="result-card"><div class="result-label" data-tip="Premium ÷ Capital Required. Shows how efficiently your money is working.">Return on Capital <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="returnOnCapital">--</div></div>
+                <div class="result-card"><div class="result-label" data-tip="Annualized assuming monthly repetition. Past performance not guaranteed.">Annualized Return <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="annualizedReturn">--</div></div>
+            </div>
+        </div>
+
+        <div class="calculator-card chart-card">
+            <h3 class="card-title">Profit &amp; Loss Diagram</h3>
+            <p class="graph-subtitle" id="graphSubtitle">P&amp;L at expiration &mdash; premium is yours to keep</p>
+            <div class="pnl-charts-row" id="pnlChartsRow">
+                <div class="pnl-chart-side" id="putChartSide">
+                    <div class="pnl-chart-side-label" id="putChartSideLabel"></div>
+                    <canvas id="pnlChart"></canvas>
+                    <div id="pnlChartLegend" class="chart-legend-row"></div>
                 </div>
-                <div class="hero-stats">
-                    <div class="stat">
-                        <div class="stat-number">12-18%</div>
-                        <div class="stat-label">Annual Returns</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">Lower</div>
-                        <div class="stat-label">Volatility</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">Weekly</div>
-                        <div class="stat-label">Income Potential</div>
-                    </div>
+                <div class="pnl-chart-side" id="callChartSide" style="display:none;">
+                    <div class="pnl-chart-side-label">&#128200; Covered Call Phase</div>
+                    <canvas id="pnlChartCall"></canvas>
+                    <div id="pnlChartCallLegend" class="chart-legend-row"></div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Learn Section -->
-    <section id="learn" class="learn-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>How the Options Wheel Works</h2>
-                <p>A systematic approach to generating income from stocks you want to own</p>
-            </div>
-            <div class="learn-grid">
-                <div class="learn-card">
-                    <div class="learn-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
-                            <path d="M24 14 L24 24 L32 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <h3>Phase 1: Sell Cash-Secured Puts</h3>
-                    <p>Start the wheel by selling a put option at a strike price you'd be happy to buy the stock at. You collect premium immediately and have the obligation to purchase shares if the stock drops below the strike.</p>
-                    <div class="learn-highlight">
-                        <strong>Key Benefit:</strong> You get paid to potentially buy a stock at a discount.
-                    </div>
-                </div>
-                <div class="learn-card">
-                    <div class="learn-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                            <rect x="12" y="12" width="24" height="24" stroke="currentColor" stroke-width="2"/>
-                            <path d="M18 24 L24 30 L30 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>Phase 2: Get Assigned Shares</h3>
-                    <p>If the stock price falls below your strike at expiration, you'll be assigned 100 shares per contract. This is actually good-you now own a quality stock at your chosen price, with the premium reducing your cost basis.</p>
-                    <div class="learn-highlight">
-                        <strong>Key Benefit:</strong> Your effective purchase price is lower than the strike due to premium collected.
-                    </div>
-                </div>
-                <div class="learn-card">
-                    <div class="learn-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                            <path d="M24 12 L32 20 L24 28 M16 36 L24 28 L32 36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>Phase 3: Sell Covered Calls</h3>
-                    <p>Now that you own the shares, sell call options against them at a strike above your purchase price. You collect more premium and keep any appreciation up to the strike price.</p>
-                    <div class="learn-highlight">
-                        <strong>Key Benefit:</strong> Generate income from stocks you already own while maintaining upside potential.
-                    </div>
-                </div>
-                <div class="learn-card">
-                    <div class="learn-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                            <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
-                            <path d="M24 14 A10 10 0 0 1 34 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                            <circle cx="24" cy="14" r="2" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <h3>Phase 4: Repeat the Cycle</h3>
-                    <p>If your shares get called away, great! You've realized the full profit. Now start over with cash-secured puts. If not called away, keep selling covered calls. Either way, you're collecting premium consistently.</p>
-                    <div class="learn-highlight">
-                        <strong>Key Benefit:</strong> Create a repeatable income stream with defined risk.
-                    </div>
-                </div>
-                <div class="learn-card">
-                    <div class="learn-icon">
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                            <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
-                            <path d="M24 14 A10 10 0 0 1 34 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                            <circle cx="24" cy="14" r="2" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <h3>Are Great Returns Gaureenteed?</h3>
-                    <p>No. But the Options Wheel enforces buy-low, sell-high behavior by systematically entering at lower strikes and exiting at higher ones. This can provide solid returns from premium collection in sidways and slightly bearish markets.</p>
-                    <div class="learn-highlight">
-                        <strong>Key Benefit:</strong> Keep growing your account with consistent income amidst "boring" market conditions.
-                    </div>
-                </div>
-            </div>
-            <div class="learn-strategy">
-                <h3>What to look for in a stock for this strategy (Easy Mode)</h3>
-                <div class="strategy-grid">
-                    <div class="strategy-item">
-                    <h4>Stock You Actually Want to Own</h4>
-                    <p>This is the #1 rule. If your put gets assigned, you'll own 100 shares per contract. Only sell puts on stocks you'd be genuinely happy holding long-term - not just ones with high premiums.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>No Earnings Release Before Expiration</h4>
-                    <p>Earnings announcements cause massive price swings that can blow through your strike overnight. Always check the earnings calendar first. Either close your position before earnings, or avoid selling options that expire after an earnings date. This takes 30 seconds to check on any finance site.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Stock Price Between $20 and $150</h4>
-                    <p>Too cheap (under $20) and premiums are tiny in dollar terms. Too expensive (over $150+) and you need a lot of capital to get assigned. The sweet spot gives you meaningful income without tying up your whole account in one position.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Market Cap Over $2 Billion</h4>
-                    <p>Mid-to-large cap companies (over $2B market cap) are more stable, have better options liquidity, and are less likely to make sudden extreme moves. Small caps can be volatile in ways that aren't reflected in IV until it's too late. Market cap is shown on any stock's summary page.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Liquid Options Market</h4>
-                    <p>Look for stocks with high options volume and tight bid-ask spreads (under $0.10 ideally). Wide spreads eat into your premium. Good liquidity means you can enter and exit positions without giving up too much edge. Check the options chain - if spreads look wide, move on.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Reasonable Valuation (Price-to-Book & P/E Ratio)</h4>
-                    <p>A stock trading at a reasonable valuation gives you a margin of safety if assigned. Price-to-Book (P/B) under 3 suggests the stock isn't wildly overpriced relative to its assets. A P/E ratio in line with or below its industry average means you're not overpaying for earnings. Overvalued stocks have further to fall - if you get assigned at an inflated price, you may wait a long time to sell covered calls profitably.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Strong Fundamental Business</h4>
-                    <p>Look for profitable companies with manageable debt, consistent revenue growth, and a real competitive advantage. You're not just trading a ticker - if assigned, you're a shareholder. Avoid companies burning cash or at risk of going bankrupt. A quick look at the income statement and balance sheet covers this.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Pays a Dividend (Big Bonus if Assigned)</h4>
-                    <p>If you get assigned and are holding shares while waiting for the price to recover, a dividend-paying stock pays you to wait. You collect premium from covered calls AND dividend income at the same time. Look for a dividend yield of 1–4% from a company with a long history of consistent payments.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Sector Diversification</h4>
-                    <p>Don't run the wheel on five tech stocks at once. If the sector crashes, everything moves together. Spread across different sectors - tech, healthcare, consumer staples, energy - so one bad sector doesn't wipe out your whole strategy. This is a portfolio-level habit to build over time.</p>
-                </div>
-                </div>
-            </div>
-            <div class="learn-strategy">
-                <h3>What to look for in a stock for this strategy (Hard Mode)</h3>
-                <div class="strategy-grid">
-                    <div class="strategy-item">
-                    <h4>Stable or Upward Trending Price</h4>
-                    <p>Check the 50-day and 200-day moving averages on any free charting site. Ideally the stock is trading above both, or at least the 200-day. A stock in a long-term uptrend is more likely to recover if you get assigned and less likely to go to zero.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>RSI Not Extremely Overbought</h4>
-                    <p>The Relative Strength Index (RSI) measures momentum on a scale of 0–100. Avoid selling puts on stocks with an RSI above 75 - they're overextended and more likely to pull back hard. An RSI between 40–65 is a healthier entry zone. RSI is visible on any free chart with one click.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Implied Volatility (IV) in a Sweet Spot</h4>
-                    <p>IV determines how much premium you collect. Too low (under 20%) and premiums are barely worth it. Too high (over 80%) and the market is pricing in something scary. Aim for IV between 25–60% for the best risk/reward balance. Your broker's options chain will show IV.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>IV Rank (IVR) Above 30</h4>
-                    <p>IV Rank tells you if current volatility is high or low compared to the past year. An IVR above 30 means options are relatively expensive right now - you're selling premium when it's inflated, which is exactly what you want. IVR above 50 is ideal. Available on most brokers and options screeners.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>No Upcoming Catalysts or News Events</h4>
-                    <p>Beyond earnings, watch for FDA decisions, product launches, lawsuits, or major macro events that could spike or crash the stock. These create binary outcomes that options pricing can't fully account for. A quick news search before entering a position takes two minutes.</p>
-                </div>
-                <div class="strategy-item">
-                    <h4>Identifiable Support Levels</h4>
-                    <p>Look at the chart for price levels where the stock has bounced before - these are "support" zones. Selling your put strike at or near a strong support level means there's historical evidence the stock holds at that price, lowering your assignment risk.</p>
-                </div>
-            </div>
+        <div class="calculator-card chart-card">
+            <h3 class="card-title">Strategy Breakdown</h3>
+            <div id="breakdownContent" class="breakdown-content"></div>
+        </div>
+
+        <div class="calculator-card chart-card" id="affiliateShow">
+            <h3 class="card-title">Now That You're a Pro...</h3>
+            <div class="affiliate-container">
+                <p class="affiliate-text">Ready to put your options strategy into practice? Open an account with Robinhood to start trading the wheel today.</p>
+                <a href="https://join.robinhood.com/gregora187" target="_blank" rel="noopener noreferrer" class="affiliate-btn">Start Trading on Robinhood</a>
+                <div class="disclosure-box"><strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra. Win-win.</div>
             </div>
         </div>
-    </section>
+    </div>
+</div>
+</section>
 
-    <!-- Calculator Section -->
-    <section id="calculator" class="calculator-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Options Wheel Calculator</h2>
-                <p>Model your potential returns and understand the mechanics</p>
+<!-- ── LIVE SIMULATOR ─────────────────────────────────────────────────────── -->
+<section id="simulator" class="calculator-section">
+<div class="container">
+
+    <!-- Status bar -->
+    <div class="whl-statusbar">
+        <div class="whl-live-dot"></div>
+        <span class="whl-live-label">SIMULATION RUNNING</span>
+        <span class="whl-day-label" id="whlDayLabel">Day 0</span>
+        <div class="whl-statusbar-right">
+            <span class="whl-speed-label">Speed:</span>
+            <div class="whl-speed-tabs" id="whlSpeedTabs">
+                <button class="whl-speed-tab" data-speed="slow">Slow</button>
+                <button class="whl-speed-tab active" data-speed="normal">Normal</button>
+                <button class="whl-speed-tab" data-speed="fast">Fast</button>
+                <button class="whl-speed-tab" data-speed="turbo">Turbo</button>
             </div>
-            
-            <!-- Strategy Toggle Buttons -->
-            <div class="strategy-selector">
-                <button class="strategy-btn" onclick="setStrategy('csp')">
-                    <span class="strategy-icon">📉</span>
-                    <span class="strategy-name">Cash Secured Put</span>
-                    <span class="strategy-desc">Sell puts to acquire stock</span>
-                </button>
-                <button class="strategy-btn" onclick="setStrategy('cc')">
-                    <span class="strategy-icon">📈</span>
-                    <span class="strategy-name">Covered Call</span>
-                    <span class="strategy-desc">Sell calls on owned stock</span>
-                </button>
-                <button class="strategy-btn active" onclick="setStrategy('wheel')">
-                    <span class="strategy-icon">🎡</span>
-                    <span class="strategy-name">Full Wheel</span>
-                    <span class="strategy-desc">Complete cycle strategy</span>
-                </button>
-            </div>
-            
-            <div class="calculator-grid">
-                <!-- Top Left: Inputs -->
-                <div class="calculator-card">
-                    <h3 class="card-title">Strategy Inputs</h3>
-                    <div id="calcError" style="display:none; background:#FEF2F2; color:#B91C1C; border:1px solid #FECACA; border-radius:8px; padding:0.65rem 1rem; font-size:0.9rem; font-weight:500; margin-bottom:1rem;"></div>
+            <button class="whl-pause-btn" id="whlPauseBtn">&#9646;&#9646; Pause</button>
+            <button class="whl-reset-btn" id="whlResetBtn">&#8635; Reset</button>
+        </div>
+    </div>
 
-                    <div class="calculator-inputs">
-                        <div class="input-group">
-                            <label for="stockPrice">Stock Price ($)</label>
-                            <input type="text" id="stockPrice" placeholder="e.g. 100" oninput="formatNumber(this); calculateWheel(); saveToStorage()">
-                        </div>
-                        <div class="input-group put-inputs">
-                            <label for="putStrike">Put Strike Price ($)</label>
-                            <input type="text" id="putStrike" placeholder="e.g. 95" oninput="formatNumber(this); calculateWheel(); saveToStorage()">
-                        </div>
-                        <div class="input-group put-inputs">
-                            <label for="putPremium">Put Premium ($)</label>
-                            <input type="number" id="putPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel(); saveToStorage()">
-                        </div>
-                        <div class="input-group call-inputs">
-                            <label for="callStrike">Call Strike Price ($)</label>
-                            <input type="text" id="callStrike" placeholder="e.g. 105" oninput="formatNumber(this); calculateWheel(); saveToStorage()">
-                        </div>
-                        <div class="input-group call-inputs">
-                            <label for="callPremium">Call Premium ($)</label>
-                            <input type="number" id="callPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel(); saveToStorage()">
-                        </div>
-                        <div class="input-group">
-                            <label for="contracts">Number of Contracts</label>
-                            <input type="number" id="contracts" placeholder="e.g. 1" min="1" step="1" oninput="calculateWheel(); saveToStorage()">
-                        </div>
-                        <div class="input-group cycles-input">
-                            <label for="cycles">Number of Cycles</label>
-                            <input type="number" id="cycles" placeholder="e.g. 4" min="1" step="1" oninput="calculateWheel(); saveToStorage()">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Top Right: Results -->
-                <div class="calculator-card">
-                    <h3 class="card-title">Expected Returns</h3>
-                    <div class="calculator-results">
-                        <div class="result-card highlight">
-                            <div class="result-label">Total Premium Collected</div>
-                            <div class="result-value" id="totalPremium">--</div>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-label">Capital Required</div>
-                            <div class="result-value" id="capitalRequired">--</div>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-label">Return on Capital</div>
-                            <div class="result-value" id="returnOnCapital">--</div>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-label">Annualized Return</div>
-                            <div class="result-value" id="annualizedReturn">--</div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Stock selector -->
+    <div class="whl-stock-tabs" id="whlStockTabs">
+        <button class="whl-stock-tab active" data-sym="MMBX">
+            <span class="whl-tab-sym">MMBX</span>
+            <span class="whl-tab-name">MoneyByMath Corp</span>
+            <span class="whl-tab-meta">$100 &middot; 25% IV &middot; Balanced</span>
+        </button>
+        <button class="whl-stock-tab" data-sym="GSTK">
+            <span class="whl-tab-sym">GSTK</span>
+            <span class="whl-tab-name">GreenStone Holdings</span>
+            <span class="whl-tab-meta">$75 &middot; 16% IV &middot; Stable</span>
+        </button>
+        <button class="whl-stock-tab" data-sym="HIVE">
+            <span class="whl-tab-sym">HIVE</span>
+            <span class="whl-tab-name">HiveChain Energy</span>
+            <span class="whl-tab-meta">$42 &middot; 48% IV &middot; Volatile</span>
+        </button>
+    </div>
 
-                <!-- Bottom Middle: P&L Graph -->
-                <div class="calculator-card chart-card">
-                    <h3 class="card-title">Profit & Loss Diagram</h3>
-                    <div class="pnl-graph-container">
-                        <p class="graph-subtitle" id="graphSubtitle">P&L at expiration - premium is yours to keep</p>
-                        <div class="pnl-charts-row" id="pnlChartsRow">
-                            <div class="pnl-chart-side" id="putChartSide">
-                                <div class="pnl-chart-side-label" id="putChartSideLabel"></div>
-                                <canvas id="pnlChart"></canvas>
-                            </div>
-                            <div class="pnl-chart-side" id="callChartSide" style="display:none;">
-                                <div class="pnl-chart-side-label">📈 Covered Call Phase</div>
-                                <canvas id="pnlChartCall"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Bottom Middle: Strategy Breakdown -->
-                <div class="calculator-card chart-card">
-                    <h3 class="card-title">Strategy Breakdown</h3>
-                    <div class="strategy-breakdown">
-                        <div id="breakdownContent" class="breakdown-content">
-                            <!-- Content will be dynamically updated by JavaScript -->
-                        </div>
-                    </div>
-                </div>
+    <!-- Row 1: Wheel Diagram + Price Chart -->
+    <div class="whl-main-grid">
 
-                <!-- Affilliate Link -->
-                <div class="calculator-card chart-card" id="affiliateShow">
-                    <h3 class="card-title">Now That You're a Pro...</h3>
-                    <div class="affiliate-container">
-                        <p class="affiliate-text">
-                            Ready to put your options strategy into practice? Open an account with Robinhood (my favorite brokerage for options trading!) to start trading the wheel today.
-                        </p>
-                        
-                        <a href="YOUR_LINK_HERE" target="_blank" rel="noopener noreferrer" class="affiliate-btn">
-                            Start Trading on Robinhood
-                        </a>
-
-                        <div class="disclosure-box">
-                            <strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra, but it does help keep the math running and the lights on around here. Win-win.
-                        </div>
-                    </div>
-                </div>
-                
-                
+        <!-- Wheel Phase Diagram -->
+        <div class="calculator-card whl-diagram-card">
+            <h3 class="card-title">Live Wheel Cycle</h3>
+            <canvas id="whlDiagram" data-h="260" style="width:100%;display:block;"></canvas>
+            <div class="whl-phase-desc">
+                <div class="whl-phase-title" id="whlPhaseTitle">Initialising&hellip;</div>
+                <div class="whl-phase-sub"   id="whlPhaseSub">&nbsp;</div>
             </div>
         </div>
-    </section>
-    {% endblock %}
+
+        <!-- Price Chart -->
+        <div class="calculator-card">
+            <div class="whl-chart-header">
+                <div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="whl-ticker-badge" id="whlTickerBadge">MMBX</span>
+                        <span class="whl-stock-name-label" id="whlStockName">MoneyByMath Corp</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;gap:10px;margin-top:4px;">
+                        <span class="whl-price-big" id="whlPrice">$100.00</span>
+                        <span class="whl-price-chg" id="whlPriceChg">+$0.00 (0.00%)</span>
+                    </div>
+                </div>
+                <div class="whl-legend-col">
+                    <span class="whl-leg-item" style="color:#10B981;">&#9135; Price</span>
+                    <span class="whl-leg-item" style="color:#EF4444;">- - Put Strike</span>
+                    <span class="whl-leg-item" style="color:#3b82f6;">- - Cost Basis</span>
+                    <span class="whl-leg-item" style="color:#8B5CF6;">- - Call Strike</span>
+                </div>
+            </div>
+            <canvas id="whlPriceChart" data-h="210" style="width:100%;display:block;margin-top:0.5rem;"></canvas>
+            <div class="whl-dte-row">
+                <span class="whl-dte-label">DTE: <strong id="whlDTE">30</strong> days</span>
+                <div class="whl-dte-track"><div class="whl-dte-fill" id="whlDTEFill" style="width:100%;"></div></div>
+                <span class="whl-dte-label">Cycle: <strong id="whlCycleNum">1</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Position + Account + Settings -->
+    <div class="whl-position-grid">
+
+        <!-- Current Position -->
+        <div class="calculator-card">
+            <h3 class="card-title">Current Position</h3>
+            <div class="whl-pos-grid">
+                <div class="whl-pos-box">
+                    <div class="whl-pos-label" data-tip="The current phase of the wheel you are in">Phase</div>
+                    <div class="whl-pos-val" id="posPhase">CSP</div>
+                </div>
+                <div class="whl-pos-box">
+                    <div class="whl-pos-label" data-tip="Number of contracts traded. Each contract = 100 shares.">Contracts</div>
+                    <div class="whl-pos-val" id="posContracts">1</div>
+                </div>
+                <div class="whl-pos-box">
+                    <div class="whl-pos-label" data-tip="The strike price of the option you sold. This is your obligation level.">Strike</div>
+                    <div class="whl-pos-val" id="posStrike">$95.00</div>
+                </div>
+                <div class="whl-pos-box">
+                    <div class="whl-pos-label" data-tip="Premium collected when you opened this position. This income is yours to keep regardless of outcome.">Premium</div>
+                    <div class="whl-pos-val" style="color:#10B981;" id="posPremium">$0.00</div>
+                </div>
+                <div class="whl-pos-box">
+                    <div class="whl-pos-label" data-tip="Your effective purchase price per share - strike minus all put premiums collected. Always lower than the strike.">Cost Basis</div>
+                    <div class="whl-pos-val" id="posCostBasis">-</div>
+                </div>
+                <div class="whl-pos-box">
+                    <div class="whl-pos-label" data-tip="Unrealized P&L on your stock position (if assigned). Changes every day. Only realized when you close the position.">Pos. P&amp;L</div>
+                    <div class="whl-pos-val" id="posPnl">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Summary -->
+        <div class="calculator-card">
+            <h3 class="card-title">Account Summary</h3>
+            <div class="whl-acct-grid">
+                <div class="whl-acct-box">
+                    <div class="whl-pos-label" data-tip="Sum of all option premiums collected so far. This is realized, cash income.">Total Premium</div>
+                    <div class="whl-acct-val" style="color:#10B981;" id="acctPremium">$0.00</div>
+                </div>
+                <div class="whl-acct-box">
+                    <div class="whl-pos-label" data-tip="Gains realized when shares were called away above your cost basis.">Realized Gains</div>
+                    <div class="whl-acct-val" style="color:#10B981;" id="acctGains">$0.00</div>
+                </div>
+                <div class="whl-acct-box">
+                    <div class="whl-pos-label" data-tip="Cash + unrealized position value. This is your net worth in the simulation.">Portfolio Value</div>
+                    <div class="whl-acct-val" id="acctValue">$10,000</div>
+                </div>
+                <div class="whl-acct-box">
+                    <div class="whl-pos-label" data-tip="Total return vs. starting capital of $10,000, including unrealized positions.">Total Return</div>
+                    <div class="whl-acct-val" id="acctReturn">0.00%</div>
+                </div>
+                <div class="whl-acct-box">
+                    <div class="whl-pos-label" data-tip="Number of complete wheel cycles - from opening CSP to shares being called away or cycling back.">Cycles Done</div>
+                    <div class="whl-acct-val" id="acctCycles">0</div>
+                </div>
+                <div class="whl-acct-box">
+                    <div class="whl-pos-label" data-tip="How many times the put was exercised and you received shares. More assignments = more premium being earned in CC phase.">Assignments</div>
+                    <div class="whl-acct-val" id="acctAssign">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="calculator-card">
+            <h3 class="card-title">Wheel Settings</h3>
+            <div class="whl-setting-group">
+                <label class="whl-setting-label" data-tip="Number of contracts. Each contract controls 100 shares. More contracts = bigger position and bigger premium.">Contracts <span class="whl-tip-dot">?</span></label>
+                <input type="number" class="whl-setting-input" id="whlContracts" value="1" min="1" max="20">
+            </div>
+            <div class="whl-setting-group">
+                <label class="whl-setting-label" data-tip="How far below current price to set the put strike. 5% OTM is a popular starting point - low probability of assignment, decent premium.">Put Strike % OTM <span class="whl-tip-dot">?</span></label>
+                <div class="whl-input-row">
+                    <input type="number" class="whl-setting-input" id="whlPutOtm" value="5" min="1" max="20" step="1">
+                    <span class="whl-setting-hint" id="whlPutStrikeHint"></span>
+                </div>
+            </div>
+            <div class="whl-setting-group">
+                <label class="whl-setting-label" data-tip="How far above cost basis to set the call strike. 5% OTM leaves room for appreciation and still earns solid premium.">Call Strike % OTM <span class="whl-tip-dot">?</span></label>
+                <div class="whl-input-row">
+                    <input type="number" class="whl-setting-input" id="whlCallOtm" value="5" min="1" max="20" step="1">
+                    <span class="whl-setting-hint" id="whlCallStrikeHint"></span>
+                </div>
+            </div>
+            <div class="whl-setting-group">
+                <label class="whl-setting-label" data-tip="Days to expiration when opening each new option. 14–45 DTE is the sweet spot for premium decay (theta) vs. time commitment.">Days to Expiry (DTE) <span class="whl-tip-dot">?</span></label>
+                <input type="number" class="whl-setting-input" id="whlDteInput" value="14" min="7" max="60" step="1">
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:0.75rem;font-size:0.9rem;padding:0.6rem;" id="whlApplyBtn">Apply Settings</button>
+        </div>
+    </div>
+
+    <!-- Row 3: Income Chart + Equity Curve -->
+    <div class="whl-charts-row">
+        <div class="calculator-card">
+            <h3 class="card-title">Premium Income Per Cycle
+                <span class="whl-tip-dot" data-tip="Each bar = one complete option cycle. Green = premium from expired OTM option. Teal = premium + share appreciation from called-away position.">?</span>
+            </h3>
+            <p class="whl-chart-sub">Bars accumulate as cycles complete &middot; hover for details</p>
+            <canvas id="whlIncomeChart" data-h="160" style="width:100%;display:block;"></canvas>
+        </div>
+        <div class="calculator-card">
+            <h3 class="card-title">Portfolio Equity Curve
+                <span class="whl-tip-dot" data-tip="Total portfolio value over time (cash + open position). The slope shows your income rate. Saved between visits.">?</span>
+            </h3>
+            <p class="whl-chart-sub">Starting: $10,000 &middot; <span id="whlSavedBadge" style="color:#10B981;display:none;">&#128190; Saved</span></p>
+            <canvas id="whlEquityChart" data-h="160" style="width:100%;display:block;"></canvas>
+        </div>
+    </div>
+
+    <!-- Row 4: Event Log -->
+    <div class="calculator-card" style="margin-top:1.5rem;">
+        <h3 class="card-title">Wheel Event Log</h3>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Every option sale, expiration, assignment, and call-away event - with plain-English explanations.</p>
+        <div class="whl-log-header-row">
+            <span>Day</span><span>Event</span><span>Detail</span><span>Premium</span><span>Running Total</span>
+        </div>
+        <div id="whlLog" class="whl-log-scroll">
+            <div class="whl-log-empty">Simulation is warming up&hellip;</div>
+        </div>
+    </div>
+
+</div>
+</section>
+
+<!-- ── LEARN ──────────────────────────────────────────────────────────────── -->
+<section id="learn" class="learn-section">
+<div class="container">
+    <div class="section-header">
+        <h2>How the Options Wheel Works</h2>
+        <p>A systematic approach to generating income from stocks you want to own</p>
+    </div>
+    <div class="learn-grid">
+        <div class="learn-card">
+            <h3>Phase 1: Sell Cash-Secured Puts</h3>
+            <p>Start by selling a put option at a strike price below the current price. You collect <span class="inline-tip" data-tip="Upfront cash the option buyer pays you. You keep this no matter what happens at expiration.">premium</span> immediately and only need to buy shares if the stock falls below your strike. This is called <span class="inline-tip" data-tip="Cash-secured means you hold enough cash to buy the shares if assigned. No margin required.">cash-secured</span> because you hold the full capital needed to buy the shares.</p>
+            <div class="learn-highlight"><strong>Key Benefit:</strong> You get paid to wait for the stock to reach your target buy price.</div>
+        </div>
+        <div class="learn-card">
+            <h3>Phase 2: Get Assigned Shares</h3>
+            <p>If the stock closes below your put strike at <span class="inline-tip" data-tip="The date the option contract expires and the outcome is determined.">expiration</span>, you are <span class="inline-tip" data-tip="Assignment means you are obligated to buy 100 shares per contract at the strike price.">assigned</span> 100 shares per contract at the strike price. This is actually good &mdash; you wanted the stock. Your true <span class="inline-tip" data-tip="Effective purchase price = strike minus all premiums collected. Always below the strike.">cost basis</span> is reduced by every premium you've collected.</p>
+            <div class="learn-highlight"><strong>Key Benefit:</strong> Premium collected lowers your true purchase price below the strike.</div>
+        </div>
+        <div class="learn-card">
+            <h3>Phase 3: Sell Covered Calls</h3>
+            <p>Now that you own shares, sell <span class="inline-tip" data-tip="A covered call gives someone the right to buy your shares at the strike price. 'Covered' means you already own the shares as collateral.">covered calls</span> at a strike above your cost basis. You collect more premium. If the stock stays below the call strike, you keep the shares and the premium. You keep selling calls every expiration cycle until shares are called away.</p>
+            <div class="learn-highlight"><strong>Key Benefit:</strong> Generate income from shares while you wait for price to recover.</div>
+        </div>
+        <div class="learn-card">
+            <h3>Phase 4: Repeat the Cycle</h3>
+            <p>If shares get <span class="inline-tip" data-tip="Called away means the call buyer exercises their right to buy your shares at the call strike. You sell at the strike price and receive cash.">called away</span>, you've realized a full profit cycle. Cash resets and you start selling puts again. If shares aren't called away, keep selling calls each expiry &mdash; collecting premium repeatedly. Either way, you're earning.</p>
+            <div class="learn-highlight"><strong>Key Benefit:</strong> A repeating income machine with defined risk at every step.</div>
+        </div>
+        <div class="learn-card">
+            <h3>Are Returns Guaranteed?</h3>
+            <p>No. The wheel enforces disciplined buy-low, sell-high behavior. In falling markets you may accumulate shares below your cost basis temporarily. The real risk: a stock that drops dramatically and stays down for months while you hold 100+ shares. Only wheel stocks you'd own anyway &mdash; this strategy does not eliminate stock risk.</p>
+            <div class="learn-highlight"><strong>Key Risk:</strong> A prolonged drawdown while holding assigned shares can create large unrealized losses.</div>
+        </div>
+    </div>
+    <div class="learn-strategy">
+        <h3>What Makes a Good Wheel Stock?</h3>
+        <div class="strategy-grid">
+            <div class="strategy-item"><h4>Stock You'd Own Long-Term</h4><p>Rule #1. Only wheel stocks you'd genuinely be happy holding for months if assigned. Never wheel a stock just for its premium.</p></div>
+            <div class="strategy-item"><h4>No Earnings Before Expiry</h4><p>Earnings cause enormous overnight price swings. Check the earnings calendar before every trade. Never let an options contract expire through an unplanned earnings date.</p></div>
+            <div class="strategy-item"><h4>Price $20&ndash;$150</h4><p>Too cheap = tiny premiums in dollar terms. Too expensive = too much capital in one position. The sweet spot gives meaningful income without overconcentration.</p></div>
+            <div class="strategy-item"><h4>Market Cap &gt; $2B</h4><p>Large-caps have tighter bid/ask spreads on options. You get better fill prices and can exit positions more easily.</p></div>
+            <div class="strategy-item"><h4>IV Between 25&ndash;60%</h4><p>Too low (&lt;20%) and premiums don't justify the capital. Too high (&gt;60%) and the market is pricing in a good reason for the volatility.</p></div>
+            <div class="strategy-item"><h4>Sideways-to-Bullish Trend</h4><p>The wheel performs best in flat-to-slightly-rising markets. A strong downtrend can keep you assigned at ever-lower prices, compounding losses.</p></div>
+        </div>
+    </div>
+</div>
+</section>
+
+{% endblock %}
 
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
