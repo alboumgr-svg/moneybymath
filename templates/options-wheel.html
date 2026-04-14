@@ -11,7 +11,7 @@
             <h1 class="hero-title">Master the <span class="gradient-text">Options Wheel</span> by Living It</h1>
             <p class="hero-subtitle">Watch a live simulation trade the wheel strategy in real time - selling puts, getting assigned, selling calls, and collecting premium cycle after cycle. Then build your own scenarios with the calculator below.</p>
             <div class="hero-cta">
-                <a href="#simulator" class="btn btn-primary">&#9654; Launch Simulator</a>
+                <a href="#simulator" class="btn btn-primary">Launch Simulator</a>
                 <a href="#calculator" class="btn btn-secondary">Open Calculator</a>
             </div>
             <div class="hero-stats">
@@ -76,7 +76,7 @@
 
         <div class="calculator-card chart-card">
             <h3 class="card-title">Profit &amp; Loss Diagram</h3>
-            <p class="graph-subtitle" id="graphSubtitle">P&amp;L at expiration &mdash; premium is yours to keep</p>
+            <p class="graph-subtitle" id="graphSubtitle">P&amp;L at expiration - premium is yours to keep</p>
             <div class="pnl-charts-row" id="pnlChartsRow">
                 <div class="pnl-chart-side" id="putChartSide">
                     <div class="pnl-chart-side-label" id="putChartSideLabel"></div>
@@ -307,11 +307,13 @@
     <div class="calculator-card" style="margin-top:1.5rem;">
         <h3 class="card-title">Wheel Event Log</h3>
         <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Every option sale, expiration, assignment, and call-away event - with plain-English explanations.</p>
-        <div class="whl-log-header-row">
-            <span>Day</span><span>Event</span><span>Detail</span><span>Premium</span><span>Running Total</span>
-        </div>
-        <div id="whlLog" class="whl-log-scroll">
-            <div class="whl-log-empty">Simulation is warming up&hellip;</div>
+        <div class="whl-log-wrap">
+            <div class="whl-log-header-row">
+                <span>Day</span><span>Event</span><span>Detail</span><span>Premium</span><span>Running Total</span>
+            </div>
+            <div id="whlLog" class="whl-log-scroll">
+                <div class="whl-log-empty">Simulation is warming up&hellip;</div>
+            </div>
         </div>
     </div>
 
@@ -333,7 +335,7 @@
         </div>
         <div class="learn-card">
             <h3>Phase 2: Get Assigned Shares</h3>
-            <p>If the stock closes below your put strike at <span class="inline-tip" data-tip="The date the option contract expires and the outcome is determined.">expiration</span>, you are <span class="inline-tip" data-tip="Assignment means you are obligated to buy 100 shares per contract at the strike price.">assigned</span> 100 shares per contract at the strike price. This is actually good &mdash; you wanted the stock. Your true <span class="inline-tip" data-tip="Effective purchase price = strike minus all premiums collected. Always below the strike.">cost basis</span> is reduced by every premium you've collected.</p>
+            <p>If the stock closes below your put strike at <span class="inline-tip" data-tip="The date the option contract expires and the outcome is determined.">expiration</span>, you are <span class="inline-tip" data-tip="Assignment means you are obligated to buy 100 shares per contract at the strike price.">assigned</span> 100 shares per contract at the strike price. This is actually good - you wanted the stock. Your true <span class="inline-tip" data-tip="Effective purchase price = strike minus all premiums collected. Always below the strike.">cost basis</span> is reduced by every premium you've collected.</p>
             <div class="learn-highlight"><strong>Key Benefit:</strong> Premium collected lowers your true purchase price below the strike.</div>
         </div>
         <div class="learn-card">
@@ -343,12 +345,12 @@
         </div>
         <div class="learn-card">
             <h3>Phase 4: Repeat the Cycle</h3>
-            <p>If shares get <span class="inline-tip" data-tip="Called away means the call buyer exercises their right to buy your shares at the call strike. You sell at the strike price and receive cash.">called away</span>, you've realized a full profit cycle. Cash resets and you start selling puts again. If shares aren't called away, keep selling calls each expiry &mdash; collecting premium repeatedly. Either way, you're earning.</p>
+            <p>If shares get <span class="inline-tip" data-tip="Called away means the call buyer exercises their right to buy your shares at the call strike. You sell at the strike price and receive cash.">called away</span>, you've realized a full profit cycle. Cash resets and you start selling puts again. If shares aren't called away, keep selling calls each expiry - collecting premium repeatedly. Either way, you're earning.</p>
             <div class="learn-highlight"><strong>Key Benefit:</strong> A repeating income machine with defined risk at every step.</div>
         </div>
         <div class="learn-card">
             <h3>Are Returns Guaranteed?</h3>
-            <p>No. The wheel enforces disciplined buy-low, sell-high behavior. In falling markets you may accumulate shares below your cost basis temporarily. The real risk: a stock that drops dramatically and stays down for months while you hold 100+ shares. Only wheel stocks you'd own anyway &mdash; this strategy does not eliminate stock risk.</p>
+            <p>No. The wheel enforces disciplined buy-low, sell-high behavior. In falling markets you may accumulate shares below your cost basis temporarily. The real risk: a stock that drops dramatically and stays down for months while you hold 100+ shares. Only wheel stocks you'd own anyway - this strategy does not eliminate stock risk.</p>
             <div class="learn-highlight"><strong>Key Risk:</strong> A prolonged drawdown while holding assigned shares can create large unrealized losses.</div>
         </div>
     </div>

@@ -81,8 +81,9 @@
 .whl-tip-dot{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--text-muted);font-size:0.6rem;font-weight:700;cursor:help;flex-shrink:0;}
 
 /* ── Event Log ───────────────────────────────────────────────────────── */
-.whl-log-header-row{display:grid;grid-template-columns:55px 130px 1fr 90px 100px;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);padding:0.3rem 0.5rem 0.4rem;border-bottom:1px solid var(--border);}
-.whl-log-scroll{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+.whl-log-wrap{overflow-x:auto;}
+.whl-log-header-row{display:grid;grid-template-columns:55px 130px 1fr 90px 100px;min-width:520px; ...rest unchanged...}
+.whl-log-scroll{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;min-width:520px;}
 .whl-log-empty{text-align:center;color:var(--text-muted);padding:1.5rem;font-size:0.825rem;}
 .whl-log-row{display:grid;grid-template-columns:55px 130px 1fr 90px 100px;align-items:center;padding:0.3rem 0.5rem;border-radius:5px;font-size:0.75rem;animation:whlFadeIn 0.3s ease;}
 .whl-log-row.sell-put{background:rgba(239,68,68,0.07);}
