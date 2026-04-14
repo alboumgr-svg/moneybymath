@@ -52,10 +52,11 @@
 .whl-chart-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;}
 .whl-ticker-badge{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-weight:800;font-size:0.95rem;letter-spacing:0.05em;padding:0.2rem 0.6rem;border-radius:6px;font-family:'Courier New',monospace;}
 .whl-stock-name-label{font-weight:700;color:var(--text-primary);font-size:0.9rem;}
-.whl-price-big{font-size:1.9rem;font-weight:800;color:var(--text-primary);font-family:'Courier New',monospace;}
-.whl-price-chg{font-size:0.88rem;font-weight:600;}
+.whl-price-big{font-size:1.6rem;font-weight:800;color:var(--text-primary);font-family:'Courier New',monospace;}
+.whl-price-chg{font-size:0.80rem;font-weight:600;}
 .whl-price-chg.up{color:#10B981;}.whl-price-chg.down{color:#EF4444;}
-.whl-legend-col{display:flex;flex-direction:column;gap:3px;font-size:0.68rem;font-weight:600;text-align:right;}
+.whl-legend-col{display:flex;flex-direction:column;gap:2px;font-size:0.8rem;font-weight:600;text-align:right;}
+@media(max-width:900px){.whl-legend-col{font-size:0.55rem;}}
 .whl-leg-item{white-space:nowrap;}
 .whl-dte-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
 .whl-dte-label{font-size:0.72rem;color:var(--text-muted);white-space:nowrap;}
@@ -157,12 +158,12 @@ const SIM = {
     contracts:   1,
     putOtmPct:   5,
     callOtmPct:  5,
-    dteSetting:  30,
+    dteSetting:  14,
 
     // Wheel state machine
     phase:       'csp',    // 'csp' | 'cc'
-    dte:         30,       // days remaining
-    dteMax:      30,
+    dte:         14,       // days remaining
+    dteMax:      14,
     putStrike:   0,
     callStrike:  0,
     costBasis:   0,        // effective cost basis (strike - put premium received)
@@ -419,16 +420,16 @@ let equityCtx  = null;
 
 // ── Draw Wheel Diagram (canvas donut) ─────────────────────────────────────────
 const PHASES_DEF = [
-    { id:'csp',        label:'Sell Put',      icon:'📉', color:'#EF4444', bgAlpha:0.12,
+    { id:'csp',        label:'Sell Put',      icon: '', color:'#EF4444', bgAlpha:0.12,
       title:'Phase 1: Selling Cash-Secured Put',
       sub:'Collecting premium · Waiting for expiration' },
-    { id:'assigned',   label:'Assigned',      icon:'📦', color:'#F59E0B', bgAlpha:0.12,
+    { id:'assigned',   label:'Assigned',      icon: '', color:'#F59E0B', bgAlpha:0.12,
       title:'Assignment Event',
       sub:'Stock fell below strike · You now own shares' },
-    { id:'cc',         label:'Sell Call',      icon:'📈', color:'#3b82f6', bgAlpha:0.12,
+    { id:'cc',         label:'Sell Call',      icon: '', color:'#3b82f6', bgAlpha:0.12,
       title:'Phase 3: Selling Covered Call',
       sub:'Collecting premium on shares you own' },
-    { id:'called_away',label:'Called Away',    icon:'🎯', color:'#8B5CF6', bgAlpha:0.12,
+    { id:'called_away',label:'Called Away',    icon: '', color:'#8B5CF6', bgAlpha:0.12,
       title:'Shares Called Away',
       sub:'Sold at call strike · Starting new cycle' },
 ];
@@ -446,7 +447,7 @@ function drawWheelDiagram(ctx) {
     const cx=W/2, cy=H/2;
     const outerR = Math.min(W,H)*0.44;
     const innerR = outerR*0.52;
-    const gap    = 0.06; // radians gap between segments
+    const gap    = 0.03; // radians gap between segments
     const activePhase = currentDiagramPhase();
 
     ctx.clearRect(0,0,W,H);
@@ -492,41 +493,25 @@ function drawWheelDiagram(ctx) {
         ctx.font = isActive ? `bold ${Math.min(20,outerR*0.18)}px sans-serif` : `${Math.min(17,outerR*0.16)}px sans-serif`;
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(phase.icon, ix, iy - 8);
-        ctx.font = `${isActive?'bold ':''}${Math.min(9,outerR*0.085)}px sans-serif`;
+        ctx.font = `${isActive?'bold ':''}${Math.min(11,outerR*0.1)}px sans-serif`;
         ctx.fillStyle = isActive ? phase.color : 'rgba(150,150,150,0.8)';
-        ctx.fillText(phase.label, ix, iy+10);
+        ctx.fillText(phase.label, ix, iy);
     }
 
     // Center: show DTE or phase info
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillStyle = 'var(--text-primary, #f1f5f9)';
     const cur = PHASES_DEF[activePhase];
-    ctx.font = `bold ${Math.min(13,W*0.04)}px sans-serif`;
+    ctx.font = `bold ${Math.min(13,W*0.05)}px sans-serif`;
     ctx.fillStyle = cur.color;
     ctx.fillText(SIM.phase==='csp'?'SELL PUT':'SELL CALL', cx, cy-14);
-    ctx.font = `${Math.min(11,W*0.034)}px monospace`;
+    ctx.font = `${Math.min(11,W*0.04)}px monospace`;
     ctx.fillStyle = 'rgba(150,150,150,0.9)';
     ctx.fillText(`DTE: ${SIM.dte}`, cx, cy+2);
-    ctx.font = `bold ${Math.min(18,W*0.055)}px monospace`;
+    ctx.font = `bold ${Math.min(18,W*0.06)}px monospace`;
     ctx.fillStyle = 'var(--text-primary, #f1f5f9)';
     const dPct = SIM.dteMax>0 ? Math.round((1-SIM.dte/SIM.dteMax)*100) : 0;
     ctx.fillText(`${dPct}%`, cx, cy+20);
-
-    // Clockwise arrows between segments
-    for (let i=0;i<4;i++) {
-        const angle = -Math.PI/2 + (i+1)*(Math.PI/2);
-        const ar    = outerR+16;
-        const ax = cx + ar*Math.cos(angle);
-        const ay = cy + ar*Math.sin(angle);
-        ctx.save();
-        ctx.translate(ax,ay);
-        ctx.rotate(angle + Math.PI/2);
-        ctx.fillStyle = 'rgba(150,150,150,0.4)';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText('▶', 0, 0);
-        ctx.restore();
-    }
 }
 
 // ── Draw Price Chart ──────────────────────────────────────────────────────────
@@ -593,7 +578,7 @@ function drawPriceChart(ctx) {
         const hy=yS(hl.val);
         ctx.setLineDash([5,4]); ctx.strokeStyle=hl.color+'aa'; ctx.lineWidth=1.5;
         ctx.beginPath(); ctx.moveTo(pad.l,hy); ctx.lineTo(pad.l+cW,hy); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle=hl.color; ctx.font='bold 8px monospace'; ctx.textAlign='left';
+        ctx.fillStyle=hl.color; ctx.font='bold 12px monospace'; ctx.textAlign='left';
         ctx.fillText(hl.label, pad.l+3, hy-3);
     });
 
@@ -979,7 +964,7 @@ function wireSimUI() {
     // Pause
     $('whlPauseBtn')?.addEventListener('click',()=>{
         SIM.paused=!SIM.paused;
-        $('whlPauseBtn').textContent=SIM.paused?'▶ Resume':'⏸ Pause';
+        $('whlPauseBtn').textContent=SIM.paused?'▶ Resume':'Pause';
     });
 
     // Reset

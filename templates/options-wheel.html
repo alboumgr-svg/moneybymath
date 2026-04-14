@@ -23,91 +23,6 @@
     </div>
 </section>
 
-<!-- ── CALCULATOR ─────────────────────────────────────────────────────────── -->
-<section id="calculator" class="calculator-section" style="padding: top 1.5rem;;">
-<div class="container">
-    <div class="section-header">
-        <h2>Options Wheel Calculator</h2>
-        <p>Enter your own numbers and see the exact P&amp;L at expiration for each strategy phase. We encourage using this before trying the simulator!</p>
-    </div>
-
-    <div class="whl-calc-strategy-row">
-        <button class="strategy-btn" onclick="setStrategy('csp')">
-            <span class="strategy-icon">&#128197;</span>
-            <span class="strategy-name">Cash-Secured Put</span>
-            <span class="strategy-desc">Phase 1 of the wheel</span>
-        </button>
-        <button class="strategy-btn" onclick="setStrategy('cc')">
-            <span class="strategy-icon">&#128200;</span>
-            <span class="strategy-name">Covered Call</span>
-            <span class="strategy-desc">Phase 3 of the wheel</span>
-        </button>
-        <button class="strategy-btn active" onclick="setStrategy('wheel')">
-            <span class="strategy-icon">&#127905;</span>
-            <span class="strategy-name">Full Wheel</span>
-            <span class="strategy-desc">Complete cycle strategy</span>
-        </button>
-    </div>
-
-    <div class="calculator-grid">
-        <div class="calculator-card">
-            <h3 class="card-title">Strategy Inputs</h3>
-            <div id="calcError" style="display:none;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:8px;padding:0.65rem 1rem;font-size:0.9rem;font-weight:500;margin-bottom:1rem;"></div>
-            <div class="calculator-inputs">
-                <div class="input-group"><label for="stockPrice">Stock Price ($)</label><input type="text" id="stockPrice" placeholder="e.g. 100" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
-                <div class="input-group put-inputs"><label for="putStrike">Put Strike ($)</label><input type="text" id="putStrike" placeholder="e.g. 95" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
-                <div class="input-group put-inputs"><label for="putPremium">Put Premium ($)</label><input type="number" id="putPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel();saveToStorage()"></div>
-                <div class="input-group call-inputs"><label for="callStrike">Call Strike ($)</label><input type="text" id="callStrike" placeholder="e.g. 105" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
-                <div class="input-group call-inputs"><label for="callPremium">Call Premium ($)</label><input type="number" id="callPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel();saveToStorage()"></div>
-                <div class="input-group"><label for="contracts">Contracts</label><input type="number" id="contracts" placeholder="e.g. 1" min="1" step="1" oninput="calculateWheel();saveToStorage()"></div>
-                <div class="input-group cycles-input"><label for="cycles">Cycles</label><input type="number" id="cycles" placeholder="e.g. 4" min="1" step="1" oninput="calculateWheel();saveToStorage()"></div>
-            </div>
-        </div>
-
-        <div class="calculator-card">
-            <h3 class="card-title">Expected Returns</h3>
-            <div class="calculator-results">
-                <div class="result-card highlight"><div class="result-label">Total Premium</div><div class="result-value" id="totalPremium">--</div></div>
-                <div class="result-card"><div class="result-label" data-tip="Cash needed: for CSP = putStrike×100×contracts; for CC = stockPrice×100×contracts.">Capital Required <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="capitalRequired">--</div></div>
-                <div class="result-card"><div class="result-label" data-tip="Premium ÷ Capital Required. Shows how efficiently your money is working.">Return on Capital <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="returnOnCapital">--</div></div>
-                <div class="result-card"><div class="result-label" data-tip="Annualized assuming monthly repetition. Past performance not guaranteed.">Annualized Return <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="annualizedReturn">--</div></div>
-            </div>
-        </div>
-
-        <div class="calculator-card chart-card">
-            <h3 class="card-title">Profit &amp; Loss Diagram</h3>
-            <p class="graph-subtitle" id="graphSubtitle">P&amp;L at expiration - premium is yours to keep</p>
-            <div class="pnl-charts-row" id="pnlChartsRow">
-                <div class="pnl-chart-side" id="putChartSide">
-                    <div class="pnl-chart-side-label" id="putChartSideLabel"></div>
-                    <canvas id="pnlChart"></canvas>
-                    <div id="pnlChartLegend" class="chart-legend-row"></div>
-                </div>
-                <div class="pnl-chart-side" id="callChartSide" style="display:none;">
-                    <div class="pnl-chart-side-label">&#128200; Covered Call Phase</div>
-                    <canvas id="pnlChartCall"></canvas>
-                    <div id="pnlChartCallLegend" class="chart-legend-row"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="calculator-card chart-card">
-            <h3 class="card-title">Strategy Breakdown</h3>
-            <div id="breakdownContent" class="breakdown-content"></div>
-        </div>
-
-        <div class="calculator-card chart-card" id="affiliateShow">
-            <h3 class="card-title">Now That You're a Pro...</h3>
-            <div class="affiliate-container">
-                <p class="affiliate-text">Ready to put your options strategy into practice? Open an account with Robinhood to start trading the wheel today.</p>
-                <a href="https://join.robinhood.com/gregora187" target="_blank" rel="noopener noreferrer" class="affiliate-btn">Start Trading on Robinhood</a>
-                <div class="disclosure-box"><strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra. Win-win.</div>
-            </div>
-        </div>
-    </div>
-</div>
-</section>
-
 <!-- ── LIVE SIMULATOR ─────────────────────────────────────────────────────── -->
 <section id="simulator" class="calculator-section">
 <div class="container">
@@ -125,7 +40,7 @@
                 <button class="whl-speed-tab" data-speed="fast">Fast</button>
                 <button class="whl-speed-tab" data-speed="turbo">Turbo</button>
             </div>
-            <button class="whl-pause-btn" id="whlPauseBtn">&#9646;&#9646; Pause</button>
+            <button class="whl-pause-btn" id="whlPauseBtn">Pause</button>
             <button class="whl-reset-btn" id="whlResetBtn">&#8635; Reset</button>
         </div>
     </div>
@@ -298,7 +213,7 @@
             <h3 class="card-title">Portfolio Equity Curve
                 <span class="whl-tip-dot" data-tip="Total portfolio value over time (cash + open position). The slope shows your income rate. Saved between visits.">?</span>
             </h3>
-            <p class="whl-chart-sub">Starting: $10,000 &middot; <span id="whlSavedBadge" style="color:#10B981;display:none;">&#128190; Saved</span></p>
+            <p class="whl-chart-sub">Starting: $10,000 &middot; <span id="whlSavedBadge" style="color:#10B981;display:none;">Saved</span></p>
             <canvas id="whlEquityChart" data-h="160" style="width:100%;display:block;"></canvas>
         </div>
     </div>
@@ -317,6 +232,91 @@
         </div>
     </div>
 
+</div>
+</section>
+
+<!-- ── CALCULATOR ─────────────────────────────────────────────────────────── -->
+<section id="calculator" class="calculator-section" style="padding: top 1.5rem;;">
+<div class="container">
+    <div class="section-header">
+        <h2>Options Wheel Calculator</h2>
+        <p>Enter your own numbers and see the exact P&amp;L at expiration for each strategy phase. We encourage using this before trying the simulator!</p>
+    </div>
+
+    <div class="whl-calc-strategy-row">
+        <button class="strategy-btn" onclick="setStrategy('csp')">
+            <span class="strategy-icon">&#128197;</span>
+            <span class="strategy-name">Cash-Secured Put</span>
+            <span class="strategy-desc">Phase 1 of the wheel</span>
+        </button>
+        <button class="strategy-btn" onclick="setStrategy('cc')">
+            <span class="strategy-icon">&#128200;</span>
+            <span class="strategy-name">Covered Call</span>
+            <span class="strategy-desc">Phase 3 of the wheel</span>
+        </button>
+        <button class="strategy-btn active" onclick="setStrategy('wheel')">
+            <span class="strategy-icon">&#127905;</span>
+            <span class="strategy-name">Full Wheel</span>
+            <span class="strategy-desc">Complete cycle strategy</span>
+        </button>
+    </div>
+
+    <div class="calculator-grid">
+        <div class="calculator-card">
+            <h3 class="card-title">Strategy Inputs</h3>
+            <div id="calcError" style="display:none;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;border-radius:8px;padding:0.65rem 1rem;font-size:0.9rem;font-weight:500;margin-bottom:1rem;"></div>
+            <div class="calculator-inputs">
+                <div class="input-group"><label for="stockPrice">Stock Price ($)</label><input type="text" id="stockPrice" placeholder="e.g. 100" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
+                <div class="input-group put-inputs"><label for="putStrike">Put Strike ($)</label><input type="text" id="putStrike" placeholder="e.g. 95" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
+                <div class="input-group put-inputs"><label for="putPremium">Put Premium ($)</label><input type="number" id="putPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel();saveToStorage()"></div>
+                <div class="input-group call-inputs"><label for="callStrike">Call Strike ($)</label><input type="text" id="callStrike" placeholder="e.g. 105" oninput="formatNumber(this);calculateWheel();saveToStorage()"></div>
+                <div class="input-group call-inputs"><label for="callPremium">Call Premium ($)</label><input type="number" id="callPremium" placeholder="e.g. 1.50" min="0" step="0.01" oninput="calculateWheel();saveToStorage()"></div>
+                <div class="input-group"><label for="contracts">Contracts</label><input type="number" id="contracts" placeholder="e.g. 1" min="1" step="1" oninput="calculateWheel();saveToStorage()"></div>
+                <div class="input-group cycles-input"><label for="cycles">Cycles</label><input type="number" id="cycles" placeholder="e.g. 4" min="1" step="1" oninput="calculateWheel();saveToStorage()"></div>
+            </div>
+        </div>
+
+        <div class="calculator-card">
+            <h3 class="card-title">Expected Returns</h3>
+            <div class="calculator-results">
+                <div class="result-card highlight"><div class="result-label">Total Premium</div><div class="result-value" id="totalPremium">--</div></div>
+                <div class="result-card"><div class="result-label" data-tip="Cash needed: for CSP = putStrike×100×contracts; for CC = stockPrice×100×contracts.">Capital Required <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="capitalRequired">--</div></div>
+                <div class="result-card"><div class="result-label" data-tip="Premium ÷ Capital Required. Shows how efficiently your money is working.">Return on Capital <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="returnOnCapital">--</div></div>
+                <div class="result-card"><div class="result-label" data-tip="Annualized assuming monthly repetition. Past performance not guaranteed.">Annualized Return <span class="whl-tip-dot" style="font-size:0.6rem;">?</span></div><div class="result-value" id="annualizedReturn">--</div></div>
+            </div>
+        </div>
+
+        <div class="calculator-card chart-card">
+            <h3 class="card-title">Profit &amp; Loss Diagram</h3>
+            <p class="graph-subtitle" id="graphSubtitle">P&amp;L at expiration - premium is yours to keep</p>
+            <div class="pnl-charts-row" id="pnlChartsRow">
+                <div class="pnl-chart-side" id="putChartSide">
+                    <div class="pnl-chart-side-label" id="putChartSideLabel"></div>
+                    <canvas id="pnlChart"></canvas>
+                    <div id="pnlChartLegend" class="chart-legend-row"></div>
+                </div>
+                <div class="pnl-chart-side" id="callChartSide" style="display:none;">
+                    <div class="pnl-chart-side-label">&#128200; Covered Call Phase</div>
+                    <canvas id="pnlChartCall"></canvas>
+                    <div id="pnlChartCallLegend" class="chart-legend-row"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="calculator-card chart-card">
+            <h3 class="card-title">Strategy Breakdown</h3>
+            <div id="breakdownContent" class="breakdown-content"></div>
+        </div>
+
+        <div class="calculator-card chart-card" id="affiliateShow">
+            <h3 class="card-title">Now That You're a Pro...</h3>
+            <div class="affiliate-container">
+                <p class="affiliate-text">Ready to put your options strategy into practice? Open an account with Robinhood to start trading the wheel today.</p>
+                <a href="https://join.robinhood.com/gregora187" target="_blank" rel="noopener noreferrer" class="affiliate-btn">Start Trading on Robinhood</a>
+                <div class="disclosure-box"><strong>Full Disclosure:</strong> This is an affiliate link. If you sign up, the brokers might toss a few coins my way. It doesn't cost you a penny extra. Win-win.</div>
+            </div>
+        </div>
+    </div>
 </div>
 </section>
 

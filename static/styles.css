@@ -4176,16 +4176,20 @@ html { -webkit-overflow-scrolling: touch; }
     scroll-margin-top: 85px;
 }
 
+#simTickerTrack {
+    scroll-margin-top: 85px;
+}
+
 .sim-field-group input {
     padding: 0.75rem 0.875rem;
     background: var(--bg-white);
     border: 1.5px solid var(--border);
     border-radius: 8px;
     color: var(--text-primary);
-    font-size: 0.9375rem;
     font-family: 'Inter', sans-serif;
     transition: all 0.2s ease;
     font-weight: 500;
+    font-size: 16px !important;
 }
 
 .sim-field-group input:focus {
@@ -4200,7 +4204,7 @@ html { -webkit-overflow-scrolling: touch; }
     border: 1.5px solid var(--border);
     border-radius: 8px;
     color: var(--text-primary);
-    font-size: 0.9375rem;
+    font-size: 16px !important;
     font-family: 'Inter', sans-serif;
     transition: all 0.2s ease;
     font-weight: 500;
