@@ -4173,7 +4173,11 @@ html { -webkit-overflow-scrolling: touch; }
 */
 
 #tryCalculator {
-    scroll-margin-top: 85px;
+    scroll-margin-top: 145px;
+}
+
+#calculator {
+    scroll-margin-top: 145px;
 }
 
 #simTickerTrack {
