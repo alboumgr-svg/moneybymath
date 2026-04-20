@@ -442,36 +442,63 @@ function calculateAffordability() {
     `;
 
     /* ===== VERDICT ===== */
-    let verdictText = '';
-    let subtitle    = '';
+    let verdictText  = '';
+    let subtitle     = '';
     let verdictState = '';
 
-    if (totalHousing > takeHomeMonthly * 0.6) {
-        verdictText  = 'You cannot afford this house, sorry!';
-        subtitle     = `You're short $${Math.round(Math.abs(leftover)).toLocaleString()} per month after obligations. Housing alone eats over 60% of your take-home.`;
-        verdictState = 'bad';
-        verdictEl.style.color        = '#EF4444';
-    } else if (leftover < 0) {
+    const leftoverPct = leftover / Math.max(1, takeHomeMonthly);
+    const housingPct  = totalHousing / Math.max(1, takeHomeMonthly);
+    
+    // Real-world absolute dollar safety net.
+    // If they have $2,000+ unallocated, they can absorb life's shocks regardless of ratios.
+    const ABSOLUTE_SAFE_FLOOR = 1000; 
+
+    if (leftover < 0) {
+        // Dealbreaker: Cash flow is negative.
         verdictText  = 'You cannot afford this house, sorry!';
         subtitle     = `You're short $${Math.round(Math.abs(leftover)).toLocaleString()} per month after obligations.`;
         verdictState = 'bad';
-        verdictEl.style.color        = '#EF4444';
-    } else {
-        const leftoverPct = leftover / Math.max(1, takeHomeMonthly);
-        if (leftoverPct >= 0.20) {
-            verdictText  = 'You can afford it safely';
-            subtitle     = `You keep $${Math.round(leftover).toLocaleString()} per month (~${(leftoverPct * 100).toFixed(0)}% buffer).`;
-            verdictState = 'good';
-            verdictEl.style.color        = '#10B981';
+        verdictEl.style.color = '#EF4444';
+        
+    } else if (leftover >= ABSOLUTE_SAFE_FLOOR || (leftoverPct >= 0.15 && housingPct <= 0.45)) {
+        // Safe: They either have a massive absolute cash buffer, OR they meet healthy percentages.
+        verdictText  = 'You can afford it safely.';
+        
+        // Contextualize the good news if their ratio is technically high
+        if (housingPct > 0.45) {
+            subtitle = `Housing is heavy at ${(housingPct * 100).toFixed(0)}% of your pay, but keeping $${Math.round(leftover).toLocaleString()} provides breathing room.`;
         } else {
-            verdictText  = 'You can afford it, but you will be house-poor.';
-            subtitle     = `You'll have $${Math.round(leftover).toLocaleString()} left per month. Flexibility is minimal. Try to lower your monthly obligations.`;
-            verdictState = 'warning';
-            verdictEl.style.color        = '#F59E0B';
+            subtitle = `You keep $${Math.round(leftover).toLocaleString()} per month (~${(leftoverPct * 100).toFixed(0)}% buffer).`;
+        }
+        
+        verdictState = 'good';
+        verdictEl.style.color = '#10B981';
+        
+    } else {
+        // Warning Tier: They have money left, but it's under the $1000 floor or has a high ratio.
+        verdictState = 'warning';
+        verdictEl.style.color = '#F59E0B';
+
+        let riskLevel = '';
+        if (leftover < 300) {
+            riskLevel = 'very high';
+        } else if (leftover < 600) {
+            riskLevel = 'high';
+        } else {
+            riskLevel = 'some minor';
+        }
+
+        verdictText = `You can afford it, but it carries ${riskLevel} risk.`;
+        
+        // Incorporating "House-Poor" wording based on the primary stressor
+        if (housingPct > 0.50) {
+            subtitle = `With housing at ${(housingPct * 100).toFixed(0)}% of your pay, you will be house-poor. Leaving only $${Math.round(leftover).toLocaleString()} per month makes unexpected expenses dangerous.`;
+        } else {
+            subtitle = `You'll only have $${Math.round(leftover).toLocaleString()} left per month. Financial flexibility will be minimal if monthly obligations are not lowered.`;
         }
     }
 
-    verdictEl.textContent        = verdictText;
+    verdictEl.textContent         = verdictText;
     verdictSubtitleEl.textContent = subtitle;
     updateVerdict(verdictEl, verdictState);
     syncFloat();
@@ -909,7 +936,7 @@ async function downloadPDF() {
         sectionHeading('Affordability Verdict');
 
         const allText   = REPORT.verdictSubText
-            ? REPORT.verdictText + REPORT.verdictSubText
+            ? REPORT.verdictText + '\n' + REPORT.verdictSubText
             : REPORT.verdictText;
         const textMaxW  = CW - 50;
         const lines     = doc.splitTextToSize(allText, textMaxW);
