@@ -138,7 +138,7 @@
 
 /* ── Trade history ────────────────────────────────────────────────────── */
 .sim-trade-scroll{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
-.sim-trade-row{display:grid;grid-template-columns:70px 65px auto 1fr auto;align-items:center;gap:6px;padding:0.3rem 0.4rem;border-radius:5px;font-size:0.78rem;animation:fadeSlideIn 0.25s ease;}
+.sim-trade-row{white-space:nowrap;display:grid;grid-template-columns:70px 65px auto 1fr auto;align-items:center;gap:6px;padding:0.3rem 0.4rem;border-radius:5px;font-size:0.78rem;animation:fadeSlideIn 0.25s ease;}
 .sim-trade-row.buy{background:rgba(16,185,129,0.07);}
 .sim-trade-row.sell{background:rgba(239,68,68,0.07);}
 .sim-trade-time{font-family:'Courier New',monospace;font-size:0.68rem;color:var(--text-muted);}
@@ -176,7 +176,7 @@
 .sim-tape-header-row{display:grid;grid-template-columns:80px 70px 90px 70px 1fr;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);padding:0.25rem 0.4rem 0.4rem;border-bottom:1px solid var(--border);}
 .sim-tape{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:1px;}
 .sim-tape-empty{text-align:center;color:var(--text-muted);padding:1.25rem;font-size:0.825rem;}
-.sim-tape-row{display:grid;grid-template-columns:80px 70px 90px 70px 1fr;align-items:center;font-size:0.76rem;font-family:'Courier New',monospace;padding:0.18rem 0.4rem;border-radius:3px;animation:fadeSlideIn 0.2s ease;}
+.sim-tape-row{white-space:nowrap;display:grid;grid-template-columns:80px 70px 90px 70px 1fr;align-items:center;font-size:0.76rem;font-family:'Courier New',monospace;padding:0.18rem 0.4rem;border-radius:3px;animation:fadeSlideIn 0.2s ease;}
 .sim-tape-row.buyer{background:rgba(16,185,129,0.07);color:#10B981;}
 .sim-tape-row.seller{background:rgba(239,68,68,0.07);color:#EF4444;}
 .sim-tape-row.mine{font-weight:700;outline:1px solid currentColor;outline-offset:-1px;}

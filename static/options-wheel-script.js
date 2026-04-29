@@ -1302,6 +1302,11 @@ function init() {
     // If no open position, open one
     if (!SIM.putStrike && !SIM.costBasis) initCSPPhase();
 
+    // Force pause on initial load
+    SIM.paused = true;
+    const pauseBtn = $('whlPauseBtn');
+    if (pauseBtn) pauseBtn.innerHTML = '<span>▶</span> Resume';
+
     // Setup canvases (after layout)
     requestAnimationFrame(()=>{
         setupCanvases();
