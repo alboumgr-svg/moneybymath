@@ -44,6 +44,10 @@ def rent_vs_buy():
 def compound_interest():
     return render_template("compound-interest.html")
 
+@app.route("/drip")
+def drip():
+    return render_template("drip.html")
+
 @app.route("/debt-payoff")
 def debt_payoff():
     return render_template("debt-payoff.html")

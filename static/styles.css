@@ -281,6 +281,7 @@ body {
 .nav-more-dropdown.active a:nth-child(10) { animation-delay: 0.40s; }
 .nav-more-dropdown.active a:nth-child(11) { animation-delay: 0.44s; }
 .nav-more-dropdown.active a:nth-child(12) { animation-delay: 0.48s; }
+.nav-more-dropdown.active a:nth-child(13) { animation-delay: 0.52s; }
 
 .nav-more-dropdown a:hover {
     background: var(--primary-light);
@@ -2785,6 +2786,7 @@ section {
 .nav-links.active a:nth-child(15) { animation-delay: 0.75s; }
 .nav-links.active a:nth-child(16) { animation-delay: 0.80s; }
 .nav-links.active a:nth-child(17) { animation-delay: 0.85s; }
+.nav-links.active a:nth-child(18) { animation-delay: 0.90s; }
 
 @keyframes slideFade {
     0%   { opacity: 0; transform: translateX(20px); }
@@ -4167,11 +4169,6 @@ html { -webkit-overflow-scrolling: touch; }
     will-change: transform;
 }
 
-/*#affiliateShow {
-    display: none;
-}
-*/
-
 #tryCalculator {
     scroll-margin-top: 145px;
 }
@@ -4218,4 +4215,17 @@ html { -webkit-overflow-scrolling: touch; }
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/*#affiliateShow {
+    display: none;
+}
+*/
+
+.footer-ad {
+    display: none !important;
+}
+
+.fixed-ad {
+    display: none !important;
 }

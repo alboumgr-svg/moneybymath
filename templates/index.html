@@ -21,7 +21,7 @@
         <div class="container">
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-icon">15</div>
+                    <div class="stat-icon">16</div>
                     <div class="stat-content">
                         <div class="stat-number">Tools</div>
                         <div class="stat-label">Free Calculators</div>
@@ -134,6 +134,14 @@
                     <div class="calculator-tag">Beginner</div>
                 </a>
 
+                <!-- DRIP -->
+                <a href="/drip" class="calculator-card-link">
+                    <div class="calculator-icon">DRIP</div>
+                    <h3>Divident Reinvestment</h3>
+                    <p>See how your investments will grow over with power of DRIP (Divident Reinvestment Plan).</p>
+                    <div class="calculator-tag">Beginner</div>
+                </a>
+
                 <!-- Debt Payoff -->
                 <a href="/debt-payoff" class="calculator-card-link">
                     <div class="calculator-icon">DEBT</div>
@@ -239,9 +247,9 @@ document.addEventListener('click', (e) => {
     const friction = 0.7;
     const bounce = 0.6;
 
-    let forceDrop = false; // 🔥 NEW FLAG
+    let forceDrop = false; 
 
-    // 🔥 Trigger instant drop on scroll
+    // Trigger instant drop on scroll
     function handleScroll() {
         forceDrop = true;
     }
