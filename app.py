@@ -29,6 +29,7 @@ csp = {
         "https://*.googleadservices.com",
         "https://*.google.com",
         "https://*.gstatic.com",
+        "https://*.adtrafficquality.google",
         "https://cdnjs.cloudflare.com",
     ],
 
