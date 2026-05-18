@@ -36,12 +36,20 @@ csp = {
         "'unsafe-inline'", 
         "https://pagead2.googlesyndication.com", 
         "https://partner.googleadservices.com",
-        "https://cdnjs.cloudflare.com"  # <-- Add this line to whitelist Chart.js
+        "https://cdnjs.cloudflare.com"
     ],
     'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     'font-src': ["'self'", "https://fonts.gstatic.com"],
-    'frame-src': ["'self'", "https://googleads.g.doubleclick.net"],
-    'img-src': ["'self'", "data:", "https://pagead2.googlesyndication.com"]
+    'frame-src': ["'self'", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
+    'img-src': ["'self'", "data:", "https://pagead2.googlesyndication.com", "https://pagead2.googleusercontent.com"],
+    
+    # 🌟 ADD THIS BLOCK TO FIX THE ERROR
+    'connect-src': [
+        "'self'",
+        "https://ep1.adtrafficquality.google",      # For Google's traffic verification checks
+        "https://pagead2.googlesyndication.com",    # For ad configuration loads
+        "https://googleads.g.doubleclick.net"       # For network ad delivery metrics
+    ]
 }
 
 Talisman(app, content_security_policy=csp, force_https=True)
