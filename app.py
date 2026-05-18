@@ -31,6 +31,8 @@ csp = {
         "https://*.gstatic.com",
         "https://*.adtrafficquality.google",
         "https://cdnjs.cloudflare.com",
+        "https://moneybymath.disqus.com",
+        "https://disqus.com",
     ],
 
     'style-src': [
@@ -51,6 +53,8 @@ csp = {
         "https://*.googleusercontent.com",
         "https://*.adtrafficquality.google",
         "https://*.gstatic.com",
+        "https://*.disqus.com",
+        "https://*.disquscdn.com",
     ],
 
     'frame-src': [
@@ -59,6 +63,8 @@ csp = {
         "https://*.googlesyndication.com",
         "https://*.google.com",
         "https://*.adtrafficquality.google",
+        "https://disqus.com",            
+        "https://*.disqus.com",              
     ],
 
     'connect-src': [
@@ -68,10 +74,21 @@ csp = {
         "https://*.googlesyndication.com",
         "https://*.adtrafficquality.google",
         "https://cdnjs.cloudflare.com",
-    ]
+        "https://csi.gstatic.com",
+    ],
+
+    # Add Trusted Types directives
+    'require-trusted-types-for': ["'script'"],
 }
 
-Talisman(app, content_security_policy=csp, force_https=True)
+Talisman(app, 
+    content_security_policy=csp, 
+    force_https=True,
+    strict_transport_security=True,
+    strict_transport_security_preload=True,
+    strict_transport_security_max_age=31536000, # 1 year
+    strict_transport_security_include_subdomains=True
+)
 CORS(app, origins=["https://moneybymath.com"])
 
 @app.route("/")
@@ -177,6 +194,17 @@ def sitemap():
     
     response = make_response('\n'.join(xml))
     response.headers["Content-Type"] = "application/xml"
+    return response
+
+@app.after_request
+def add_security_headers(response):
+    # Prevents other domains from opening your site in a popup and retaining a window reference
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    
+    # Protects against cross-origin leaks. 
+    # NOTE: If Google Ads break, change 'credentialless' to 'unsafe-none' or remove this header.
+    response.headers['Cross-Origin-Embedder-Policy'] = 'credentialless'
+    
     return response
 
 # ── Edit this every week ──────────────────────────────────────────────────────
@@ -414,4 +442,4 @@ def inject_global_template_data():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True, ssl_context='adhoc')

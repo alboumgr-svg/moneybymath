@@ -28,6 +28,10 @@
      crossorigin="anonymous"></script>
     <meta name='impact-site-verification' value='f8af61d5-84fc-42b7-9738-437854f384f5'>
     <meta name="google-adsense-account" content="ca-pub-2187075822443464">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+    <script src="/static/security.js"></script>
+
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -143,59 +147,9 @@
             </div>
         </div>
     </footer>
-    <script>
-        const navToggle  = document.getElementById('navToggle');
-        const navLinks   = document.getElementById('navLinks');
-        const navOverlay = document.getElementById('navOverlay');
-
-        function openNav() {
-            navLinks.classList.add('active');
-            navToggle.classList.add('active');
-            navOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeNav() {
-            navLinks.classList.remove('active');
-            navToggle.classList.remove('active');
-            navOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-        navToggle.addEventListener('click', () => {
-            navLinks.classList.contains('active') ? closeNav() : openNav();
-        });
-        navOverlay.addEventListener('click', closeNav);
-        document.querySelectorAll('.nav-links > a').forEach(link => {
-            link.addEventListener('click', closeNav);
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') { closeNav(); closeMore(); }
-        });
-
-        const navMoreBtn      = document.getElementById('navMoreBtn');
-        const navMoreDropdown = document.getElementById('navMoreDropdown');
-
-        function openMore() {
-            navMoreDropdown.classList.add('active');
-            navMoreBtn.setAttribute('aria-expanded', 'true');
-            navMoreBtn.classList.add('active');
-        }
-        function closeMore() {
-            navMoreDropdown.classList.remove('active');
-            navMoreBtn.setAttribute('aria-expanded', 'false');
-            navMoreBtn.classList.remove('active');
-        }
-        navMoreBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            navMoreDropdown.classList.contains('active') ? closeMore() : openMore();
-        });
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#navMore')) closeMore();
-        });
-        navMoreDropdown.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', closeMore);
-        });
-    </script>
-    {% block scripts %}{% endblock %}
+    {% block scripts %}
+    {% endblock %}
+    <script src="{{ url_for('static', filename='nav.js') }}"></script>
 
     <!-- Fixed sidebar ads - outside all layout, zero impact on content -->
     <div class="fixed-ad fixed-ad--left">
