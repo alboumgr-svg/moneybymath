@@ -36,19 +36,19 @@ csp = {
         "'unsafe-inline'", 
         "https://pagead2.googlesyndication.com", 
         "https://partner.googleadservices.com",
-        "https://cdnjs.cloudflare.com"
+        "https://cdnjs.cloudflare.com",
+        "https://*.adtrafficquality.google"         # Whitelists all script layers from Google's validation network
     ],
     'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     'font-src': ["'self'", "https://fonts.gstatic.com"],
     'frame-src': ["'self'", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
     'img-src': ["'self'", "data:", "https://pagead2.googlesyndication.com", "https://pagead2.googleusercontent.com"],
-    
-    # 🌟 ADD THIS BLOCK TO FIX THE ERROR
     'connect-src': [
         "'self'",
-        "https://ep1.adtrafficquality.google",      # For Google's traffic verification checks
-        "https://pagead2.googlesyndication.com",    # For ad configuration loads
-        "https://googleads.g.doubleclick.net"       # For network ad delivery metrics
+        "https://*.adtrafficquality.google",        # Whitelists telemetry communication
+        "https://pagead2.googlesyndication.com",    
+        "https://googleads.g.doubleclick.net",
+        "https://cdnjs.cloudflare.com"              # Whitelists source map downloads for dependencies
     ]
 }
 
@@ -370,14 +370,8 @@ SEO_DATA = {
 }
 
 @app.context_processor
-def inject_is_prod():
-    # This will be True if the variable exists at all in Render's "Environment" tab
-    is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
-    return dict(IS_PROD=is_prod)
-
-@app.context_processor
 def inject_global_template_data():
-    # 1. Determine if ads/analytics are active
+    # 1. Determine if ads/analytics are active globally
     is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
     
     # 2. Extract current request endpoint safely to fall back to root configuration if mismatched
@@ -387,6 +381,7 @@ def inject_global_template_data():
     # 3. Formulate the dynamic target canonical URL
     current_url = f"https://moneybymath.com{path if path != '/' else ''}"
     
+    # Returns everything required by base.html in a single pass
     return dict(
         IS_PROD=is_prod,
         SEO_TITLE=seo["title"],
