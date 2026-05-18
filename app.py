@@ -35,7 +35,8 @@ csp = {
         "'self'", 
         "'unsafe-inline'", 
         "https://pagead2.googlesyndication.com", 
-        "https://partner.googleadservices.com"
+        "https://partner.googleadservices.com",
+        "https://cdnjs.cloudflare.com"  # <-- Add this line to whitelist Chart.js
     ],
     'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     'font-src': ["'self'", "https://fonts.gstatic.com"],
