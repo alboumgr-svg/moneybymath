@@ -3,8 +3,9 @@ import math
 import datetime
 import pandas as pd
 import numpy as np
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, jsonify, render_template, request, send_from_directory, make_response
 from flask_cors import CORS
+from flask_talisman import Talisman
 import requests
 from dotenv import load_dotenv
 
@@ -14,6 +15,35 @@ app = Flask(__name__)
 
 # Allow requests from your site. In production replace "*" with your domain,
 # e.g. CORS(app, origins=["https://moneybymath.com"])
+CORS(app, origins=["https://moneybymath.com"])
+
+from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask_cors import CORS
+from flask_talisman import Talisman # Add this import
+import requests
+import os
+import math
+import datetime
+
+app = Flask(__name__)
+
+# Initialize Talisman
+# We configure the CSP to allow Google Ads, fonts, and inline styles (which your setup relies on)
+csp = {
+    'default-src': ["'self'"],
+    'script-src': [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://pagead2.googlesyndication.com", 
+        "https://partner.googleadservices.com"
+    ],
+    'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    'font-src': ["'self'", "https://fonts.gstatic.com"],
+    'frame-src': ["'self'", "https://googleads.g.doubleclick.net"],
+    'img-src': ["'self'", "data:", "https://pagead2.googlesyndication.com"]
+}
+
+Talisman(app, content_security_policy=csp, force_https=True)
 CORS(app, origins=["https://moneybymath.com"])
 
 @app.route("/")
@@ -91,6 +121,35 @@ def newsletter():
 @app.route("/ads.txt")
 def ads():
     return send_from_directory(app.root_path, "ads.txt", mimetype="text/plain")
+
+@app.route("/sitemap.xml")
+def sitemap():
+    # List of all your static calculator endpoints
+    pages = [
+        "/", "/stock-analysis", "/afford-house", "/options-wheel", 
+        "/coast-fire", "/rent-vs-buy", "/compound-interest", "/drip", 
+        "/debt-payoff", "/retirement", "/car-cost", "/kids-future", 
+        "/loan-from-401k", "/federal-tax", "/mortgage-calculator", 
+        "/budget", "/financial-health-check", "/newsletter"
+    ]
+    
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>']
+    xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    
+    for page in pages:
+        xml.append('  <url>')
+        xml.append(f'    <loc>https://moneybymath.com{page}</loc>')
+        xml.append('    <changefreq>weekly</changefreq>')
+        # Give slightly higher priority to the index and core tools
+        priority = "1.0" if page == "/" else "0.8"
+        xml.append(f'    <priority>{priority}</priority>')
+        xml.append('  </url>')
+        
+    xml.append('</urlset>')
+    
+    response = make_response('\n'.join(xml))
+    response.headers["Content-Type"] = "application/xml"
+    return response
 
 # ── Edit this every week ──────────────────────────────────────────────────────
 LATEST_ARTICLE = {
@@ -220,14 +279,111 @@ def privacy():
     return render_template("privacy.html")
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  IS_PROD
+#  Context Processors
 # ─────────────────────────────────────────────────────────────────────────────
+SEO_DATA = {
+    "/": {
+        "title": "MoneyByMath - New Age Financial Tools",
+        "desc": "Free financial calculators and tools for the new age - Coast FIRE, Renting vs Buying, and more."
+    },
+    "/options-wheel": {
+        "title": "Options Wheel Strategy Calculator | MoneyByMath",
+        "desc": "Master the covered call and cash-secured put strategy with interactive premium modeling tools."
+    },
+    "/coast-fire": {
+        "title": "Coast FIRE Calculator | MoneyByMath",
+        "desc": "Calculate when you can stop saving and let your current investments compound to retirement."
+    },
+    "/stock-analysis": {
+        "title": "Stock Analysis & Valuation Tool | MoneyByMath",
+        "desc": "Analyze stock metrics, compound growth scenarios, and fundamental asset valuation metrics cleanly."
+    },
+    "/afford-house": {
+        "title": "Home Affordability Calculator | MoneyByMath",
+        "desc": "Determine how much house you can safely afford based on income, debt, down payments, and rates."
+    },
+    "/rent-vs-buy": {
+        "title": "Rent vs Buy a House Calculator | MoneyByMath",
+        "desc": "Compare the long-term net worth impact of renting vs buying a home, factoring in opportunity costs."
+    },
+    "/compound-interest": {
+        "title": "Compound Interest Calculator | MoneyByMath",
+        "desc": "Visualize investment growth models with dynamic compounding timelines, contributions, and inflation."
+    },
+    "/drip": {
+        "title": "DRIP Calculator (Dividend Reinvestment) | MoneyByMath",
+        "desc": "Model the wealth acceleration of Dividend Reinvestment Plans using custom yields and growth rates."
+    },
+    "/debt-payoff": {
+        "title": "Debt Payoff Calculator (Snowball & Avalanche) | MoneyByMath",
+        "desc": "Compare structural debt payoff methods to map out your absolute fastest mathematical path to zero."
+    },
+    "/retirement": {
+        "title": "Retirement & Financial Independence Calculator | MoneyByMath",
+        "desc": "Project your financial freedom timeline, total nest egg target, and safe withdrawal rate boundaries."
+    },
+    "/car-cost": {
+        "title": "True Cost of Car Ownership Calculator | MoneyByMath",
+        "desc": "Calculate the hidden lifecycle cost of owning a vehicle, including depreciation and interest math."
+    },
+    "/kids-future": {
+        "title": "Child's Financial Future & College Calculator | MoneyByMath",
+        "desc": "Plan custodial accounts, 529 plans, and long-term generational compound growth goals for minors."
+    },
+    "/loan-from-401k": {
+        "title": "401(k) Loan Modeling Calculator | MoneyByMath",
+        "desc": "Evaluate the exact opportunity costs and interest mechanics of borrowing money out of your 401(k)."
+    },
+    "/federal-tax": {
+        "title": "Federal Income Tax Calculator | MoneyByMath",
+        "desc": "Estimate your take-home pay, effective tax rates, and marginal bracket breakdowns using modern IRS limits."
+    },
+    "/mortgage-calculator": {
+        "title": "Advanced Mortgage & Amortization Calculator | MoneyByMath",
+        "desc": "Generate custom amortization schedules and interest payment calculations with real mortgage baselines."
+    },
+    "/budget": {
+        "title": "Data-Driven Budget Planning Tool | MoneyByMath",
+        "desc": "Optimize cash flow with allocations like the 50/30/20 rule to actively maximize your personal savings rate."
+    },
+    "/financial-health-check": {
+        "title": "Financial Health & Net Worth Audit | MoneyByMath",
+        "desc": "Run a comprehensive technical checkup on your savings rate, emergency runway, and debt ratios."
+    },
+    "/newsletter": {
+        "title": "MoneyByMath Newsletter & Financial Insights",
+        "desc": "Deep dives into quantitative finance concepts, strategic options writing, and microeconomic indicators."
+    },
+    "/privacy": {
+        "title": "Privacy Policy | MoneyByMath",
+        "desc": "Review how we safeguard your information. MoneyByMath operates purely client-side and retains zero PII."
+    }
+}
 
 @app.context_processor
 def inject_is_prod():
     # This will be True if the variable exists at all in Render's "Environment" tab
     is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
     return dict(IS_PROD=is_prod)
+
+@app.context_processor
+def inject_global_template_data():
+    # 1. Determine if ads/analytics are active
+    is_prod = os.environ.get("SHOW_ADS", "false").lower() == "true"
+    
+    # 2. Extract current request endpoint safely to fall back to root configuration if mismatched
+    path = request.path
+    seo = SEO_DATA.get(path, SEO_DATA["/"])
+    
+    # 3. Formulate the dynamic target canonical URL
+    current_url = f"https://moneybymath.com{path if path != '/' else ''}"
+    
+    return dict(
+        IS_PROD=is_prod,
+        SEO_TITLE=seo["title"],
+        SEO_DESC=seo["desc"],
+        CURRENT_URL=current_url
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  MAIN FUNCITON
