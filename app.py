@@ -21,30 +21,52 @@ CORS(app, origins=["https://moneybymath.com"])
 # We configure the CSP to allow Google Ads, fonts, and inline styles (which your setup relies on)
 csp = {
     'default-src': ["'self'"],
+
     'script-src': [
-        "'self'", 
-        "'unsafe-inline'", 
-        "https://pagead2.googlesyndication.com", 
-        "https://partner.googleadservices.com",
+        "'self'",
+        "'unsafe-inline'",
+        "https://*.googlesyndication.com",
+        "https://*.googleadservices.com",
+        "https://*.google.com",
+        "https://*.gstatic.com",
         "https://cdnjs.cloudflare.com",
-        "https://*.adtrafficquality.google"         # Whitelists all script layers from Google's validation network
     ],
-    'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-    'font-src': ["'self'", "https://fonts.gstatic.com"],
+
+    'style-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com",
+    ],
+
+    'font-src': [
+        "'self'",
+        "https://fonts.gstatic.com",
+    ],
+
+    'img-src': [
+        "'self'",
+        "data:",
+        "https://*.googlesyndication.com",
+        "https://*.googleusercontent.com",
+        "https://*.adtrafficquality.google",
+        "https://*.gstatic.com",
+    ],
+
     'frame-src': [
-            "'self'",
-            "https://googleads.g.doubleclick.net",
-            "https://tpc.googlesyndication.com",
-            "https://www.google.com",
-            "https://ep2.adtrafficquality.google",
-        ],
-    'img-src': ["'self'", "data:", "https://pagead2.googlesyndication.com", "https://pagead2.googleusercontent.com"],
+        "'self'",
+        "https://*.doubleclick.net",
+        "https://*.googlesyndication.com",
+        "https://*.google.com",
+        "https://*.adtrafficquality.google",
+    ],
+
     'connect-src': [
         "'self'",
-        "https://*.adtrafficquality.google",        # Whitelists telemetry communication
-        "https://pagead2.googlesyndication.com",    
-        "https://googleads.g.doubleclick.net",
-        "https://cdnjs.cloudflare.com"              # Whitelists source map downloads for dependencies
+        "https://*.google.com",
+        "https://*.doubleclick.net",
+        "https://*.googlesyndication.com",
+        "https://*.adtrafficquality.google",
+        "https://cdnjs.cloudflare.com",
     ]
 }
 
