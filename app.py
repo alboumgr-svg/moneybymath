@@ -17,16 +17,6 @@ app = Flask(__name__)
 # e.g. CORS(app, origins=["https://moneybymath.com"])
 CORS(app, origins=["https://moneybymath.com"])
 
-from flask import Flask, jsonify, render_template, request, send_from_directory
-from flask_cors import CORS
-from flask_talisman import Talisman # Add this import
-import requests
-import os
-import math
-import datetime
-
-app = Flask(__name__)
-
 # Initialize Talisman
 # We configure the CSP to allow Google Ads, fonts, and inline styles (which your setup relies on)
 csp = {
@@ -41,7 +31,13 @@ csp = {
     ],
     'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     'font-src': ["'self'", "https://fonts.gstatic.com"],
-    'frame-src': ["'self'", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
+    'frame-src': [
+            "'self'",
+            "https://googleads.g.doubleclick.net",
+            "https://tpc.googlesyndication.com",
+            "https://www.google.com",
+            "https://ep2.adtrafficquality.google",
+        ],
     'img-src': ["'self'", "data:", "https://pagead2.googlesyndication.com", "https://pagead2.googleusercontent.com"],
     'connect-src': [
         "'self'",
