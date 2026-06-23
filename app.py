@@ -167,6 +167,10 @@ def newsletter():
 def ads():
     return send_from_directory(app.root_path, "ads.txt", mimetype="text/plain")
 
+@app.route("/robots.txt")
+def robots():
+    return send_from_directory(app.root_path, "robots.txt", mimetype="text/plain")
+
 @app.route("/sitemap.xml")
 def sitemap():
     # List of all your static calculator endpoints
