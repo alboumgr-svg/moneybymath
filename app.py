@@ -15,7 +15,8 @@ app = Flask(__name__)
 
 # Allow requests from your site. In production replace "*" with your domain,
 # e.g. CORS(app, origins=["https://moneybymath.com"])
-CORS(app, origins=["https://moneybymath.com"])
+# Allow both variations just to be safe
+CORS(app, origins=["https://www.moneybymath.com", "https://moneybymath.com"])
 
 # Initialize Talisman
 # We configure the CSP to allow Google Ads, fonts, and inline styles (which your setup relies on)
@@ -89,7 +90,6 @@ Talisman(app,
     strict_transport_security_max_age=31536000, # 1 year
     strict_transport_security_include_subdomains=True
 )
-CORS(app, origins=["https://moneybymath.com"])
 
 @app.route("/")
 def index():
@@ -173,7 +173,6 @@ def robots():
 
 @app.route("/sitemap.xml")
 def sitemap():
-    # List of all your static calculator endpoints
     pages = [
         "/", "/stock-analysis", "/afford-house", "/options-wheel", 
         "/coast-fire", "/rent-vs-buy", "/compound-interest", "/drip", 
@@ -187,9 +186,9 @@ def sitemap():
     
     for page in pages:
         xml.append('  <url>')
-        xml.append(f'    <loc>https://moneybymath.com{page}</loc>')
+        # TRICK: Added "www." to match your canonical domain
+        xml.append(f'    <loc>https://www.moneybymath.com{page}</loc>')
         xml.append('    <changefreq>weekly</changefreq>')
-        # Give slightly higher priority to the index and core tools
         priority = "1.0" if page == "/" else "0.8"
         xml.append(f'    <priority>{priority}</priority>')
         xml.append('  </url>')
