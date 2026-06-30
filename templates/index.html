@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block title %}MoneyByMath - New Age Financial Tools{% endblock %}
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/index-home.css">
+{% endblock %}
 {% block content %}
     <!-- Hero Section -->
     <section class="hero home-hero">
@@ -10,43 +16,7 @@
                 <h1 class="hero-title-large">Take Control of Your <span class="gradient-text">Financial Future</span></h1>
                 <p class="hero-subtitle-large">Stop scrolling FinTok. Start using real calculators. Free tools to help you make smarter money decisions.</p>
                 <div class="hero-cta">
-                    <a href="#calculatorscrollto" class="btn btn-primary btn-large">Explore Calculators</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Quick Stats -->
-    <section class="stats-banner">
-        <div class="container">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-icon">16</div>
-                    <div class="stat-content">
-                        <div class="stat-number">Tools</div>
-                        <div class="stat-label">Free Calculators</div>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">$0</div>
-                    <div class="stat-content">
-                        <div class="stat-number">Fees</div>
-                        <div class="stat-label">No Hidden Costs</div>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">No</div>
-                    <div class="stat-content">
-                        <div class="stat-number">Email</div>
-                        <div class="stat-label">Required</div>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">24/7</div>
-                    <div class="stat-content">
-                        <div class="stat-number" id="calculatorscrollto">Access</div>
-                        <div class="stat-label">Always Available</div>
-                    </div>
+                    <a href="#calculators" class="btn btn-primary btn-large">Explore Calculators</a>
                 </div>
             </div>
         </div>
